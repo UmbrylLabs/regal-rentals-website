@@ -56,3 +56,11 @@ Update these items:
 The current quote form opens an email draft to:
 
 `bookings@regal.rentals`
+
+
+## V2 mobile/light fixes
+
+- Mobile hero shortened so the content appears above the fold.
+- Top mobile utility bar removed to save vertical space.
+- Added light color-scheme hints to resist browser/OS dark-mode auto-darkening.
+- Home/logo links use `/` instead of `#top`.
