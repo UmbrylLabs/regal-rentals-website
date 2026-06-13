@@ -1,5 +1,5 @@
 :root {
-  color-scheme: light;
+  color-scheme: only light;
   --purple: #26063f;
   --purple-2: #3b0b61;
   --purple-3: #150320;
@@ -16,7 +16,7 @@
 }
 
 * { box-sizing: border-box; }
-html { scroll-behavior: smooth; background: var(--cream); }
+html { scroll-behavior: smooth; background: var(--cream); color-scheme: only light !important; }
 body { margin: 0; background: var(--cream); color: var(--ink); font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; line-height: 1.5; }
 a { color: inherit; text-decoration: none; }
 img { max-width: 100%; display: block; }
@@ -136,9 +136,138 @@ input:focus, textarea:focus { border-color: var(--gold); box-shadow: 0 0 0 4px r
   .reveal { opacity: 1; transform: none; }
 }
 
+/* Lock the public site to the intended light design. Some browsers/extensions try to auto-darken pages. */
+html,
+body {
+  color-scheme: only light !important;
+}
+
+body,
+.site-header,
+.section-cream,
+.section-light,
+.hero,
+.browse,
+.launch-pill,
+.quote-form,
+.coming-card,
+.coming-card__photo,
+.btn--secondary,
+input,
+textarea {
+  forced-color-adjust: none;
+}
+
 @media (prefers-color-scheme: dark) {
-  html, body { background: var(--cream) !important; color: var(--ink) !important; }
-  input, textarea, .quote-form, .coming-card, .btn--secondary, .site-header { background-color: var(--cream) !important; color: var(--ink) !important; }
+  html,
+  body {
+    background: #fffaf0 !important;
+    color: #24192c !important;
+    color-scheme: only light !important;
+  }
+
+  .site-header {
+    background: rgba(255,250,240,.96) !important;
+    color: #24192c !important;
+    border-bottom-color: #e8dac0 !important;
+  }
+
+  .brand__wordmark,
+  .site-nav,
+  .site-nav a,
+  .header-cta,
+  .section-heading h2,
+  .coming-card h3,
+  .hero h1,
+  .form-grid label {
+    color: #26063f !important;
+  }
+
+  .section-cream,
+  .hero {
+    background: #fffaf0 !important;
+    color: #24192c !important;
+  }
+
+  .hero::before {
+    background: radial-gradient(circle at 50% 20%, rgba(231,199,106,.34), transparent 25%), linear-gradient(180deg, rgba(255,255,255,.8), rgba(255,250,240,.92)) !important;
+  }
+
+  .section-light,
+  .browse {
+    background: linear-gradient(180deg, #ffffff, #f8eed8) !important;
+    color: #24192c !important;
+  }
+
+  .section-intro,
+  .hero__copy,
+  .hero__note,
+  .coming-card p,
+  .form-note {
+    color: #6f6377 !important;
+  }
+
+  .micro-trust {
+    color: #4a3b55 !important;
+  }
+
+  .launch-pill,
+  .coming-card__photo span,
+  .btn--secondary {
+    background: #fffaf0 !important;
+    color: #26063f !important;
+    border-color: rgba(201,152,46,.6) !important;
+  }
+
+  .rental-carousel {
+    display: grid !important;
+    grid-auto-flow: column !important;
+    grid-auto-columns: minmax(260px, 31%) !important;
+    gap: 22px !important;
+    overflow-x: auto !important;
+    scroll-snap-type: x mandatory !important;
+    background: transparent !important;
+  }
+
+  .coming-card {
+    display: block !important;
+    min-height: 350px !important;
+    background: #ffffff !important;
+    color: #24192c !important;
+    border: 1px solid #e8dac0 !important;
+    border-radius: 24px !important;
+    padding: 18px !important;
+    box-shadow: 0 14px 38px rgba(38, 6, 63, .10) !important;
+  }
+
+  .coming-card__photo {
+    height: 210px !important;
+    display: grid !important;
+    place-items: center !important;
+    background: linear-gradient(135deg, rgba(38,6,63,.08), rgba(201,152,46,.18)) !important;
+    border: 1px dashed rgba(201,152,46,.75) !important;
+    border-radius: 18px !important;
+    color: #26063f !important;
+  }
+
+  .carousel-btn {
+    background: #ffffff !important;
+    color: #26063f !important;
+    border-color: #c9982e !important;
+  }
+
+  .btn--primary {
+    background: #26063f !important;
+    color: #ffffff !important;
+    border-color: #26063f !important;
+  }
+
+  input,
+  textarea,
+  .quote-form {
+    background: #fffaf0 !important;
+    color: #24192c !important;
+  }
 }
 
 @media (max-width: 1050px) {
@@ -195,4 +324,19 @@ input:focus, textarea:focus { border-color: var(--gold); box-shadow: 0 0 0 4px r
   .coming-card { min-height: 320px; }
   .coming-card__photo { height: 180px; }
   .quote-form { padding: 20px; border-radius: 22px; }
+}
+
+
+/* Final safety layer for Chromium forced-dark edge cases. */
+:where(html, body, main, .section-cream, .section-light, .hero, .browse) {
+  background-color: #fffaf0 !important;
+}
+:where(.section-light, .browse) {
+  background-image: linear-gradient(180deg, #ffffff, #f8eed8) !important;
+}
+:where(.site-header) {
+  background-color: rgba(255,250,240,.96) !important;
+}
+:where(.coming-card, .carousel-btn, .btn--secondary) {
+  background-color: #ffffff !important;
 }

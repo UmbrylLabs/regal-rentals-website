@@ -4,7 +4,7 @@ Upload-ready static website for Regal Rentals.
 
 ## Current version
 
-Launching-soon version. This version avoids listing specific rental inventory until real items are ready.
+Launching-soon version. This version avoids listing specific rental inventory until real items are ready. v3.2 includes stronger light-mode locking to reduce browser dark-mode/auto-dark issues.
 
 ## Files
 
