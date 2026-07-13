@@ -11,18 +11,26 @@
     chairs: {
       max: 60,
       price: 3.5,
-      input: document.getElementById('chair-quantity'),
+      cardInput: document.getElementById('chair-card-quantity'),
+      quoteInput: document.getElementById('chair-quantity'),
       row: document.querySelector('[data-quote-row="chairs"]'),
       addButton: document.querySelector('[data-add-item="chairs"]'),
+      removeButton: document.querySelector('[data-remove-item="chairs"]'),
+      addLabel: 'Add Chairs to Quote',
+      updateLabel: 'Update Chair Quantity',
       singular: 'chair',
       plural: 'chairs'
     },
     tables: {
       max: 8,
       price: 16,
-      input: document.getElementById('table-quantity'),
+      cardInput: document.getElementById('table-card-quantity'),
+      quoteInput: document.getElementById('table-quantity'),
       row: document.querySelector('[data-quote-row="tables"]'),
       addButton: document.querySelector('[data-add-item="tables"]'),
+      removeButton: document.querySelector('[data-remove-item="tables"]'),
+      addLabel: 'Add Tables to Quote',
+      updateLabel: 'Update Table Quantity',
       singular: 'table',
       plural: 'tables'
     }
@@ -30,27 +38,36 @@
 
   const selectedItems = new Set();
 
-  const clampQuantity = (itemKey) => {
-    const item = inventory[itemKey];
-    const parsed = Number.parseInt(item.input.value || '1', 10);
-    const quantity = Math.min(item.max, Math.max(1, Number.isFinite(parsed) ? parsed : 1));
-    item.input.value = String(quantity);
+  const clampInput = (input, max) => {
+    const parsed = Number.parseInt(input.value || '1', 10);
+    const quantity = Math.min(max, Math.max(1, Number.isFinite(parsed) ? parsed : 1));
+    input.value = String(quantity);
     return quantity;
   };
 
   const updateStepButtons = (itemKey) => {
     const item = inventory[itemKey];
-    const quantity = clampQuantity(itemKey);
-    const minusButton = item.row.querySelector('[data-step="-1"]');
-    const plusButton = item.row.querySelector('[data-step="1"]');
+    const cardQuantity = clampInput(item.cardInput, item.max);
+    const quoteQuantity = clampInput(item.quoteInput, item.max);
 
-    if (minusButton) minusButton.disabled = quantity <= 1;
-    if (plusButton) plusButton.disabled = quantity >= item.max;
+    const cardMinus = document.querySelector(`[data-card-step="-1"][data-item="${itemKey}"]`);
+    const cardPlus = document.querySelector(`[data-card-step="1"][data-item="${itemKey}"]`);
+    const quoteMinus = document.querySelector(`[data-quote-step="-1"][data-item="${itemKey}"]`);
+    const quotePlus = document.querySelector(`[data-quote-step="1"][data-item="${itemKey}"]`);
+
+    if (cardMinus) cardMinus.disabled = cardQuantity <= 1;
+    if (cardPlus) cardPlus.disabled = cardQuantity >= item.max;
+    if (quoteMinus) quoteMinus.disabled = quoteQuantity <= 1;
+    if (quotePlus) quotePlus.disabled = quoteQuantity >= item.max;
   };
 
   const selectedQuantity = (itemKey) => {
     if (!selectedItems.has(itemKey)) return 0;
-    return clampQuantity(itemKey);
+    return clampInput(inventory[itemKey].quoteInput, inventory[itemKey].max);
+  };
+
+  const updateEmptyState = () => {
+    emptyState.hidden = selectedItems.size > 0;
   };
 
   const updateSummary = () => {
@@ -83,19 +100,36 @@
     messageEl.classList.add('availability-message--ready');
   };
 
-  const addItemToQuote = (itemKey) => {
+  const addOrUpdateItem = (itemKey) => {
     const item = inventory[itemKey];
-    if (!item || selectedItems.has(itemKey)) return;
+    if (!item) return;
 
+    const quantity = clampInput(item.cardInput, item.max);
     selectedItems.add(itemKey);
-    item.input.value = '1';
+    item.quoteInput.value = String(quantity);
     item.row.hidden = false;
     item.row.classList.add('is-selected');
-    item.addButton.disabled = true;
     item.addButton.classList.add('is-added');
-    item.addButton.textContent = 'Added to Quote ✓';
-    emptyState.hidden = true;
+    item.addButton.textContent = item.updateLabel;
 
+    updateEmptyState();
+    updateStepButtons(itemKey);
+    updateSummary();
+  };
+
+  const removeItem = (itemKey) => {
+    const item = inventory[itemKey];
+    if (!item || !selectedItems.has(itemKey)) return;
+
+    selectedItems.delete(itemKey);
+    item.row.hidden = true;
+    item.row.classList.remove('is-selected');
+    item.cardInput.value = '1';
+    item.quoteInput.value = '1';
+    item.addButton.classList.remove('is-added');
+    item.addButton.textContent = item.addLabel;
+
+    updateEmptyState();
     updateStepButtons(itemKey);
     updateSummary();
   };
@@ -103,31 +137,61 @@
   Object.entries(inventory).forEach(([itemKey, item]) => {
     item.row.hidden = true;
     item.row.classList.remove('is-selected');
+    item.addButton.textContent = item.addLabel;
 
-    item.addButton.addEventListener('click', () => addItemToQuote(itemKey));
+    item.addButton.addEventListener('click', () => addOrUpdateItem(itemKey));
+    item.removeButton.addEventListener('click', () => removeItem(itemKey));
 
-    item.input.addEventListener('input', () => {
-      clampQuantity(itemKey);
+    item.cardInput.addEventListener('input', () => {
+      clampInput(item.cardInput, item.max);
+      updateStepButtons(itemKey);
+    });
+
+    item.cardInput.addEventListener('change', () => {
+      clampInput(item.cardInput, item.max);
+      updateStepButtons(itemKey);
+    });
+
+    item.quoteInput.addEventListener('input', () => {
+      const quantity = clampInput(item.quoteInput, item.max);
+      item.cardInput.value = String(quantity);
       updateStepButtons(itemKey);
       updateSummary();
     });
 
-    item.input.addEventListener('change', () => {
-      clampQuantity(itemKey);
+    item.quoteInput.addEventListener('change', () => {
+      const quantity = clampInput(item.quoteInput, item.max);
+      item.cardInput.value = String(quantity);
       updateStepButtons(itemKey);
       updateSummary();
+    });
+
+    updateStepButtons(itemKey);
+  });
+
+  document.querySelectorAll('[data-card-step][data-item]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const itemKey = button.dataset.item;
+      const item = inventory[itemKey];
+      if (!item) return;
+
+      const current = clampInput(item.cardInput, item.max);
+      item.cardInput.value = String(current + Number(button.dataset.cardStep || 0));
+      clampInput(item.cardInput, item.max);
+      updateStepButtons(itemKey);
     });
   });
 
-  document.querySelectorAll('[data-step][data-item]').forEach((button) => {
+  document.querySelectorAll('[data-quote-step][data-item]').forEach((button) => {
     button.addEventListener('click', () => {
       const itemKey = button.dataset.item;
       const item = inventory[itemKey];
       if (!item || !selectedItems.has(itemKey)) return;
 
-      const current = clampQuantity(itemKey);
-      item.input.value = String(current + Number(button.dataset.step || 0));
-      clampQuantity(itemKey);
+      const current = clampInput(item.quoteInput, item.max);
+      item.quoteInput.value = String(current + Number(button.dataset.quoteStep || 0));
+      const quantity = clampInput(item.quoteInput, item.max);
+      item.cardInput.value = String(quantity);
       updateStepButtons(itemKey);
       updateSummary();
     });
@@ -157,6 +221,10 @@
 
     const data = new FormData(form);
     const subtotal = chairs * inventory.chairs.price + tables * inventory.tables.price;
+    const itemLines = [];
+    if (chairs > 0) itemLines.push(`White resin folding chairs: ${chairs} at $3.50 each`);
+    if (tables > 0) itemLines.push(`60-inch round tables: ${tables} at $16 each`);
+
     const lines = [
       'Regal Rentals Quote Request',
       '',
@@ -168,8 +236,7 @@
       `Service type: ${data.get('serviceType') || ''}`,
       `Event city: ${data.get('eventCity') || ''}`,
       '',
-      `White resin folding chairs: ${chairs} at $3.50 each`,
-      `60-inch round tables: ${tables} at $16 each`,
+      ...itemLines,
       `Estimated rental subtotal: $${subtotal.toFixed(2)}`,
       '',
       'Event notes:',
@@ -183,6 +250,6 @@
     window.location.href = `mailto:bookings@regal.rentals?subject=${subject}&body=${body}`;
   });
 
-  emptyState.hidden = false;
+  updateEmptyState();
   updateSummary();
 })();
