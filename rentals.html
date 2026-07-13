@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Browse Rentals | Regal Rentals</title>
   <meta name="description" content="Browse Regal Rentals inventory, select an event date and time, and request a quote for white resin chairs and 60-inch round tables." />
+  <meta name="robots" content="noindex, nofollow" />
   <meta name="theme-color" content="#26063f" />
   <meta name="color-scheme" content="light only" />
   <meta name="supported-color-schemes" content="light" />
@@ -68,7 +69,7 @@
         <p class="eyebrow">Regal Rentals inventory</p>
         <h1 id="inventory-title">Plan Your Event</h1>
         <p>Select your event date, time, and quantities to build a quote request. Confirmed availability will be verified before payment.</p>
-        <a class="btn btn--primary" href="#quote-builder">Check Quantities <span aria-hidden="true">↓</span></a>
+        <a class="btn btn--primary" href="#inventory-list-title">Browse Inventory <span aria-hidden="true">↓</span></a>
       </div>
     </section>
 
@@ -79,7 +80,7 @@
           <h2 id="inventory-list-title">Available Inventory</h2>
           <span class="heading-line"></span>
         </div>
-        <p class="section-intro reveal">Clean, matching equipment for local parties, weddings, and special events. Delivery is quoted separately.</p>
+        <p class="section-intro reveal">Choose a quantity on an item, then add it to your quote. Delivery is quoted separately.</p>
 
         <div class="inventory-grid">
           <article class="inventory-card reveal">
@@ -100,7 +101,14 @@
                 <li>Indoor or outdoor event use</li>
                 <li>Delivery quoted separately</li>
               </ul>
-              <a class="btn btn--secondary btn--full" href="#chair-quantity">Add Chairs to Quote</a>
+              <div class="card-quote-control">
+                <div class="quantity-control quantity-control--card" aria-label="Chair quantity selector">
+                  <button type="button" data-step="-1" data-target="chair-card-quantity" aria-label="Remove one chair">−</button>
+                  <input id="chair-card-quantity" type="number" min="1" max="60" value="1" inputmode="numeric" aria-label="Chair quantity to add" />
+                  <button type="button" data-step="1" data-target="chair-card-quantity" aria-label="Add one chair">+</button>
+                </div>
+                <button class="btn btn--secondary add-to-quote-btn" type="button" data-add-item="chairs">Add to Quote</button>
+              </div>
             </div>
           </article>
 
@@ -122,7 +130,14 @@
                 <li>Approximately 8 guests per table</li>
                 <li>Linens not included</li>
               </ul>
-              <a class="btn btn--secondary btn--full" href="#table-quantity">Add Tables to Quote</a>
+              <div class="card-quote-control">
+                <div class="quantity-control quantity-control--card" aria-label="Table quantity selector">
+                  <button type="button" data-step="-1" data-target="table-card-quantity" aria-label="Remove one table">−</button>
+                  <input id="table-card-quantity" type="number" min="1" max="8" value="1" inputmode="numeric" aria-label="Table quantity to add" />
+                  <button type="button" data-step="1" data-target="table-card-quantity" aria-label="Add one table">+</button>
+                </div>
+                <button class="btn btn--secondary add-to-quote-btn" type="button" data-add-item="tables">Add to Quote</button>
+              </div>
             </div>
           </article>
         </div>
@@ -170,28 +185,30 @@
             </div>
           </fieldset>
 
-          <fieldset>
+          <fieldset id="selected-rentals-fieldset">
             <legend>Rental quantities</legend>
-            <div class="quantity-row">
+            <p class="selected-rentals-empty" id="selected-rentals-empty">Choose a quantity above, then click <strong>Add to Quote</strong>.</p>
+
+            <div class="quantity-row" data-quote-row="chairs" hidden>
               <div>
                 <strong>White resin folding chairs</strong>
                 <span>$3.50 each · 60 total owned</span>
               </div>
               <div class="quantity-control">
                 <button type="button" data-step="-1" data-target="chair-quantity" aria-label="Remove one chair">−</button>
-                <input id="chair-quantity" name="chairQuantity" type="number" min="0" max="60" value="0" inputmode="numeric" aria-label="Chair quantity" />
+                <input id="chair-quantity" name="chairQuantity" type="number" min="1" max="60" value="1" inputmode="numeric" aria-label="Chair quantity" />
                 <button type="button" data-step="1" data-target="chair-quantity" aria-label="Add one chair">+</button>
               </div>
             </div>
 
-            <div class="quantity-row">
+            <div class="quantity-row" data-quote-row="tables" hidden>
               <div>
                 <strong>60-inch round tables</strong>
                 <span>$16 each · 8 total owned</span>
               </div>
               <div class="quantity-control">
                 <button type="button" data-step="-1" data-target="table-quantity" aria-label="Remove one table">−</button>
-                <input id="table-quantity" name="tableQuantity" type="number" min="0" max="8" value="0" inputmode="numeric" aria-label="Table quantity" />
+                <input id="table-quantity" name="tableQuantity" type="number" min="1" max="8" value="1" inputmode="numeric" aria-label="Table quantity" />
                 <button type="button" data-step="1" data-target="table-quantity" aria-label="Add one table">+</button>
               </div>
             </div>
@@ -202,7 +219,7 @@
               <span>Estimated rental subtotal</span>
               <strong id="quote-subtotal">$0.00</strong>
             </div>
-            <p id="availability-message">Select at least one rental item to continue.</p>
+            <p id="availability-message">Add at least one rental item to begin your quote.</p>
             <small>Delivery, setup, taxes, deposits, and optional services are not included in this estimate.</small>
           </div>
 
