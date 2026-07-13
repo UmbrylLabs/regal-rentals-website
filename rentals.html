@@ -1,0 +1,271 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Browse Rentals | Regal Rentals</title>
+  <meta name="description" content="Browse Regal Rentals inventory, select an event date and time, and request a quote for white resin chairs and 60-inch round tables." />
+  <meta name="theme-color" content="#26063f" />
+  <meta name="color-scheme" content="light only" />
+  <meta name="supported-color-schemes" content="light" />
+  <meta name="darkreader-lock" />
+  <link rel="icon" href="assets/favicon.png" type="image/png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="rentals.css" />
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <div class="topbar">
+    <div class="container topbar__inner">
+      <a class="topbar__item" href="tel:19162870848" aria-label="Call Regal Rentals">
+        <span aria-hidden="true">☎</span>
+        <span>(916) 287-0848</span>
+      </a>
+      <div class="topbar__item topbar__service">
+        <span aria-hidden="true">●</span>
+        <span>Serving El Dorado Hills, Folsom, Cameron Park & surrounding areas</span>
+      </div>
+      <a class="topbar__item" href="mailto:bookings@regal.rentals" aria-label="Email Regal Rentals">
+        <span aria-hidden="true">✉</span>
+        <span>bookings@regal.rentals</span>
+      </a>
+    </div>
+  </div>
+
+  <header class="site-header" id="top">
+    <div class="container header__inner">
+      <a class="brand" href="/" aria-label="Regal Rentals home">
+        <img src="assets/regal-shield.png" alt="Regal Rentals shield logo" class="brand__shield" />
+        <span class="brand__wordmark"><span>Regal</span><span>Rentals</span></span>
+      </a>
+
+      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="site-nav">
+        <span class="nav-toggle__bar"></span>
+        <span class="nav-toggle__bar"></span>
+        <span class="nav-toggle__bar"></span>
+        <span class="sr-only">Menu</span>
+      </button>
+
+      <nav class="site-nav" id="site-nav" aria-label="Main navigation">
+        <a href="/">Home</a>
+        <a href="rentals.html" class="active">Browse Rentals</a>
+        <a href="/#launch">Launch Info</a>
+        <a href="#quote-builder">Request a Quote</a>
+      </nav>
+
+      <a class="header-cta" href="#quote-builder"><span aria-hidden="true">♛</span> Request a Quote</a>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="inventory-hero section-cream" aria-labelledby="inventory-title">
+      <img class="inventory-hero__watermark" src="assets/regal-shield.png" alt="" aria-hidden="true" />
+      <div class="container inventory-hero__inner reveal">
+        <p class="eyebrow">Regal Rentals inventory</p>
+        <h1 id="inventory-title">Plan Your Event</h1>
+        <p>Select your event date, time, and quantities to build a quote request. Confirmed availability will be verified before payment.</p>
+        <a class="btn btn--primary" href="#quote-builder">Check Quantities <span aria-hidden="true">↓</span></a>
+      </div>
+    </section>
+
+    <section class="inventory-list section-light" aria-labelledby="inventory-list-title">
+      <div class="container">
+        <div class="section-heading reveal">
+          <span class="heading-line"></span>
+          <h2 id="inventory-list-title">Available Inventory</h2>
+          <span class="heading-line"></span>
+        </div>
+        <p class="section-intro reveal">Clean, matching equipment for local parties, weddings, and special events. Delivery is quoted separately.</p>
+
+        <div class="inventory-grid">
+          <article class="inventory-card reveal">
+            <div class="inventory-card__visual inventory-card__visual--chair" aria-hidden="true">
+              <div class="chair-icon"><span></span><i></i></div>
+              <span class="inventory-card__badge">60 owned</span>
+            </div>
+            <div class="inventory-card__body">
+              <p class="inventory-card__kicker">Seating</p>
+              <h3>White Resin Folding Chair</h3>
+              <p class="inventory-card__description">A clean, wedding-friendly folding chair with a white resin frame and padded seat.</p>
+              <div class="inventory-card__meta">
+                <strong>$3.50</strong>
+                <span>per chair</span>
+              </div>
+              <ul class="inventory-card__features">
+                <li>60 chairs in starting inventory</li>
+                <li>Indoor or outdoor event use</li>
+                <li>Delivery quoted separately</li>
+              </ul>
+              <a class="btn btn--secondary btn--full" href="#chair-quantity">Add Chairs to Quote</a>
+            </div>
+          </article>
+
+          <article class="inventory-card reveal">
+            <div class="inventory-card__visual inventory-card__visual--table" aria-hidden="true">
+              <div class="table-icon"><span></span><i></i><b></b></div>
+              <span class="inventory-card__badge">8 owned</span>
+            </div>
+            <div class="inventory-card__body">
+              <p class="inventory-card__kicker">Tables</p>
+              <h3>60-Inch Round Table</h3>
+              <p class="inventory-card__description">A banquet-size round table that typically seats eight guests comfortably.</p>
+              <div class="inventory-card__meta">
+                <strong>$16</strong>
+                <span>per table</span>
+              </div>
+              <ul class="inventory-card__features">
+                <li>8 tables in starting inventory</li>
+                <li>Approximately 8 guests per table</li>
+                <li>Linens not included</li>
+              </ul>
+              <a class="btn btn--secondary btn--full" href="#table-quantity">Add Tables to Quote</a>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="availability-section" id="quote-builder" aria-labelledby="availability-title">
+      <div class="container availability-layout">
+        <div class="availability-copy reveal">
+          <p class="eyebrow">Quote builder</p>
+          <h2 id="availability-title">Choose Your Event Window</h2>
+          <p>The selected date and time will eventually connect to Regal Rentals’ secure reservation system. For launch, this page builds a detailed request for manual confirmation.</p>
+          <div class="availability-notice">
+            <strong>Important:</strong> A quote request does not reserve inventory. Equipment is reserved only after Regal Rentals confirms the quote and receives the required payment.
+          </div>
+        </div>
+
+        <form class="availability-form reveal" id="availability-form">
+          <fieldset>
+            <legend>Event details</legend>
+            <div class="availability-form__grid">
+              <label>
+                Event date
+                <input id="event-date" name="eventDate" type="date" required />
+              </label>
+              <label>
+                Service type
+                <select id="service-type" name="serviceType" required>
+                  <option value="delivery">Regal Rentals delivery</option>
+                  <option value="pickup">Customer pickup</option>
+                </select>
+              </label>
+              <label>
+                Event start
+                <input id="event-start" name="eventStart" type="time" required value="14:00" />
+              </label>
+              <label>
+                Event end
+                <input id="event-end" name="eventEnd" type="time" required value="20:00" />
+              </label>
+              <label class="availability-form__full">
+                Event city
+                <input id="event-city" name="eventCity" type="text" autocomplete="address-level2" placeholder="El Dorado Hills, Folsom, Cameron Park, etc." required />
+              </label>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend>Rental quantities</legend>
+            <div class="quantity-row">
+              <div>
+                <strong>White resin folding chairs</strong>
+                <span>$3.50 each · 60 total owned</span>
+              </div>
+              <div class="quantity-control">
+                <button type="button" data-step="-1" data-target="chair-quantity" aria-label="Remove one chair">−</button>
+                <input id="chair-quantity" name="chairQuantity" type="number" min="0" max="60" value="0" inputmode="numeric" aria-label="Chair quantity" />
+                <button type="button" data-step="1" data-target="chair-quantity" aria-label="Add one chair">+</button>
+              </div>
+            </div>
+
+            <div class="quantity-row">
+              <div>
+                <strong>60-inch round tables</strong>
+                <span>$16 each · 8 total owned</span>
+              </div>
+              <div class="quantity-control">
+                <button type="button" data-step="-1" data-target="table-quantity" aria-label="Remove one table">−</button>
+                <input id="table-quantity" name="tableQuantity" type="number" min="0" max="8" value="0" inputmode="numeric" aria-label="Table quantity" />
+                <button type="button" data-step="1" data-target="table-quantity" aria-label="Add one table">+</button>
+              </div>
+            </div>
+          </fieldset>
+
+          <div class="quote-summary" aria-live="polite">
+            <div>
+              <span>Estimated rental subtotal</span>
+              <strong id="quote-subtotal">$0.00</strong>
+            </div>
+            <p id="availability-message">Select at least one rental item to continue.</p>
+            <small>Delivery, setup, taxes, deposits, and optional services are not included in this estimate.</small>
+          </div>
+
+          <fieldset>
+            <legend>Contact information</legend>
+            <div class="availability-form__grid">
+              <label>
+                Name
+                <input name="name" type="text" autocomplete="name" required />
+              </label>
+              <label>
+                Phone
+                <input name="phone" type="tel" autocomplete="tel" required />
+              </label>
+              <label class="availability-form__full">
+                Email
+                <input name="email" type="email" autocomplete="email" required />
+              </label>
+              <label class="availability-form__full">
+                Event notes
+                <textarea name="notes" placeholder="Venue, guest count, delivery notes, setup needs, or anything else we should know."></textarea>
+              </label>
+            </div>
+          </fieldset>
+
+          <button class="btn btn--primary btn--full" type="submit">Request This Quote <span aria-hidden="true">→</span></button>
+          <p class="form-note">This currently opens your email app with the event and inventory details filled in.</p>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer__grid">
+      <div>
+        <a class="footer-brand" href="/" aria-label="Regal Rentals home">
+          <img src="assets/regal-shield.png" alt="Regal Rentals shield" />
+          <span>Regal<br />Rentals</span>
+        </a>
+        <p>Premium local event rentals for unforgettable celebrations.</p>
+      </div>
+      <div>
+        <h3>Quick Links</h3>
+        <a href="/">Home</a>
+        <a href="rentals.html">Browse Rentals</a>
+        <a href="#quote-builder">Request a Quote</a>
+      </div>
+      <div>
+        <h3>Contact Us</h3>
+        <a href="tel:19162870848">☎ (916) 287-0848</a>
+        <a href="mailto:bookings@regal.rentals">✉ bookings@regal.rentals</a>
+        <p>Serving El Dorado Hills, Folsom, Cameron Park & surrounding areas</p>
+      </div>
+    </div>
+    <div class="footer__bottom">
+      <div class="container">
+        <span>© <span id="year"></span> Regal Rentals. All rights reserved.</span>
+        <span>Inventory and pricing subject to confirmation.</span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+  <script src="rentals.js"></script>
+</body>
+</html>
