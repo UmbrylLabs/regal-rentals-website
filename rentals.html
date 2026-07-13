@@ -68,7 +68,7 @@
       <div class="container inventory-hero__inner reveal">
         <p class="eyebrow">Regal Rentals inventory</p>
         <h1 id="inventory-title">Plan Your Event</h1>
-        <p>Select the items you need, then choose quantities in the quote builder. Confirmed availability will be verified before payment.</p>
+        <p>Select the quantity you need on each item, then add it to your quote. Confirmed availability will be verified before payment.</p>
         <a class="btn btn--primary" href="#inventory-list-title">Browse Inventory <span aria-hidden="true">↓</span></a>
       </div>
     </section>
@@ -80,7 +80,7 @@
           <h2 id="inventory-list-title">Available Inventory</h2>
           <span class="heading-line"></span>
         </div>
-        <p class="section-intro reveal">Click <strong>Add to Quote</strong> on an item. Its quantity controls will then appear below. Delivery is quoted separately.</p>
+        <p class="section-intro reveal">Choose a quantity, then click <strong>Add to Quote</strong>. You can adjust or remove the item in the quote builder below.</p>
 
         <div class="inventory-grid">
           <article class="inventory-card reveal">
@@ -101,7 +101,14 @@
                 <li>Indoor or outdoor event use</li>
                 <li>Delivery quoted separately</li>
               </ul>
-              <button class="btn btn--secondary btn--full add-to-quote-btn" type="button" data-add-item="chairs">Add Chairs to Quote</button>
+              <div class="card-quote-control">
+                <div class="quantity-control quantity-control--card" aria-label="Chair quantity selector">
+                  <button type="button" data-card-step="-1" data-item="chairs" aria-label="Remove one chair">−</button>
+                  <input id="chair-card-quantity" type="number" min="1" max="60" value="1" inputmode="numeric" aria-label="Chair quantity to add" />
+                  <button type="button" data-card-step="1" data-item="chairs" aria-label="Add one chair">+</button>
+                </div>
+                <button class="btn btn--secondary add-to-quote-btn" type="button" data-add-item="chairs">Add Chairs to Quote</button>
+              </div>
             </div>
           </article>
 
@@ -123,7 +130,14 @@
                 <li>Approximately 8 guests per table</li>
                 <li>Linens not included</li>
               </ul>
-              <button class="btn btn--secondary btn--full add-to-quote-btn" type="button" data-add-item="tables">Add Tables to Quote</button>
+              <div class="card-quote-control">
+                <div class="quantity-control quantity-control--card" aria-label="Table quantity selector">
+                  <button type="button" data-card-step="-1" data-item="tables" aria-label="Remove one table">−</button>
+                  <input id="table-card-quantity" type="number" min="1" max="8" value="1" inputmode="numeric" aria-label="Table quantity to add" />
+                  <button type="button" data-card-step="1" data-item="tables" aria-label="Add one table">+</button>
+                </div>
+                <button class="btn btn--secondary add-to-quote-btn" type="button" data-add-item="tables">Add Tables to Quote</button>
+              </div>
             </div>
           </article>
         </div>
@@ -180,10 +194,13 @@
                 <strong>White resin folding chairs</strong>
                 <span>$3.50 each · Maximum 60</span>
               </div>
-              <div class="quantity-control">
-                <button type="button" data-step="-1" data-item="chairs" aria-label="Remove one chair">−</button>
-                <input id="chair-quantity" name="chairQuantity" type="number" min="1" max="60" value="1" inputmode="numeric" aria-label="Chair quantity" />
-                <button type="button" data-step="1" data-item="chairs" aria-label="Add one chair">+</button>
+              <div class="card-quote-control">
+                <div class="quantity-control">
+                  <button type="button" data-quote-step="-1" data-item="chairs" aria-label="Remove one chair">−</button>
+                  <input id="chair-quantity" name="chairQuantity" type="number" min="1" max="60" value="1" inputmode="numeric" aria-label="Chair quantity" />
+                  <button type="button" data-quote-step="1" data-item="chairs" aria-label="Add one chair">+</button>
+                </div>
+                <button class="btn btn--secondary remove-from-quote-btn" type="button" data-remove-item="chairs">Remove from Quote</button>
               </div>
             </div>
 
@@ -192,10 +209,13 @@
                 <strong>60-inch round tables</strong>
                 <span>$16 each · Maximum 8</span>
               </div>
-              <div class="quantity-control">
-                <button type="button" data-step="-1" data-item="tables" aria-label="Remove one table">−</button>
-                <input id="table-quantity" name="tableQuantity" type="number" min="1" max="8" value="1" inputmode="numeric" aria-label="Table quantity" />
-                <button type="button" data-step="1" data-item="tables" aria-label="Add one table">+</button>
+              <div class="card-quote-control">
+                <div class="quantity-control">
+                  <button type="button" data-quote-step="-1" data-item="tables" aria-label="Remove one table">−</button>
+                  <input id="table-quantity" name="tableQuantity" type="number" min="1" max="8" value="1" inputmode="numeric" aria-label="Table quantity" />
+                  <button type="button" data-quote-step="1" data-item="tables" aria-label="Add one table">+</button>
+                </div>
+                <button class="btn btn--secondary remove-from-quote-btn" type="button" data-remove-item="tables">Remove from Quote</button>
               </div>
             </div>
           </fieldset>
@@ -269,6 +289,6 @@
   </footer>
 
   <script src="script.js"></script>
-  <script src="rentals.js?v=20260712-2"></script>
+  <script src="rentals.js?v=20260712-3"></script>
 </body>
 </html>
