@@ -11,49 +11,51 @@
     chairs: {
       max: 60,
       price: 3.5,
-      cardInput: document.getElementById('chair-card-quantity'),
-      quoteInput: document.getElementById('chair-quantity'),
+      input: document.getElementById('chair-quantity'),
       row: document.querySelector('[data-quote-row="chairs"]'),
-      button: document.querySelector('[data-add-item="chairs"]'),
-      label: 'chair'
+      addButton: document.querySelector('[data-add-item="chairs"]'),
+      singular: 'chair',
+      plural: 'chairs'
     },
     tables: {
       max: 8,
       price: 16,
-      cardInput: document.getElementById('table-card-quantity'),
-      quoteInput: document.getElementById('table-quantity'),
+      input: document.getElementById('table-quantity'),
       row: document.querySelector('[data-quote-row="tables"]'),
-      button: document.querySelector('[data-add-item="tables"]'),
-      label: 'table'
+      addButton: document.querySelector('[data-add-item="tables"]'),
+      singular: 'table',
+      plural: 'tables'
     }
   };
 
   const selectedItems = new Set();
 
-  const clamp = (input) => {
-    const min = Number(input.min || 0);
-    const max = Number(input.max || 9999);
-    const parsed = Number.parseInt(input.value || String(min), 10);
-    const value = Math.min(max, Math.max(min, Number.isFinite(parsed) ? parsed : min));
-    input.value = value;
-    return value;
+  const clampQuantity = (itemKey) => {
+    const item = inventory[itemKey];
+    const parsed = Number.parseInt(item.input.value || '1', 10);
+    const quantity = Math.min(item.max, Math.max(1, Number.isFinite(parsed) ? parsed : 1));
+    item.input.value = String(quantity);
+    return quantity;
   };
 
-  const itemQuantity = (itemKey) => {
+  const updateStepButtons = (itemKey) => {
+    const item = inventory[itemKey];
+    const quantity = clampQuantity(itemKey);
+    const minusButton = item.row.querySelector('[data-step="-1"]');
+    const plusButton = item.row.querySelector('[data-step="1"]');
+
+    if (minusButton) minusButton.disabled = quantity <= 1;
+    if (plusButton) plusButton.disabled = quantity >= item.max;
+  };
+
+  const selectedQuantity = (itemKey) => {
     if (!selectedItems.has(itemKey)) return 0;
-    return clamp(inventory[itemKey].quoteInput);
-  };
-
-  const updateSelectedRows = () => {
-    Object.entries(inventory).forEach(([itemKey, item]) => {
-      item.row.hidden = !selectedItems.has(itemKey);
-    });
-    emptyState.hidden = selectedItems.size > 0;
+    return clampQuantity(itemKey);
   };
 
   const updateSummary = () => {
-    const chairs = itemQuantity('chairs');
-    const tables = itemQuantity('tables');
+    const chairs = selectedQuantity('chairs');
+    const tables = selectedQuantity('tables');
     const subtotal = chairs * inventory.chairs.price + tables * inventory.tables.price;
 
     subtotalEl.textContent = subtotal.toLocaleString('en-US', {
@@ -62,6 +64,7 @@
     });
 
     messageEl.className = '';
+
     if (selectedItems.size === 0) {
       messageEl.textContent = 'Add at least one rental item to begin your quote.';
       return;
@@ -73,57 +76,60 @@
     }
 
     const requested = [];
-    if (chairs > 0) requested.push(`${chairs} chair${chairs === 1 ? '' : 's'}`);
-    if (tables > 0) requested.push(`${tables} table${tables === 1 ? '' : 's'}`);
+    if (chairs > 0) requested.push(`${chairs} ${chairs === 1 ? inventory.chairs.singular : inventory.chairs.plural}`);
+    if (tables > 0) requested.push(`${tables} ${tables === 1 ? inventory.tables.singular : inventory.tables.plural}`);
 
     messageEl.textContent = `Requested: ${requested.join(' and ')}. Final availability will be confirmed by Regal Rentals.`;
     messageEl.classList.add('availability-message--ready');
   };
 
-  const syncFromInput = (input) => {
-    const value = clamp(input);
+  const addItemToQuote = (itemKey) => {
+    const item = inventory[itemKey];
+    if (!item || selectedItems.has(itemKey)) return;
 
-    Object.entries(inventory).forEach(([itemKey, item]) => {
-      if (input === item.cardInput && selectedItems.has(itemKey)) {
-        item.quoteInput.value = value;
-      }
-      if (input === item.quoteInput) {
-        item.cardInput.value = value;
-      }
-    });
+    selectedItems.add(itemKey);
+    item.input.value = '1';
+    item.row.hidden = false;
+    item.row.classList.add('is-selected');
+    item.addButton.disabled = true;
+    item.addButton.classList.add('is-added');
+    item.addButton.textContent = 'Added to Quote ✓';
+    emptyState.hidden = true;
 
+    updateStepButtons(itemKey);
     updateSummary();
   };
 
-  document.querySelectorAll('[data-step]').forEach((button) => {
-    button.addEventListener('click', () => {
-      const target = document.getElementById(button.dataset.target);
-      if (!target) return;
-      target.value = Number(target.value || target.min || 0) + Number(button.dataset.step || 0);
-      syncFromInput(target);
+  Object.entries(inventory).forEach(([itemKey, item]) => {
+    item.row.hidden = true;
+    item.row.classList.remove('is-selected');
+
+    item.addButton.addEventListener('click', () => addItemToQuote(itemKey));
+
+    item.input.addEventListener('input', () => {
+      clampQuantity(itemKey);
+      updateStepButtons(itemKey);
+      updateSummary();
+    });
+
+    item.input.addEventListener('change', () => {
+      clampQuantity(itemKey);
+      updateStepButtons(itemKey);
+      updateSummary();
     });
   });
 
-  Object.values(inventory).forEach((item) => {
-    [item.cardInput, item.quoteInput].forEach((input) => {
-      input.addEventListener('input', () => syncFromInput(input));
-      input.addEventListener('change', () => syncFromInput(input));
-    });
+  document.querySelectorAll('[data-step][data-item]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const itemKey = button.dataset.item;
+      const item = inventory[itemKey];
+      if (!item || !selectedItems.has(itemKey)) return;
 
-    item.button.addEventListener('click', () => {
-      const itemKey = item.button.dataset.addItem;
-      const quantity = clamp(item.cardInput);
-
-      selectedItems.add(itemKey);
-      item.quoteInput.value = quantity;
-      item.button.classList.add('is-added');
-      item.button.textContent = 'Added ✓';
-      updateSelectedRows();
+      const current = clampQuantity(itemKey);
+      item.input.value = String(current + Number(button.dataset.step || 0));
+      clampQuantity(itemKey);
+      updateStepButtons(itemKey);
       updateSummary();
-
-      window.setTimeout(() => {
-        if (selectedItems.has(itemKey)) item.button.textContent = 'Update Quote';
-      }, 900);
     });
   });
 
@@ -138,8 +144,8 @@
     event.preventDefault();
     updateSummary();
 
-    const chairs = itemQuantity('chairs');
-    const tables = itemQuantity('tables');
+    const chairs = selectedQuantity('chairs');
+    const tables = selectedQuantity('tables');
 
     if (selectedItems.size === 0 || (chairs === 0 && tables === 0)) {
       messageEl.textContent = 'Add at least one chair or table before requesting a quote.';
@@ -177,6 +183,6 @@
     window.location.href = `mailto:bookings@regal.rentals?subject=${subject}&body=${body}`;
   });
 
-  updateSelectedRows();
+  emptyState.hidden = false;
   updateSummary();
 })();
