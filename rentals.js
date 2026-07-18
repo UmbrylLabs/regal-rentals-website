@@ -1,4 +1,26 @@
 (() => {
+  const availableFilter = document.getElementById('available-now-filter');
+  const categoryCards = Array.from(document.querySelectorAll('[data-category-availability]'));
+  const categoryEmpty = document.getElementById('category-empty');
+
+  const updateCategoryFilter = () => {
+    if (!availableFilter) return;
+
+    let visibleCount = 0;
+    categoryCards.forEach((card) => {
+      const shouldHide = availableFilter.checked && card.dataset.categoryAvailability !== 'available';
+      card.hidden = shouldHide;
+      if (!shouldHide) visibleCount += 1;
+    });
+
+    if (categoryEmpty) categoryEmpty.hidden = visibleCount > 0;
+  };
+
+  if (availableFilter) {
+    availableFilter.addEventListener('change', updateCategoryFilter);
+    updateCategoryFilter();
+  }
+
   const form = document.getElementById('availability-form');
   if (!form) return;
 
@@ -8,31 +30,44 @@
   const emptyState = document.getElementById('selected-rentals-empty');
 
   const inventory = {
-    chairs: {
-      max: 60,
-      price: 3.5,
-      cardInput: document.getElementById('chair-card-quantity'),
-      quoteInput: document.getElementById('chair-quantity'),
-      row: document.querySelector('[data-quote-row="chairs"]'),
-      addButton: document.querySelector('[data-add-item="chairs"]'),
-      removeButton: document.querySelector('[data-remove-item="chairs"]'),
-      addLabel: 'Add Chairs to Quote',
-      updateLabel: 'Update Chair Quantity',
-      singular: 'chair',
-      plural: 'chairs'
-    },
-    tables: {
-      max: 8,
+    roundTables: {
+      max: 3,
       price: 16,
-      cardInput: document.getElementById('table-card-quantity'),
-      quoteInput: document.getElementById('table-quantity'),
-      row: document.querySelector('[data-quote-row="tables"]'),
-      addButton: document.querySelector('[data-add-item="tables"]'),
-      removeButton: document.querySelector('[data-remove-item="tables"]'),
-      addLabel: 'Add Tables to Quote',
-      updateLabel: 'Update Table Quantity',
-      singular: 'table',
-      plural: 'tables'
+      cardInput: document.getElementById('round-table-card-quantity'),
+      quoteInput: document.getElementById('round-table-quantity'),
+      row: document.querySelector('[data-quote-row="roundTables"]'),
+      addButton: document.querySelector('[data-add-item="roundTables"]'),
+      removeButton: document.querySelector('[data-remove-item="roundTables"]'),
+      addLabel: 'Add to Quote',
+      updateLabel: 'Update Quantity',
+      singular: '60-inch round table',
+      plural: '60-inch round tables'
+    },
+    rectangleTables: {
+      max: 2,
+      price: 14,
+      cardInput: document.getElementById('rectangle-table-card-quantity'),
+      quoteInput: document.getElementById('rectangle-table-quantity'),
+      row: document.querySelector('[data-quote-row="rectangleTables"]'),
+      addButton: document.querySelector('[data-add-item="rectangleTables"]'),
+      removeButton: document.querySelector('[data-remove-item="rectangleTables"]'),
+      addLabel: 'Add to Quote',
+      updateLabel: 'Update Quantity',
+      singular: '6-foot rectangular table',
+      plural: '6-foot rectangular tables'
+    },
+    canopy: {
+      max: 1,
+      price: null,
+      cardInput: document.getElementById('canopy-card-quantity'),
+      quoteInput: document.getElementById('canopy-quantity'),
+      row: document.querySelector('[data-quote-row="canopy"]'),
+      addButton: document.querySelector('[data-add-item="canopy"]'),
+      removeButton: document.querySelector('[data-remove-item="canopy"]'),
+      addLabel: 'Add to Quote',
+      updateLabel: 'Canopy Added',
+      singular: '10×10 pop-up canopy',
+      plural: '10×10 pop-up canopies'
     }
   };
 
@@ -70,16 +105,39 @@
     emptyState.hidden = selectedItems.size > 0;
   };
 
-  const updateSummary = () => {
-    const chairs = selectedQuantity('chairs');
-    const tables = selectedQuantity('tables');
-    const subtotal = chairs * inventory.chairs.price + tables * inventory.tables.price;
+  const formatRequestedItems = () => {
+    return Array.from(selectedItems).map((itemKey) => {
+      const item = inventory[itemKey];
+      const quantity = selectedQuantity(itemKey);
+      return `${quantity} ${quantity === 1 ? item.singular : item.plural}`;
+    });
+  };
 
-    subtotalEl.textContent = subtotal.toLocaleString('en-US', {
+  const calculateSubtotal = () => {
+    let subtotal = 0;
+    let hasUnpricedItem = false;
+
+    selectedItems.forEach((itemKey) => {
+      const item = inventory[itemKey];
+      const quantity = selectedQuantity(itemKey);
+      if (item.price === null) {
+        hasUnpricedItem = true;
+      } else {
+        subtotal += quantity * item.price;
+      }
+    });
+
+    return { subtotal, hasUnpricedItem };
+  };
+
+  const updateSummary = () => {
+    const { subtotal, hasUnpricedItem } = calculateSubtotal();
+    const formattedSubtotal = subtotal.toLocaleString('en-US', {
       style: 'currency',
       currency: 'USD'
     });
 
+    subtotalEl.textContent = hasUnpricedItem ? `${formattedSubtotal}*` : formattedSubtotal;
     messageEl.className = '';
 
     if (selectedItems.size === 0) {
@@ -88,15 +146,15 @@
     }
 
     if (!dateInput.value) {
-      messageEl.textContent = 'Choose an event date to prepare your quote request.';
+      messageEl.textContent = hasUnpricedItem
+        ? 'Choose an event date. Canopy pricing will be confirmed separately.'
+        : 'Choose an event date to prepare your quote request.';
       return;
     }
 
-    const requested = [];
-    if (chairs > 0) requested.push(`${chairs} ${chairs === 1 ? inventory.chairs.singular : inventory.chairs.plural}`);
-    if (tables > 0) requested.push(`${tables} ${tables === 1 ? inventory.tables.singular : inventory.tables.plural}`);
-
-    messageEl.textContent = `Requested: ${requested.join(' and ')}. Final availability will be confirmed by Regal Rentals.`;
+    const requested = formatRequestedItems();
+    const pricingNote = hasUnpricedItem ? ' Canopy pricing will be confirmed separately.' : '';
+    messageEl.textContent = `Requested: ${requested.join(', ')}. Final availability will be confirmed by Regal Rentals.${pricingNote}`;
     messageEl.classList.add('availability-message--ready');
   };
 
@@ -208,11 +266,8 @@
     event.preventDefault();
     updateSummary();
 
-    const chairs = selectedQuantity('chairs');
-    const tables = selectedQuantity('tables');
-
-    if (selectedItems.size === 0 || (chairs === 0 && tables === 0)) {
-      messageEl.textContent = 'Add at least one chair or table before requesting a quote.';
+    if (selectedItems.size === 0) {
+      messageEl.textContent = 'Add at least one rental item before requesting a quote.';
       messageEl.className = 'availability-message--error';
       return;
     }
@@ -220,10 +275,19 @@
     if (!form.reportValidity()) return;
 
     const data = new FormData(form);
-    const subtotal = chairs * inventory.chairs.price + tables * inventory.tables.price;
-    const itemLines = [];
-    if (chairs > 0) itemLines.push(`White resin folding chairs: ${chairs} at $3.50 each`);
-    if (tables > 0) itemLines.push(`60-inch round tables: ${tables} at $16 each`);
+    const { subtotal, hasUnpricedItem } = calculateSubtotal();
+    const itemLines = Array.from(selectedItems).map((itemKey) => {
+      const item = inventory[itemKey];
+      const quantity = selectedQuantity(itemKey);
+      const name = quantity === 1 ? item.singular : item.plural;
+      return item.price === null
+        ? `${name}: ${quantity} — pricing to be confirmed`
+        : `${name}: ${quantity} at $${item.price.toFixed(2)} each`;
+    });
+
+    const subtotalLine = hasUnpricedItem
+      ? `Estimated known-price subtotal: $${subtotal.toFixed(2)} (canopy pricing not included)`
+      : `Estimated rental subtotal: $${subtotal.toFixed(2)}`;
 
     const lines = [
       'Regal Rentals Quote Request',
@@ -237,7 +301,7 @@
       `Event city: ${data.get('eventCity') || ''}`,
       '',
       ...itemLines,
-      `Estimated rental subtotal: $${subtotal.toFixed(2)}`,
+      subtotalLine,
       '',
       'Event notes:',
       `${data.get('notes') || ''}`,
