@@ -1,0 +1,199 @@
+.inventory-hero__actions {
+  display: flex;
+  justify-content: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+#availability-check,
+#rental-categories,
+#available-inventory,
+#quote-builder {
+  scroll-margin-top: 112px;
+}
+
+.date-check-section {
+  padding: 54px 0;
+  background: linear-gradient(135deg, var(--purple), var(--purple-3));
+  color: #fff;
+}
+
+.date-check-card {
+  display: grid;
+  grid-template-columns: minmax(260px, .8fr) minmax(540px, 1.2fr);
+  gap: 36px;
+  align-items: center;
+  padding: 34px;
+  border: 1px solid rgba(231, 199, 106, .35);
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, .07);
+  box-shadow: var(--shadow);
+}
+
+.date-check-card__copy h2 {
+  margin: 0;
+  color: #fff;
+  font-family: Cinzel, Georgia, serif;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  font-size: clamp(30px, 4vw, 48px);
+  line-height: 1.12;
+}
+
+.date-check-card__copy p:not(.eyebrow) {
+  margin: 18px 0 0;
+  color: #f6e7c2;
+  line-height: 1.7;
+}
+
+.date-check-form {
+  display: grid;
+  grid-template-columns: 1.2fr .8fr .8fr auto;
+  gap: 12px;
+  align-items: end;
+}
+
+.date-check-form label {
+  display: grid;
+  gap: 8px;
+  color: #fff7df;
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+}
+
+.date-check-form input {
+  min-width: 0;
+  width: 100%;
+  height: 52px;
+  border: 1px solid rgba(231, 199, 106, .55);
+  border-radius: 12px;
+  background: #fffaf0;
+  color: var(--ink);
+  padding: 11px 12px;
+}
+
+.date-check-form .btn {
+  min-height: 52px;
+  white-space: nowrap;
+  border-color: var(--gold);
+  background: var(--gold);
+  color: var(--purple);
+}
+
+.date-check-form .btn:hover {
+  background: var(--gold-2);
+  border-color: var(--gold-2);
+}
+
+.date-check-message {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding-top: 4px;
+  color: #eadbb7;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.date-check-message--ready {
+  color: #d8ffd8;
+}
+
+.date-check-message--error {
+  color: #ffd4d4;
+}
+
+.mobile-action-bar {
+  display: none;
+}
+
+@media (max-width: 1050px) {
+  body {
+    padding-bottom: 74px;
+  }
+
+  .mobile-action-bar {
+    position: fixed;
+    z-index: 80;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: block;
+    padding: 10px 14px calc(10px + env(safe-area-inset-bottom));
+    background: rgba(21, 3, 32, .96);
+    border-top: 1px solid rgba(231, 199, 106, .35);
+    box-shadow: 0 -12px 30px rgba(21, 3, 32, .24);
+    backdrop-filter: blur(14px);
+  }
+
+  .mobile-action-bar a {
+    display: flex;
+    min-height: 52px;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 12px 18px;
+    background: var(--gold);
+    color: var(--purple);
+    font-size: 12px;
+    font-weight: 900;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: .09em;
+  }
+
+  .date-check-card {
+    grid-template-columns: 1fr;
+  }
+
+  .date-check-form {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .date-check-form .btn {
+    grid-column: 1 / -1;
+    width: 100%;
+  }
+}
+
+@media (max-width: 620px) {
+  #availability-check,
+  #rental-categories,
+  #available-inventory,
+  #quote-builder {
+    scroll-margin-top: 92px;
+  }
+
+  .inventory-hero__actions {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .date-check-section {
+    padding: 38px 0;
+  }
+
+  .date-check-card {
+    gap: 24px;
+    padding: 24px 20px;
+  }
+
+  .date-check-form {
+    grid-template-columns: 1fr;
+  }
+
+  .date-check-form .btn {
+    grid-column: auto;
+  }
+}
+
+@media print {
+  .mobile-action-bar {
+    display: none !important;
+  }
+
+  body {
+    padding-bottom: 0 !important;
+  }
+}
