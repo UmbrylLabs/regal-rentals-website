@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Browse Rentals | Regal Rentals</title>
-  <meta name="description" content="Browse Regal Rentals inventory, select an event date and time, and request a quote for white resin chairs and 60-inch round tables." />
+  <meta name="description" content="Browse Regal Rentals categories and current event rental inventory, including round tables, rectangular tables, and a 10-by-10 pop-up canopy." />
   <meta name="robots" content="noindex, nofollow" />
   <meta name="theme-color" content="#26063f" />
   <meta name="color-scheme" content="light only" />
@@ -15,7 +15,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
-  <link rel="stylesheet" href="rentals.css?v=20260712-2" />
+  <link rel="stylesheet" href="rentals.css?v=20260718-1" />
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to content</a>
@@ -66,59 +66,94 @@
     <section class="inventory-hero section-cream" aria-labelledby="inventory-title">
       <img class="inventory-hero__watermark" src="assets/regal-shield.png" alt="" aria-hidden="true" />
       <div class="container inventory-hero__inner reveal">
-        <p class="eyebrow">Regal Rentals inventory</p>
+        <p class="eyebrow">Regal Rentals catalog</p>
         <h1 id="inventory-title">Plan Your Event</h1>
-        <p>Select the quantity you need on each item, then add it to your quote. Confirmed availability will be verified before payment.</p>
-        <a class="btn btn--primary" href="#inventory-list-title">Browse Inventory <span aria-hidden="true">↓</span></a>
+        <p>Browse what is available now and preview the categories being added as Regal Rentals grows.</p>
+        <a class="btn btn--primary" href="#rental-categories">Browse Categories <span aria-hidden="true">↓</span></a>
       </div>
     </section>
 
-    <section class="inventory-list section-light" aria-labelledby="inventory-list-title">
+    <section class="category-section section-light" id="rental-categories" aria-labelledby="category-title">
       <div class="container">
         <div class="section-heading reveal">
           <span class="heading-line"></span>
-          <h2 id="inventory-list-title">Available Inventory</h2>
+          <h2 id="category-title">Rental Categories</h2>
           <span class="heading-line"></span>
         </div>
-        <p class="section-intro reveal">Choose a quantity, then click <strong>Add to Quote</strong>. You can adjust or remove the item in the quote builder below.</p>
+        <div class="category-toolbar reveal">
+          <p>Explore our current inventory and upcoming rental collections.</p>
+          <label class="availability-filter" for="available-now-filter">
+            <input id="available-now-filter" type="checkbox" />
+            <span>Show available now only</span>
+          </label>
+        </div>
 
-        <div class="inventory-grid">
-          <article class="inventory-card reveal">
-            <div class="inventory-card__visual inventory-card__visual--chair" aria-hidden="true">
-              <div class="chair-icon"><span></span><i></i></div>
-              <span class="inventory-card__badge">60 owned</span>
-            </div>
-            <div class="inventory-card__body">
-              <p class="inventory-card__kicker">Seating</p>
-              <h3>White Resin Folding Chair</h3>
-              <p class="inventory-card__description">A clean, wedding-friendly folding chair with a white resin frame and padded seat.</p>
-              <div class="inventory-card__meta">
-                <strong>$3.50</strong>
-                <span>per chair</span>
-              </div>
-              <ul class="inventory-card__features">
-                <li>60 chairs in starting inventory</li>
-                <li>Indoor or outdoor event use</li>
-                <li>Delivery quoted separately</li>
-              </ul>
-              <div class="card-quote-control">
-                <div class="quantity-control quantity-control--card" aria-label="Chair quantity selector">
-                  <button type="button" data-card-step="-1" data-item="chairs" aria-label="Remove one chair">−</button>
-                  <input id="chair-card-quantity" type="number" min="1" max="60" value="1" inputmode="numeric" aria-label="Chair quantity to add" />
-                  <button type="button" data-card-step="1" data-item="chairs" aria-label="Add one chair">+</button>
-                </div>
-                <button class="btn btn--secondary add-to-quote-btn" type="button" data-add-item="chairs">Add Chairs to Quote</button>
-              </div>
-            </div>
+        <div class="category-grid" id="category-grid">
+          <article class="category-card reveal" data-category-availability="available">
+            <div class="category-card__icon" aria-hidden="true">♜</div>
+            <span class="category-card__status category-card__status--available">Available Now</span>
+            <h3>Tables &amp; Chairs</h3>
+            <p>Round and rectangular tables available now, with folding chair options being added next.</p>
+            <a href="#available-inventory">View Current Inventory <span aria-hidden="true">→</span></a>
           </article>
 
+          <article class="category-card reveal" data-category-availability="available">
+            <div class="category-card__icon" aria-hidden="true">⌂</div>
+            <span class="category-card__status category-card__status--available">Available Now</span>
+            <h3>Tents &amp; Shade</h3>
+            <p>A 10×10 pop-up canopy is currently available, with more shade and tent options planned.</p>
+            <a href="#available-inventory">View Current Inventory <span aria-hidden="true">→</span></a>
+          </article>
+
+          <article class="category-card reveal" data-category-availability="coming">
+            <div class="category-card__icon" aria-hidden="true">★</div>
+            <span class="category-card__status">Coming Soon</span>
+            <h3>Backyard Games</h3>
+            <p>Cornhole, giant games, tug-of-war, and other easy-to-book entertainment for outdoor events.</p>
+          </article>
+
+          <article class="category-card reveal" data-category-availability="coming">
+            <div class="category-card__icon" aria-hidden="true">⚑</div>
+            <span class="category-card__status">In Development</span>
+            <h3>Mini Golf</h3>
+            <p>A portable nine-hole mini golf experience designed for parties, weddings, and corporate events.</p>
+          </article>
+
+          <article class="category-card reveal" data-category-availability="coming">
+            <div class="category-card__icon" aria-hidden="true">◉</div>
+            <span class="category-card__status">Coming Soon</span>
+            <h3>Photo Booths &amp; Guestbooks</h3>
+            <p>Photo, video, and audio guestbook experiences built to capture messages and memories.</p>
+          </article>
+
+          <article class="category-card reveal" data-category-availability="coming">
+            <div class="category-card__icon" aria-hidden="true">♫</div>
+            <span class="category-card__status">Coming Soon</span>
+            <h3>Audio &amp; Visual</h3>
+            <p>PA systems, microphones, projectors, screens, karaoke, lighting, and event technology.</p>
+          </article>
+        </div>
+        <p class="category-empty" id="category-empty" hidden>No categories match the selected filter.</p>
+      </div>
+    </section>
+
+    <section class="inventory-list section-light" id="available-inventory" aria-labelledby="inventory-list-title">
+      <div class="container">
+        <div class="section-heading reveal">
+          <span class="heading-line"></span>
+          <h2 id="inventory-list-title">Available Now</h2>
+          <span class="heading-line"></span>
+        </div>
+        <p class="section-intro reveal">Choose a quantity, then click <strong>Add to Quote</strong>. Current quantities reflect the inventory Regal Rentals owns today.</p>
+
+        <div class="inventory-grid inventory-grid--three">
           <article class="inventory-card reveal">
             <div class="inventory-card__visual inventory-card__visual--table" aria-hidden="true">
               <div class="table-icon"><span></span><i></i><b></b></div>
-              <span class="inventory-card__badge">8 owned</span>
+              <span class="inventory-card__badge">3 available</span>
             </div>
             <div class="inventory-card__body">
-              <p class="inventory-card__kicker">Tables</p>
+              <p class="inventory-card__kicker">Tables &amp; Chairs</p>
               <h3>60-Inch Round Table</h3>
               <p class="inventory-card__description">A banquet-size round table that typically seats eight guests comfortably.</p>
               <div class="inventory-card__meta">
@@ -126,17 +161,75 @@
                 <span>per table</span>
               </div>
               <ul class="inventory-card__features">
-                <li>8 tables in starting inventory</li>
+                <li>3 tables currently available</li>
                 <li>Approximately 8 guests per table</li>
                 <li>Linens not included</li>
               </ul>
               <div class="card-quote-control">
-                <div class="quantity-control quantity-control--card" aria-label="Table quantity selector">
-                  <button type="button" data-card-step="-1" data-item="tables" aria-label="Remove one table">−</button>
-                  <input id="table-card-quantity" type="number" min="1" max="8" value="1" inputmode="numeric" aria-label="Table quantity to add" />
-                  <button type="button" data-card-step="1" data-item="tables" aria-label="Add one table">+</button>
+                <div class="quantity-control quantity-control--card" aria-label="Round table quantity selector">
+                  <button type="button" data-card-step="-1" data-item="roundTables" aria-label="Remove one round table">−</button>
+                  <input id="round-table-card-quantity" type="number" min="1" max="3" value="1" inputmode="numeric" aria-label="Round table quantity to add" />
+                  <button type="button" data-card-step="1" data-item="roundTables" aria-label="Add one round table">+</button>
                 </div>
-                <button class="btn btn--secondary add-to-quote-btn" type="button" data-add-item="tables">Add Tables to Quote</button>
+                <button class="btn btn--secondary add-to-quote-btn" type="button" data-add-item="roundTables">Add to Quote</button>
+              </div>
+            </div>
+          </article>
+
+          <article class="inventory-card reveal">
+            <div class="inventory-card__visual inventory-card__visual--rectangle" aria-hidden="true">
+              <div class="rectangle-table-icon"><span></span><i></i><b></b></div>
+              <span class="inventory-card__badge">2 available</span>
+            </div>
+            <div class="inventory-card__body">
+              <p class="inventory-card__kicker">Tables &amp; Chairs</p>
+              <h3>6-Foot Rectangle Table</h3>
+              <p class="inventory-card__description">A versatile commercial folding table for dining, gifts, food service, or event displays.</p>
+              <div class="inventory-card__meta">
+                <strong>$14</strong>
+                <span>per table</span>
+              </div>
+              <ul class="inventory-card__features">
+                <li>2 tables currently available</li>
+                <li>Seats approximately 6–8 guests</li>
+                <li>Linens not included</li>
+              </ul>
+              <div class="card-quote-control">
+                <div class="quantity-control quantity-control--card" aria-label="Rectangle table quantity selector">
+                  <button type="button" data-card-step="-1" data-item="rectangleTables" aria-label="Remove one rectangle table">−</button>
+                  <input id="rectangle-table-card-quantity" type="number" min="1" max="2" value="1" inputmode="numeric" aria-label="Rectangle table quantity to add" />
+                  <button type="button" data-card-step="1" data-item="rectangleTables" aria-label="Add one rectangle table">+</button>
+                </div>
+                <button class="btn btn--secondary add-to-quote-btn" type="button" data-add-item="rectangleTables">Add to Quote</button>
+              </div>
+            </div>
+          </article>
+
+          <article class="inventory-card reveal">
+            <div class="inventory-card__visual inventory-card__visual--canopy" aria-hidden="true">
+              <div class="canopy-icon"><span></span><i></i><b></b><em></em></div>
+              <span class="inventory-card__badge">1 available</span>
+            </div>
+            <div class="inventory-card__body">
+              <p class="inventory-card__kicker">Tents &amp; Shade</p>
+              <h3>10×10 Pop-Up Canopy</h3>
+              <p class="inventory-card__description">Compact shade coverage for backyard parties, vendor areas, food stations, and small events.</p>
+              <div class="inventory-card__meta inventory-card__meta--text">
+                <strong>Pricing soon</strong>
+                <span>per canopy</span>
+              </div>
+              <ul class="inventory-card__features">
+                <li>1 canopy currently available</li>
+                <li>10×10-foot coverage area</li>
+                <li>Final pricing and setup terms being confirmed</li>
+              </ul>
+              <div class="card-quote-control">
+                <div class="quantity-control quantity-control--card" aria-label="Canopy quantity selector">
+                  <button type="button" data-card-step="-1" data-item="canopy" aria-label="Remove one canopy">−</button>
+                  <input id="canopy-card-quantity" type="number" min="1" max="1" value="1" inputmode="numeric" aria-label="Canopy quantity to add" />
+                  <button type="button" data-card-step="1" data-item="canopy" aria-label="Add one canopy">+</button>
+                </div>
+                <button class="btn btn--secondary add-to-quote-btn" type="button" data-add-item="canopy">Add to Quote</button>
               </div>
             </div>
           </article>
@@ -149,7 +242,7 @@
         <div class="availability-copy reveal">
           <p class="eyebrow">Quote builder</p>
           <h2 id="availability-title">Choose Your Event Window</h2>
-          <p>The selected date and time will eventually connect to Regal Rentals’ secure reservation system. For launch, this page builds a detailed request for manual confirmation.</p>
+          <p>Build a detailed request using the inventory currently available. Regal Rentals will manually confirm the date, delivery details, and final total.</p>
           <div class="availability-notice">
             <strong>Important:</strong> A quote request does not reserve inventory. Equipment is reserved only after Regal Rentals confirms the quote and receives the required payment.
           </div>
@@ -189,33 +282,48 @@
             <legend>Rental quantities</legend>
             <p class="selected-rentals-empty" id="selected-rentals-empty">No rental items have been added yet.</p>
 
-            <div class="quantity-row quote-item-row" data-quote-row="chairs" hidden>
+            <div class="quantity-row quote-item-row" data-quote-row="roundTables" hidden>
               <div>
-                <strong>White resin folding chairs</strong>
-                <span>$3.50 each · Maximum 60</span>
+                <strong>60-inch round tables</strong>
+                <span>$16 each · Maximum 3</span>
               </div>
               <div class="card-quote-control">
                 <div class="quantity-control">
-                  <button type="button" data-quote-step="-1" data-item="chairs" aria-label="Remove one chair">−</button>
-                  <input id="chair-quantity" name="chairQuantity" type="number" min="1" max="60" value="1" inputmode="numeric" aria-label="Chair quantity" />
-                  <button type="button" data-quote-step="1" data-item="chairs" aria-label="Add one chair">+</button>
+                  <button type="button" data-quote-step="-1" data-item="roundTables" aria-label="Remove one round table">−</button>
+                  <input id="round-table-quantity" name="roundTableQuantity" type="number" min="1" max="3" value="1" inputmode="numeric" aria-label="Round table quantity" />
+                  <button type="button" data-quote-step="1" data-item="roundTables" aria-label="Add one round table">+</button>
                 </div>
-                <button class="btn btn--secondary remove-from-quote-btn" type="button" data-remove-item="chairs">Remove from Quote</button>
+                <button class="btn btn--secondary remove-from-quote-btn" type="button" data-remove-item="roundTables">Remove from Quote</button>
               </div>
             </div>
 
-            <div class="quantity-row quote-item-row" data-quote-row="tables" hidden>
+            <div class="quantity-row quote-item-row" data-quote-row="rectangleTables" hidden>
               <div>
-                <strong>60-inch round tables</strong>
-                <span>$16 each · Maximum 8</span>
+                <strong>6-foot rectangular tables</strong>
+                <span>$14 each · Maximum 2</span>
               </div>
               <div class="card-quote-control">
                 <div class="quantity-control">
-                  <button type="button" data-quote-step="-1" data-item="tables" aria-label="Remove one table">−</button>
-                  <input id="table-quantity" name="tableQuantity" type="number" min="1" max="8" value="1" inputmode="numeric" aria-label="Table quantity" />
-                  <button type="button" data-quote-step="1" data-item="tables" aria-label="Add one table">+</button>
+                  <button type="button" data-quote-step="-1" data-item="rectangleTables" aria-label="Remove one rectangle table">−</button>
+                  <input id="rectangle-table-quantity" name="rectangleTableQuantity" type="number" min="1" max="2" value="1" inputmode="numeric" aria-label="Rectangle table quantity" />
+                  <button type="button" data-quote-step="1" data-item="rectangleTables" aria-label="Add one rectangle table">+</button>
                 </div>
-                <button class="btn btn--secondary remove-from-quote-btn" type="button" data-remove-item="tables">Remove from Quote</button>
+                <button class="btn btn--secondary remove-from-quote-btn" type="button" data-remove-item="rectangleTables">Remove from Quote</button>
+              </div>
+            </div>
+
+            <div class="quantity-row quote-item-row" data-quote-row="canopy" hidden>
+              <div>
+                <strong>10×10 pop-up canopy</strong>
+                <span>Pricing to be confirmed · Maximum 1</span>
+              </div>
+              <div class="card-quote-control">
+                <div class="quantity-control">
+                  <button type="button" data-quote-step="-1" data-item="canopy" aria-label="Remove one canopy">−</button>
+                  <input id="canopy-quantity" name="canopyQuantity" type="number" min="1" max="1" value="1" inputmode="numeric" aria-label="Canopy quantity" />
+                  <button type="button" data-quote-step="1" data-item="canopy" aria-label="Add one canopy">+</button>
+                </div>
+                <button class="btn btn--secondary remove-from-quote-btn" type="button" data-remove-item="canopy">Remove from Quote</button>
               </div>
             </div>
           </fieldset>
@@ -226,7 +334,7 @@
               <strong id="quote-subtotal">$0.00</strong>
             </div>
             <p id="availability-message">Add at least one rental item to begin your quote.</p>
-            <small>Delivery, setup, taxes, deposits, and optional services are not included in this estimate.</small>
+            <small>Delivery, setup, taxes, deposits, and items marked “pricing to be confirmed” are not included in this estimate.</small>
           </div>
 
           <fieldset>
@@ -289,6 +397,6 @@
   </footer>
 
   <script src="script.js"></script>
-  <script src="rentals.js?v=20260712-3"></script>
+  <script src="rentals.js?v=20260718-1"></script>
 </body>
 </html>
