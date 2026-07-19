@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sign Rental Agreement | Regal Rentals</title>
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="icon" href="/assets/favicon.png" type="image/png" />
+  <link rel="stylesheet" href="/sign.css" />
+</head>
+<body>
+  <header class="sign-header">
+    <a href="/" class="sign-brand"><img src="/assets/regal-shield.png" alt="" /><span>Regal Rentals</span></a>
+  </header>
+  <main class="sign-shell">
+    <section class="loading-card" id="loading-card"><h1>Loading Agreement</h1><p>Please wait while the secure agreement is retrieved.</p></section>
+    <section id="error-card" class="error-card" hidden><h1>Agreement Unavailable</h1><p id="error-message"></p></section>
+    <section id="signing-view" hidden>
+      <div class="sign-summary"><p class="eyebrow">Secure electronic signature</p><h1 id="sign-title">Rental Agreement</h1><p id="sign-meta"></p></div>
+      <div class="agreement-card" id="agreement-content"></div>
+      <form class="signature-card" id="signature-form">
+        <h2>Review and Sign</h2>
+        <label>Legal name<input id="typed-name" type="text" autocomplete="name" required maxlength="150" /></label>
+        <div class="canvas-label"><strong>Draw your signature</strong><button type="button" id="clear-signature">Clear</button></div>
+        <canvas id="signature-canvas" width="600" height="200" aria-label="Signature drawing area"></canvas>
+        <label class="consent"><input id="signature-consent" type="checkbox" required /><span>I reviewed this agreement, consent to conduct this transaction electronically, and intend my electronic signature to be legally binding.</span></label>
+        <button class="sign-button" type="submit">Agree and Sign</button>
+        <p class="form-message" id="signature-message" aria-live="polite"></p>
+      </form>
+    </section>
+    <section class="success-card" id="success-card" hidden>
+      <h1>Agreement Signed</h1><p>Your electronic signature was recorded successfully.</p><p><strong>Evidence reference:</strong></p><code id="evidence-hash"></code><button type="button" id="print-agreement">Print or Save a Copy</button>
+    </section>
+  </main>
+  <script src="/sign.js" defer></script>
+</body>
+</html>
