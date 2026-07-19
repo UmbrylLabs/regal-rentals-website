@@ -54,6 +54,17 @@ export async function hashPassword(password, env, salt = null, iterations = PASS
   };
 }
 
+function constantTimeEqual(leftValue, rightValue) {
+  const left = new TextEncoder().encode(String(leftValue));
+  const right = new TextEncoder().encode(String(rightValue));
+  const length = Math.max(left.length, right.length);
+  let mismatch = left.length ^ right.length;
+  for (let index = 0; index < length; index += 1) {
+    mismatch |= (left[index] || 0) ^ (right[index] || 0);
+  }
+  return mismatch === 0;
+}
+
 export async function verifyPassword(password, user, env) {
   try {
     const derived = await hashPassword(
@@ -62,10 +73,7 @@ export async function verifyPassword(password, user, env) {
       user.password_salt,
       Number(user.password_iterations)
     );
-    const left = new TextEncoder().encode(derived.hash);
-    const right = new TextEncoder().encode(user.password_hash);
-    if (left.byteLength !== right.byteLength) return false;
-    return crypto.subtle.timingSafeEqual(left, right);
+    return constantTimeEqual(derived.hash, user.password_hash);
   } catch {
     return false;
   }
