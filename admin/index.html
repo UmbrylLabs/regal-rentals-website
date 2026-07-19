@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Regal Rentals Admin</title>
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="icon" href="/assets/favicon.png" type="image/png" />
+  <link rel="stylesheet" href="/admin/admin.css" />
+</head>
+<body>
+  <main class="admin-shell">
+    <section class="login-card" id="login-view">
+      <img src="/assets/regal-shield.png" alt="" />
+      <p class="eyebrow">Private management system</p>
+      <h1>Regal Rentals Admin</h1>
+      <form id="login-form">
+        <label>Email
+          <input id="login-email" type="email" autocomplete="username" required />
+        </label>
+        <label>Password
+          <input id="login-password" type="password" autocomplete="current-password" minlength="12" required />
+        </label>
+        <button type="submit">Sign In</button>
+        <p class="message" id="login-message" aria-live="polite"></p>
+      </form>
+    </section>
+
+    <section class="dashboard" id="dashboard-view" hidden>
+      <header class="admin-header">
+        <a href="/" class="admin-brand">
+          <img src="/assets/regal-shield.png" alt="" />
+          <span>Regal Rentals</span>
+        </a>
+        <div>
+          <span id="current-user"></span>
+          <button class="button button--quiet" id="logout-button" type="button">Sign Out</button>
+        </div>
+      </header>
+
+      <div class="dashboard-grid">
+        <aside class="sidebar">
+          <button class="nav-button is-active" data-panel="overview">Overview</button>
+          <button class="nav-button" data-panel="new-booking">New Booking</button>
+          <button class="nav-button" data-panel="bookings">Bookings</button>
+          <button class="nav-button" data-panel="inventory">Inventory</button>
+          <button class="nav-button" data-panel="users" id="users-nav" hidden>Users</button>
+        </aside>
+
+        <div class="content">
+          <section class="panel" data-panel-view="overview">
+            <div class="panel-heading">
+              <div><p class="eyebrow">Today</p><h2>Booking Overview</h2></div>
+              <button class="button" data-open-panel="new-booking">Create Booking</button>
+            </div>
+            <div class="stat-grid" id="stat-grid"></div>
+            <div class="card"><h3>Upcoming rentals</h3><div id="upcoming-list"></div></div>
+          </section>
+
+          <section class="panel" data-panel-view="new-booking" hidden>
+            <div class="panel-heading"><div><p class="eyebrow">Inventory protected</p><h2>Create a Booking</h2></div></div>
+            <form class="card form-stack" id="booking-form">
+              <div class="form-grid">
+                <label>Customer name<input name="customerName" autocomplete="name" required /></label>
+                <label>Email<input name="customerEmail" type="email" autocomplete="email" required /></label>
+                <label>Phone<input name="customerPhone" type="tel" autocomplete="tel" required /></label>
+                <label>Event city<input name="eventCity" required /></label>
+                <label>Event date<input name="eventDate" type="date" required /></label>
+                <label>Start time<input name="eventStart" type="time" value="14:00" required /></label>
+                <label>End time<input name="eventEnd" type="time" value="20:00" required /></label>
+                <label>Service type<select name="serviceType"><option value="delivery">Delivery</option><option value="pickup">Customer pickup</option></select></label>
+                <label>Initial status<select name="status"><option value="inquiry">Inquiry — does not reserve</option><option value="quote">Quote — does not reserve</option><option value="hold">30-minute hold</option><option value="confirmed">Confirmed reservation</option></select></label>
+                <label>Preparation buffer before<select name="bufferBefore"><option value="60">1 hour</option><option value="120" selected>2 hours</option><option value="180">3 hours</option><option value="1440">1 day</option></select></label>
+                <label>Return/cleaning buffer after<select name="bufferAfter"><option value="60">1 hour</option><option value="120" selected>2 hours</option><option value="180">3 hours</option><option value="1440">1 day</option></select></label>
+                <label class="full">Event address<input name="eventAddress" autocomplete="street-address" /></label>
+                <label class="full">Notes<textarea name="notes" rows="4"></textarea></label>
+              </div>
+              <div class="availability-box">
+                <div><h3>Rental items</h3><p id="booking-availability-message">Choose the event date and times to check exact availability.</p></div>
+                <button class="button button--secondary" id="check-booking-availability" type="button">Check Availability</button>
+              </div>
+              <div class="product-picker" id="booking-product-picker"></div>
+              <button class="button" type="submit">Create Booking</button>
+              <p class="message" id="booking-message" aria-live="polite"></p>
+            </form>
+          </section>
+
+          <section class="panel" data-panel-view="bookings" hidden>
+            <div class="panel-heading"><div><p class="eyebrow">All orders</p><h2>Bookings</h2></div><button class="button button--secondary" id="refresh-bookings" type="button">Refresh</button></div>
+            <div class="card table-wrap"><table><thead><tr><th>Booking</th><th>Customer</th><th>Event</th><th>Status</th><th>Units</th><th></th></tr></thead><tbody id="bookings-table-body"></tbody></table></div>
+          </section>
+
+          <section class="panel" data-panel-view="inventory" hidden>
+            <div class="panel-heading"><div><p class="eyebrow">Owned equipment</p><h2>Inventory</h2></div></div>
+            <div class="card" id="inventory-list"></div>
+          </section>
+
+          <section class="panel" data-panel-view="users" hidden>
+            <div class="panel-heading"><div><p class="eyebrow">Separate secure accounts</p><h2>Admin Users</h2></div></div>
+            <div class="booking-summary">
+              <form class="card form-stack" id="user-form"><h3>Create Admin Account</h3><label>Name<input name="displayName" required /></label><label>Email<input name="email" type="email" required /></label><label>Temporary password<input name="password" type="password" minlength="12" maxlength="128" required /></label><button class="button" type="submit">Create Account</button><p class="message" id="user-message"></p></form>
+              <div class="card"><h3>Current users</h3><div id="users-list"></div></div>
+            </div>
+          </section>
+
+          <section class="panel" data-panel-view="booking-detail" hidden>
+            <button class="back-button" type="button" data-open-panel="bookings">← Back to bookings</button>
+            <div id="booking-detail"></div>
+          </section>
+        </div>
+      </div>
+    </section>
+  </main>
+  <script src="/admin/admin.js" defer></script>
+</body>
+</html>
