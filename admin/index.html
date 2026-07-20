@@ -7,6 +7,7 @@
   <meta name="robots" content="noindex, nofollow" />
   <link rel="icon" href="/assets/favicon.png" type="image/png" />
   <link rel="stylesheet" href="/admin/admin.css" />
+  <link rel="stylesheet" href="/admin/catalog-manager.css" />
 </head>
 <body>
   <main class="admin-shell">
@@ -82,14 +83,45 @@
           </section>
 
           <section class="panel" data-panel-view="inventory" hidden>
-            <div class="panel-heading"><div><p class="eyebrow">Owned equipment</p><h2>Inventory</h2></div></div>
-            <div class="card" id="inventory-list"></div>
+            <div class="panel-heading inventory-heading">
+              <div><p class="eyebrow">Website catalog & owned equipment</p><h2>Inventory</h2></div>
+              <button class="button" id="new-product-button" type="button">Add Rental Item</button>
+            </div>
+            <form class="card form-stack product-form" id="product-form" hidden>
+              <div class="product-form-heading">
+                <div><p class="eyebrow" id="product-form-eyebrow">New catalog item</p><h3 id="product-form-title">Add Rental Item</h3></div>
+                <button class="button button--quiet" id="cancel-product-button" type="button">Cancel</button>
+              </div>
+              <input name="id" type="hidden" />
+              <div class="form-grid product-form-grid">
+                <label>Item name<input name="name" maxlength="200" required placeholder="White Resin Folding Chair" /></label>
+                <label>SKU <span class="label-note">optional for new items</span><input name="sku" maxlength="80" placeholder="CHAIR-RESIN-WHITE" /></label>
+                <label>Category<select name="category" required>
+                  <option>Tables &amp; Chairs</option><option>Tents &amp; Shade</option><option>Backyard Games</option><option>Mini Golf</option><option>Photo Booths &amp; Guestbooks</option><option>Audio &amp; Visual</option><option>Decor &amp; Event Extras</option><option>Other</option>
+                </select></label>
+                <label>Style<select name="style" required>
+                  <option value="chair">Chair</option><option value="round-table">Round table</option><option value="rectangle-table">Rectangle table</option><option value="canopy">Canopy</option><option value="tent">Tent</option><option value="game">Backyard game</option><option value="mini-golf">Mini golf</option><option value="photo-booth">Photo booth / guestbook</option><option value="audio">Audio</option><option value="visual">Visual / projector</option><option value="lighting">Lighting</option><option value="decor">Decor</option><option value="other">Other</option>
+                </select></label>
+                <label>Quantity owned<input name="quantityOwned" type="number" min="0" max="100000" value="1" required /></label>
+                <label>Rental price<input name="price" type="number" min="0" step="0.01" placeholder="Leave blank if pending" /></label>
+                <label>Price label<select name="priceUnit"><option>each</option><option>per chair</option><option>per table</option><option>per canopy</option><option>per tent</option><option>per game</option><option>per set</option><option>per package</option><option>per event</option></select></label>
+                <label>Display order<input name="sortOrder" type="number" min="0" value="100" /></label>
+                <label class="full">Short website description<textarea name="description" rows="3" maxlength="1000" placeholder="Describe the item, size, seating, or best use."></textarea></label>
+                <label class="toggle-label full"><input name="active" type="checkbox" checked /><span>Show this item on the public rental website</span></label>
+              </div>
+              <div class="product-form-actions">
+                <button class="button" type="submit">Save Rental Item</button>
+                <p class="message" id="product-message" aria-live="polite"></p>
+              </div>
+            </form>
+            <div class="catalog-summary" id="catalog-summary"></div>
+            <div class="inventory-catalog" id="inventory-list"></div>
           </section>
 
           <section class="panel" data-panel-view="users" hidden>
             <div class="panel-heading"><div><p class="eyebrow">Cloudflare-protected accounts</p><h2>Access Users</h2></div></div>
             <div class="card">
-              <p>Add or remove authorized email addresses in the <strong>Regal Rentals Owners</strong> policy in Cloudflare Zero Trust.</p>
+              <p>Add or remove authorized account members in the <strong>Regal Rentals Owners</strong> policy in Cloudflare Zero Trust.</p>
               <div id="users-list"></div>
             </div>
           </section>

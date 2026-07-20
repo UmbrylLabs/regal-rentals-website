@@ -17,6 +17,10 @@ export async function onRequestGet(context) {
         sku: product.sku,
         name: product.name,
         category: product.category,
+        style: product.style,
+        description: product.description,
+        priceUnit: product.price_unit,
+        sortOrder: Number(product.sort_order || 100),
         quantityOwned: Number(product.quantity_owned),
         quantityAvailable: Number(product.quantity_available),
         priceCents: product.price_cents == null ? null : Number(product.price_cents)
