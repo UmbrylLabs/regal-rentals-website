@@ -14,3 +14,23 @@
 
 /sign.js
   Cache-Control: no-store
+
+/rentals
+  Cache-Control: no-store, max-age=0, must-revalidate
+  Clear-Site-Data: "cache"
+
+/rentals.html
+  Cache-Control: no-store, max-age=0, must-revalidate
+  Clear-Site-Data: "cache"
+
+/rentals.js
+  Cache-Control: no-store, max-age=0, must-revalidate
+
+/catalog-dynamic.css
+  Cache-Control: no-store, max-age=0, must-revalidate
+
+/api/public/catalog
+  Cache-Control: no-store, max-age=0, must-revalidate
+
+/api/public/availability
+  Cache-Control: no-store, max-age=0, must-revalidate
