@@ -1,19 +1,28 @@
 import {
   assertSameOrigin,
+  base64UrlDecode,
   clientIp,
   getCookie,
   normalizeEmail,
+  randomId,
   randomToken,
   sha256
 } from './http.js';
 
 export const SESSION_COOKIE = '__Host-regal_session';
 const PASSWORD_ITERATIONS = 220000;
-const PASSWORD_HASH = 'SHA-512';
 const SESSION_SECONDS = 60 * 60 * 10;
 const LOGIN_WINDOW_SECONDS = 15 * 60;
 const LOGIN_LOCK_SECONDS = 15 * 60;
 const MAX_LOGIN_FAILURES = 5;
+const ADMIN_HOSTNAME = 'admin.regal.rentals';
+const ACCESS_KEY_CACHE_SECONDS = 60 * 60;
+
+let accessKeyCache = {
+  issuer: '',
+  expiresAt: 0,
+  keys: new Map()
+};
 
 function bytesToHex(bytes) {
   return Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('');
@@ -44,7 +53,7 @@ export async function hashPassword(password, env, salt = null, iterations = PASS
     ['deriveBits']
   );
   const bits = await crypto.subtle.deriveBits(
-    { name: 'PBKDF2', hash: PASSWORD_HASH, salt: saltBytes, iterations },
+    { name: 'PBKDF2', hash: 'SHA-512', salt: saltBytes, iterations },
     key,
     256
   );
@@ -116,25 +125,142 @@ export async function destroySession(env, request) {
     .run();
 }
 
-export async function currentUser(env, request) {
-  const token = getCookie(request, SESSION_COOKIE);
-  if (!token) return null;
-  const tokenHash = await sha256(token);
-  const now = Math.floor(Date.now() / 1000);
-  const user = await env.DB.prepare(
-    `SELECT u.id, u.email, u.display_name, u.role
-     FROM sessions s
-     JOIN users u ON u.id = s.user_id
-     WHERE s.token_hash = ?1
-       AND s.expires_at > ?2
-       AND u.is_active = 1`
-  ).bind(tokenHash, now).first();
-  if (!user) return null;
+function normalizeTeamDomain(value) {
+  const trimmed = String(value || '').trim().replace(/\/+$/g, '');
+  if (!/^https:\/\/[a-z0-9-]+\.cloudflareaccess\.com$/i.test(trimmed)) {
+    throw new Error('ACCESS_NOT_CONFIGURED');
+  }
+  return trimmed;
+}
 
-  await env.DB.prepare(
-    'UPDATE sessions SET last_seen_at = ?1 WHERE token_hash = ?2'
-  ).bind(now, tokenHash).run();
+function decodeJwtJson(segment) {
+  try {
+    return JSON.parse(new TextDecoder().decode(base64UrlDecode(segment)));
+  } catch {
+    throw new Error('ACCESS_INVALID');
+  }
+}
+
+function audienceMatches(actual, expected) {
+  if (Array.isArray(actual)) return actual.includes(expected);
+  return String(actual || '') === expected;
+}
+
+async function loadAccessKeys(issuer, forceRefresh = false) {
+  const now = Math.floor(Date.now() / 1000);
+  if (!forceRefresh && accessKeyCache.issuer === issuer && accessKeyCache.expiresAt > now) {
+    return accessKeyCache.keys;
+  }
+
+  const response = await fetch(`${issuer}/cdn-cgi/access/certs`, {
+    headers: { Accept: 'application/json' }
+  });
+  if (!response.ok) throw new Error('ACCESS_INVALID');
+  const body = await response.json();
+  if (!Array.isArray(body?.keys)) throw new Error('ACCESS_INVALID');
+
+  const keys = new Map();
+  for (const jwk of body.keys) {
+    if (!jwk?.kid || jwk.kty !== 'RSA') continue;
+    const key = await crypto.subtle.importKey(
+      'jwk',
+      jwk,
+      { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' },
+      false,
+      ['verify']
+    );
+    keys.set(jwk.kid, key);
+  }
+  accessKeyCache = { issuer, expiresAt: now + ACCESS_KEY_CACHE_SECONDS, keys };
+  return keys;
+}
+
+async function validateAccessIdentity(env, request) {
+  const issuer = normalizeTeamDomain(env.ACCESS_TEAM_DOMAIN);
+  const expectedAudience = String(env.ACCESS_AUD || '').trim();
+  if (!expectedAudience) throw new Error('ACCESS_NOT_CONFIGURED');
+
+  const hostname = new URL(request.url).hostname.toLowerCase();
+  if (hostname !== ADMIN_HOSTNAME) throw new Error('ACCESS_REQUIRED');
+
+  const token = request.headers.get('Cf-Access-Jwt-Assertion');
+  if (!token) throw new Error('ACCESS_REQUIRED');
+  const parts = token.split('.');
+  if (parts.length !== 3) throw new Error('ACCESS_INVALID');
+
+  const header = decodeJwtJson(parts[0]);
+  const payload = decodeJwtJson(parts[1]);
+  if (header.alg !== 'RS256' || !header.kid) throw new Error('ACCESS_INVALID');
+
+  const now = Math.floor(Date.now() / 1000);
+  if (String(payload.iss || '').replace(/\/+$/g, '') !== issuer) throw new Error('ACCESS_INVALID');
+  if (!audienceMatches(payload.aud, expectedAudience)) throw new Error('ACCESS_INVALID');
+  if (!Number.isFinite(Number(payload.exp)) || Number(payload.exp) <= now) throw new Error('ACCESS_INVALID');
+  if (payload.nbf != null && Number(payload.nbf) > now + 30) throw new Error('ACCESS_INVALID');
+
+  let keys = await loadAccessKeys(issuer);
+  let key = keys.get(header.kid);
+  if (!key) {
+    keys = await loadAccessKeys(issuer, true);
+    key = keys.get(header.kid);
+  }
+  if (!key) throw new Error('ACCESS_INVALID');
+
+  const verified = await crypto.subtle.verify(
+    { name: 'RSASSA-PKCS1-v1_5' },
+    key,
+    base64UrlDecode(parts[2]),
+    new TextEncoder().encode(`${parts[0]}.${parts[1]}`)
+  );
+  if (!verified) throw new Error('ACCESS_INVALID');
+
+  const email = normalizeEmail(payload.email);
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new Error('ACCESS_INVALID');
+  return { email, subject: String(payload.sub || ''), payload };
+}
+
+function displayNameFromEmail(email) {
+  const local = email.split('@')[0] || email;
+  return local
+    .split(/[._-]+/g)
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ')
+    .slice(0, 150) || email;
+}
+
+async function accessUser(env, identity) {
+  let user = await env.DB.prepare(
+    `SELECT id, email, display_name, role, is_active
+     FROM users WHERE email = ?1 COLLATE NOCASE`
+  ).bind(identity.email).first();
+
+  if (!user) {
+    const id = randomId();
+    const now = Math.floor(Date.now() / 1000);
+    try {
+      await env.DB.prepare(
+        `INSERT INTO users (
+          id, email, display_name, password_hash, password_salt,
+          password_iterations, role, is_active, created_at, updated_at
+        ) VALUES (?1, ?2, ?3, 'CLOUDFLARE_ACCESS_ONLY', 'CLOUDFLARE_ACCESS_ONLY', 1, 'owner', 1, ?4, ?4)`
+      ).bind(id, identity.email, displayNameFromEmail(identity.email), now).run();
+    } catch (error) {
+      if (!String(error?.message || '').toLowerCase().includes('unique')) throw error;
+    }
+    user = await env.DB.prepare(
+      `SELECT id, email, display_name, role, is_active
+       FROM users WHERE email = ?1 COLLATE NOCASE`
+    ).bind(identity.email).first();
+  }
+
+  if (!user || Number(user.is_active) !== 1) throw new Error('FORBIDDEN');
   return user;
+}
+
+export async function currentUser(env, request) {
+  const identity = await validateAccessIdentity(env, request);
+  return accessUser(env, identity);
 }
 
 export async function requireAdmin(env, request) {
