@@ -1,0 +1,14 @@
+{
+  "name": "regal-rentals-website",
+  "private": true,
+  "scripts": {
+    "test": "python3 -m unittest -v tests/test_inventory_guards.py",
+    "check:js": "find functions admin -name '*.js' -print0 | xargs -0 -n1 node --check && node --check rentals.js && node --check sign.js",
+    "dev": "wrangler pages dev .",
+    "db:migrate:local": "wrangler d1 migrations apply regal-rentals --local",
+    "db:migrate:remote": "wrangler d1 migrations apply regal-rentals --remote"
+  },
+  "devDependencies": {
+    "wrangler": "^4.0.0"
+  }
+}
