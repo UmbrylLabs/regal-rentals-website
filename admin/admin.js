@@ -4,7 +4,6 @@
   const $$ = (selector, root = document) => Array.from(root.querySelectorAll(selector));
   const loginView = $('#login-view');
   const dashboardView = $('#dashboard-view');
-  const loginForm = $('#login-form');
   const loginMessage = $('#login-message');
   const bookingForm = $('#booking-form');
   const bookingMessage = $('#booking-message');
@@ -157,26 +156,35 @@
   const loadUsers = async () => {
     if (state.user?.role !== 'owner') return;
     const data = await api('/api/admin/users'); state.users = data.users || [];
-    $('#users-list').innerHTML = state.users.map((user) => `<div class="upcoming-row"><div><strong>${escapeHtml(user.display_name)}</strong><p>${escapeHtml(user.email)} · ${escapeHtml(user.role)} · ${user.is_active ? 'active' : 'disabled'}</p></div></div>`).join('') || '<p>No users found.</p>';
+    $('#users-list').innerHTML = state.users.map((user) => `<div class="upcoming-row"><div><strong>${escapeHtml(user.display_name)}</strong><p>${escapeHtml(user.email)} · ${escapeHtml(user.role)} · ${user.is_active ? 'active' : 'disabled'}</p></div></div>`).join('') || '<p>No Access users have opened the dashboard yet.</p>';
   };
 
-  const createUser = async (event) => {
-    event.preventDefault(); const form = event.currentTarget; const message = $('#user-message'); showMessage(message, 'Creating account…'); const data = new FormData(form);
-    try { await api('/api/admin/users', { method: 'POST', body: JSON.stringify({ displayName: data.get('displayName'), email: data.get('email'), password: data.get('password') }) }); form.reset(); showMessage(message, 'Admin account created.', 'success'); await loadUsers(); }
-    catch (error) { showMessage(message, error.message, 'error'); }
+  const showDashboard = async (user) => {
+    state.user = user;
+    loginView.hidden = true;
+    dashboardView.hidden = false;
+    $('#current-user').textContent = user.displayName || user.email;
+    if (user.role === 'owner') $('#users-nav').hidden = false;
+    await Promise.all([loadProducts(), loadBookings(), loadUsers()]);
   };
 
-  const showDashboard = async (user) => { state.user = user; loginView.hidden = true; dashboardView.hidden = false; $('#current-user').textContent = user.displayName || user.email; if (user.role === 'owner') $('#users-nav').hidden = false; await Promise.all([loadProducts(), loadBookings(), loadUsers()]); };
-  const checkSession = async () => { try { const data = await api('/api/auth/me', { headers: {} }); await showDashboard(data.user); } catch { loginView.hidden = false; dashboardView.hidden = true; } };
+  const checkSession = async () => {
+    try {
+      const data = await api('/api/auth/me', { headers: {} });
+      await showDashboard(data.user);
+    } catch (error) {
+      loginView.hidden = false;
+      dashboardView.hidden = true;
+      showMessage(loginMessage, error.message, 'error');
+    }
+  };
 
-  loginForm.addEventListener('submit', async (event) => { event.preventDefault(); showMessage(loginMessage, 'Signing in…'); try { const data = await api('/api/auth/login', { method: 'POST', body: JSON.stringify({ email: $('#login-email').value, password: $('#login-password').value }) }); showMessage(loginMessage, ''); await showDashboard(data.user); } catch (error) { showMessage(loginMessage, error.message, 'error'); } });
-  $('#logout-button').addEventListener('click', async () => { try { await api('/api/auth/logout', { method: 'POST', body: '{}' }); } finally { location.reload(); } });
+  $('#logout-button').addEventListener('click', () => { location.href = '/cdn-cgi/access/logout'; });
   $$('.nav-button').forEach((button) => button.addEventListener('click', () => openPanel(button.dataset.panel)));
   $$('[data-open-panel]').forEach((button) => button.addEventListener('click', () => openPanel(button.dataset.openPanel)));
   $('#refresh-bookings').addEventListener('click', loadBookings);
   $('#check-booking-availability').addEventListener('click', checkAvailability);
   bookingForm.addEventListener('submit', createBooking);
-  $('#user-form')?.addEventListener('submit', createUser);
   const today = new Date(); today.setMinutes(today.getMinutes() - today.getTimezoneOffset()); bookingForm.elements.eventDate.min = today.toISOString().slice(0, 10);
   checkSession();
 })();
