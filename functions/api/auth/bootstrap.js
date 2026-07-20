@@ -5,8 +5,25 @@ export async function onRequestPost(context) {
   try {
     protectMutation(context.request);
     const suppliedToken = context.request.headers.get('X-Bootstrap-Token') || '';
-    if (!context.env.BOOTSTRAP_TOKEN || suppliedToken !== context.env.BOOTSTRAP_TOKEN) {
-      return json({ ok: false, error: { code: 'BOOTSTRAP_DENIED', message: 'Bootstrap denied.' } }, 403);
+
+    if (!context.env.BOOTSTRAP_TOKEN) {
+      return json({
+        ok: false,
+        error: {
+          code: 'BOOTSTRAP_NOT_CONFIGURED',
+          message: 'The bootstrap secret is not configured for this deployment.'
+        }
+      }, 503);
+    }
+
+    if (suppliedToken !== context.env.BOOTSTRAP_TOKEN) {
+      return json({
+        ok: false,
+        error: {
+          code: 'BOOTSTRAP_MISMATCH',
+          message: 'The bootstrap token does not match the secret configured for this deployment.'
+        }
+      }, 403);
     }
 
     const count = await context.env.DB.prepare('SELECT COUNT(*) AS count FROM users').first();
