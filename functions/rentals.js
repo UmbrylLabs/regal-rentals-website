@@ -60,7 +60,7 @@ function renderCategories(products) {
   return CATEGORY_DEFINITIONS.map(([name, icon, description]) => {
     const count = counts.get(name) || 0;
     const available = count > 0;
-    return `<article class="category-card reveal" data-category-availability="${available ? 'available' : 'coming'}"${available ? '' : ' hidden'}>
+    return `<article class="category-card" data-category-availability="${available ? 'available' : 'coming'}"${available ? '' : ' hidden'}>
       <div class="category-card__icon category-card__icon--dynamic" aria-hidden="true">${escapeHtml(icon)}</div>
       <span class="category-card__status${available ? ' category-card__status--available' : ''}">${available ? `${count} Available` : 'Coming Soon'}</span>
       <h3>${escapeHtml(name)}</h3>
@@ -81,7 +81,7 @@ function renderInventory(products) {
     const priceText = product.priceCents == null ? 'Pricing soon' : money(product.priceCents);
     const symbol = STYLE_ICONS[product.style] || STYLE_ICONS.other;
     const inputId = `${String(product.id).replace(/[^a-zA-Z0-9_-]/g, '-')}-card`;
-    return `<article class="inventory-card reveal${unavailable ? ' inventory-card--unavailable' : ''}" data-inventory-product="${escapeHtml(product.id)}">
+    return `<article class="inventory-card${unavailable ? ' inventory-card--unavailable' : ''}" data-inventory-product="${escapeHtml(product.id)}">
       <div class="inventory-card__visual inventory-card__visual--dynamic" aria-hidden="true">
         <div class="catalog-style-symbol">${escapeHtml(symbol)}</div>
         <span class="inventory-card__badge" data-product-badge="${escapeHtml(product.id)}">${unavailable ? 'Unavailable' : `${quantity} in inventory`}</span>
@@ -124,7 +124,7 @@ class ReplaceHtml {
 
 class InjectHeadAssets {
   element(element) {
-    element.append('<link rel="stylesheet" href="/catalog-dynamic.css?v=20260721-6" />', { html: true });
+    element.append('<link rel="stylesheet" href="/catalog-dynamic.css?v=20260721-7" />', { html: true });
   }
 }
 
@@ -136,7 +136,7 @@ class InjectCatalogBootstrap {
   element(element) {
     const json = JSON.stringify({ ok: true, products: this.products }).replace(/</g, '\\u003c');
     element.append(
-      `<script id="catalog-bootstrap" type="application/json">${json}</script><script src="/catalog-loader.js?v=20260721-6" defer></script>`,
+      `<script id="catalog-bootstrap" type="application/json">${json}</script><script src="/catalog-loader.js?v=20260721-7" defer></script>`,
       { html: true }
     );
   }
