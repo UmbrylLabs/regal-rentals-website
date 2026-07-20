@@ -1,14 +1,14 @@
 class RemoveOldCatalogScripts {
   element(element) {
     const src = String(element.getAttribute('src') || '');
-    if (src.includes('rentals.js')) element.remove();
+    if (src.includes('rentals.js') || src.includes('catalog-loader.js')) element.remove();
   }
 }
 
 class InjectCurrentCatalogScript {
   element(element) {
     element.append(
-      '<script src="/rentals.js?v=20260721-3" defer></script>',
+      '<script src="/catalog-loader.js?v=20260721-5" defer></script>',
       { html: true }
     );
   }
@@ -17,7 +17,6 @@ class InjectCurrentCatalogScript {
 export async function onRequest(context) {
   const response = await context.next();
   const contentType = String(response.headers.get('content-type') || '');
-
   if (!contentType.includes('text/html')) return response;
 
   const transformed = new HTMLRewriter()
