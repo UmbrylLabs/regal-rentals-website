@@ -24,7 +24,11 @@ export async function onRequestGet(context) {
         priceCents: product.price_cents == null ? null : Number(product.price_cents),
         sortOrder: Number(product.sort_order || 100)
       }))
-    }, 200, { 'Cache-Control': 'public, max-age=30' });
+    }, 200, {
+      'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
+      Pragma: 'no-cache',
+      Expires: '0'
+    });
   } catch (error) {
     return safeErrorResponse(error);
   }
