@@ -8,7 +8,8 @@ import {
 } from './http.js';
 
 export const SESSION_COOKIE = '__Host-regal_session';
-const PASSWORD_ITERATIONS = 600000;
+const PASSWORD_ITERATIONS = 220000;
+const PASSWORD_HASH = 'SHA-512';
 const SESSION_SECONDS = 60 * 60 * 10;
 const LOGIN_WINDOW_SECONDS = 15 * 60;
 const LOGIN_LOCK_SECONDS = 15 * 60;
@@ -43,7 +44,7 @@ export async function hashPassword(password, env, salt = null, iterations = PASS
     ['deriveBits']
   );
   const bits = await crypto.subtle.deriveBits(
-    { name: 'PBKDF2', hash: 'SHA-256', salt: saltBytes, iterations },
+    { name: 'PBKDF2', hash: PASSWORD_HASH, salt: saltBytes, iterations },
     key,
     256
   );
