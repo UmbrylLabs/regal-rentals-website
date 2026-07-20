@@ -14,21 +14,12 @@
       <img src="/assets/regal-shield.png" alt="" />
       <p class="eyebrow">Private management system</p>
       <h1>Regal Rentals Admin</h1>
-      <form id="login-form">
-        <label>Email
-          <input id="login-email" type="email" autocomplete="username" required />
-        </label>
-        <label>Password
-          <input id="login-password" type="password" autocomplete="current-password" minlength="12" required />
-        </label>
-        <button type="submit">Sign In</button>
-        <p class="message" id="login-message" aria-live="polite"></p>
-      </form>
+      <p id="login-message" class="message" aria-live="polite">Verifying your Cloudflare Access session…</p>
     </section>
 
     <section class="dashboard" id="dashboard-view" hidden>
       <header class="admin-header">
-        <a href="/" class="admin-brand">
+        <a href="https://regal.rentals/" class="admin-brand">
           <img src="/assets/regal-shield.png" alt="" />
           <span>Regal Rentals</span>
         </a>
@@ -44,7 +35,7 @@
           <button class="nav-button" data-panel="new-booking">New Booking</button>
           <button class="nav-button" data-panel="bookings">Bookings</button>
           <button class="nav-button" data-panel="inventory">Inventory</button>
-          <button class="nav-button" data-panel="users" id="users-nav" hidden>Users</button>
+          <button class="nav-button" data-panel="users" id="users-nav" hidden>Access Users</button>
         </aside>
 
         <div class="content">
@@ -96,10 +87,10 @@
           </section>
 
           <section class="panel" data-panel-view="users" hidden>
-            <div class="panel-heading"><div><p class="eyebrow">Separate secure accounts</p><h2>Admin Users</h2></div></div>
-            <div class="booking-summary">
-              <form class="card form-stack" id="user-form"><h3>Create Admin Account</h3><label>Name<input name="displayName" required /></label><label>Email<input name="email" type="email" required /></label><label>Temporary password<input name="password" type="password" minlength="12" maxlength="128" required /></label><button class="button" type="submit">Create Account</button><p class="message" id="user-message"></p></form>
-              <div class="card"><h3>Current users</h3><div id="users-list"></div></div>
+            <div class="panel-heading"><div><p class="eyebrow">Cloudflare-protected accounts</p><h2>Access Users</h2></div></div>
+            <div class="card">
+              <p>Add or remove authorized email addresses in the <strong>Regal Rentals Owners</strong> policy in Cloudflare Zero Trust.</p>
+              <div id="users-list"></div>
             </div>
           </section>
 
