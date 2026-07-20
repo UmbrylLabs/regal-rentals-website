@@ -28,35 +28,32 @@
   }
 
   const originalFetch = globalThis.fetch.bind(globalThis);
-  globalThis.fetch = async (input, init = {}) => {
+  const embeddedCatalogResponse = () => new Response(
+    JSON.stringify({ ok: true, products: bootstrapProducts }),
+    {
+      status: 200,
+      headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }
+    }
+  );
+
+  globalThis.fetch = (input, init = {}) => {
     const rawUrl = typeof input === 'string' ? input : input?.url;
     const isCatalog = rawUrl && rawUrl.includes('/api/public/catalog');
     const isAvailability = rawUrl && rawUrl.includes('/api/public/availability');
 
+    // The server already queried D1 and embedded the current catalog in this page.
+    // Reuse it immediately instead of making a second network and database request.
+    if (isCatalog && bootstrapProducts.length) return Promise.resolve(embeddedCatalogResponse());
     if (!isCatalog && !isAvailability) return originalFetch(input, init);
 
     const url = new URL(rawUrl, globalThis.location.origin);
     url.searchParams.set('_catalogRefresh', String(Date.now()));
-
-    try {
-      const response = await originalFetch(url.toString(), { ...init, cache: 'no-store' });
-      if (!isCatalog || !bootstrapProducts.length) return response;
-
-      const data = await response.clone().json();
-      if (response.ok && Array.isArray(data.products) && data.products.length) return response;
-    } catch (error) {
-      if (!isCatalog || !bootstrapProducts.length) throw error;
-    }
-
-    return new Response(JSON.stringify({ ok: true, products: bootstrapProducts }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }
-    });
+    return originalFetch(url.toString(), { ...init, cache: 'no-store' });
   };
 
   const script = document.createElement('script');
-  script.src = '/rentals.js?v=20260721-6';
-  script.defer = true;
+  script.src = '/rentals.js?v=20260721-8';
+  script.async = true;
   script.onerror = () => {
     const grid = document.querySelector('#available-inventory .inventory-grid');
     if (grid && !grid.querySelector('[data-inventory-product]')) {
