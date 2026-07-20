@@ -110,6 +110,15 @@ export function safeErrorResponse(error) {
   if (message === 'PAYLOAD_TOO_LARGE') return fail('Request is too large.', 413, message);
   if (message === 'INVALID_JSON') return fail('Invalid JSON request.', 400, message);
   if (message === 'CROSS_SITE_REQUEST_BLOCKED') return fail('Cross-site request blocked.', 403, message);
+  if (message === 'ACCESS_NOT_CONFIGURED') {
+    return fail('Cloudflare Access is not fully configured for this deployment.', 503, message);
+  }
+  if (message === 'ACCESS_REQUIRED') {
+    return fail('Open the admin dashboard through admin.regal.rentals and sign in with Cloudflare Access.', 401, message);
+  }
+  if (message === 'ACCESS_INVALID') {
+    return fail('Cloudflare Access could not verify this session. Sign out and sign in again.', 403, message);
+  }
   if (message === 'UNAUTHORIZED') return fail('Sign in required.', 401, message);
   if (message === 'FORBIDDEN') return fail('You do not have permission.', 403, message);
   console.error(error);
