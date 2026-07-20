@@ -5,12 +5,6 @@ import {
   sha256
 } from './http.js';
 
-const PRODUCT_IDS = new Set([
-  'round-table-60',
-  'rectangle-table-6',
-  'canopy-10x10'
-]);
-
 const VALID_STATUSES = new Set([
   'inquiry', 'quote', 'hold', 'confirmed', 'paid', 'ready',
   'out', 'returned', 'completed', 'cancelled', 'expired'
@@ -36,7 +30,7 @@ export function normalizeItems(items) {
   for (const input of items) {
     const productId = cleanText(input?.productId, 80);
     const quantity = Number(input?.quantity);
-    if (!PRODUCT_IDS.has(productId) || !Number.isInteger(quantity) || quantity < 1 || quantity > 1000) {
+    if (!productId || !/^[a-zA-Z0-9_-]+$/.test(productId) || !Number.isInteger(quantity) || quantity < 1 || quantity > 1000) {
       throw new Error('INVALID_ITEMS');
     }
     merged.set(productId, (merged.get(productId) || 0) + quantity);
@@ -71,7 +65,8 @@ export async function loadProducts(db, items) {
   const ids = items.map((item) => item.productId);
   const placeholders = ids.map((_, index) => `?${index + 1}`).join(', ');
   const result = await db.prepare(
-    `SELECT id, sku, name, quantity_owned, price_cents, active
+    `SELECT id, sku, name, category, style, description, price_unit,
+            quantity_owned, price_cents, active, sort_order
      FROM products
      WHERE id IN (${placeholders})`
   ).bind(...ids).all();
@@ -100,8 +95,12 @@ export async function getAvailability(db, blockStartAt, blockEndAt) {
        p.sku,
        p.name,
        p.category,
+       p.style,
+       p.description,
+       p.price_unit,
        p.quantity_owned,
        p.price_cents,
+       p.sort_order,
        MAX(
          0,
          p.quantity_owned - COALESCE(SUM(
@@ -122,7 +121,7 @@ export async function getAvailability(db, blockStartAt, blockEndAt) {
        )
      WHERE p.active = 1
      GROUP BY p.id
-     ORDER BY p.category, p.name`
+     ORDER BY p.category, p.sort_order, p.name`
   ).bind(start, end).all();
   return result.results || [];
 }
