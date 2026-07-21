@@ -7,6 +7,16 @@ const HOLD_SECONDS = 24 * 60 * 60;
 export async function onRequestGet(context) {
   try {
     await requireAdmin(context.env, context.request);
+
+    // Availability already ignores elapsed holds. Keep the admin status in sync when the dashboard loads.
+    await context.env.DB.prepare(
+      `UPDATE bookings
+       SET status = 'expired', updated_at = unixepoch()
+       WHERE status = 'hold'
+         AND hold_expires_at IS NOT NULL
+         AND hold_expires_at <= unixepoch()`
+    ).run();
+
     const url = new URL(context.request.url);
     const status = String(url.searchParams.get('status') || '').trim();
     const limit = Math.min(200, Math.max(1, Number(url.searchParams.get('limit') || 100)));
@@ -50,6 +60,16 @@ export async function onRequestPost(context) {
     const result = await createBooking(context.env, context.request, body, user.id);
     return json({ ok: true, duplicate: result.duplicate, booking: result.booking }, 201);
   } catch (error) {
+    const code = String(error?.message || '');
+    if (code.includes('INVENTORY_CONFLICT')) {
+      return json({
+        ok: false,
+        error: {
+          code: 'INVENTORY_CONFLICT',
+          message: 'That inventory is no longer available for the selected date and time.'
+        }
+      }, 409);
+    }
     return safeErrorResponse(error);
   }
 }
