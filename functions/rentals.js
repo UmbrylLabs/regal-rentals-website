@@ -1,121 +1,5 @@
-const CATEGORY_DEFINITIONS = [
-  ['Tables & Chairs', '♜', 'Tables, chairs, and seating arrangements for events of every size.'],
-  ['Tents & Shade', '⌂', 'Canopies, tents, and shade equipment for outdoor events.'],
-  ['Backyard Games', '★', 'Cornhole, giant games, tug-of-war, and outdoor entertainment.'],
-  ['Mini Golf', '⚑', 'Portable mini golf experiences for parties, weddings, and corporate events.'],
-  ['Photo Booths & Guestbooks', '◉', 'Photo, video, and audio guestbook experiences.'],
-  ['Audio & Visual', '♫', 'PA systems, microphones, projectors, screens, karaoke, and lighting.'],
-  ['Decor & Event Extras', '❖', 'Decor, event accents, and useful extras.'],
-  ['Other', '◆', 'Additional event rental equipment.']
-];
-
-const STYLE_ICONS = {
-  'round-table': '◯',
-  'rectangle-table': '▭',
-  chair: '♜',
-  canopy: '⌂',
-  tent: '△',
-  game: '★',
-  'mini-golf': '⚑',
-  'photo-booth': '◉',
-  audio: '♫',
-  visual: '▣',
-  lighting: '✦',
-  decor: '❖',
-  other: '◆'
-};
-
 const BOOKING_NOTICE_HTML = '<strong>Temporary hold:</strong> Submitting a request places the selected equipment on a 24-hour hold for the chosen date and time. Regal Rentals will review pricing, delivery details, and the agreement before confirming the reservation.';
-const PAGE_CACHE_VERSION = '20260721-1';
-const EDGE_CACHE_SECONDS = 30;
-
-function escapeHtml(value) {
-  return String(value ?? '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
-}
-
-function money(cents) {
-  if (cents == null) return 'Pricing soon';
-  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(Number(cents) / 100);
-}
-
-function publicProduct(row) {
-  return {
-    id: row.id,
-    sku: row.sku,
-    name: row.name,
-    category: row.category,
-    style: row.style,
-    description: row.description,
-    priceUnit: row.price_unit,
-    quantityOwned: Number(row.quantity_owned),
-    priceCents: row.price_cents == null ? null : Number(row.price_cents),
-    sortOrder: Number(row.sort_order || 100)
-  };
-}
-
-function renderCategories(products) {
-  const counts = new Map();
-  products.forEach((product) => counts.set(product.category, (counts.get(product.category) || 0) + 1));
-  return CATEGORY_DEFINITIONS.map(([name, icon, description]) => {
-    const available = (counts.get(name) || 0) > 0;
-    return `<article class="category-card" data-category-availability="${available ? 'available' : 'coming'}"${available ? '' : ' hidden'}>
-      <div class="category-card__icon category-card__icon--dynamic" aria-hidden="true">${escapeHtml(icon)}</div>
-      <h3>${escapeHtml(name)}</h3>
-      <p>${escapeHtml(description)}</p>
-      ${available ? '<a href="#available-inventory">View Current Inventory <span aria-hidden="true">→</span></a>' : ''}
-    </article>`;
-  }).join('');
-}
-
-function renderInventory(products) {
-  if (!products.length) {
-    return '<div class="catalog-load-state"><h3>Inventory is being updated</h3><p>Please contact Regal Rentals for current rental options.</p></div>';
-  }
-
-  return products.map((product) => {
-    const quantity = Number(product.quantityOwned || 0);
-    const unavailable = quantity < 1;
-    const priceText = product.priceCents == null ? 'Pricing soon' : money(product.priceCents);
-    const symbol = STYLE_ICONS[product.style] || STYLE_ICONS.other;
-    const inputId = `${String(product.id).replace(/[^a-zA-Z0-9_-]/g, '-')}-card`;
-    return `<article class="inventory-card${unavailable ? ' inventory-card--unavailable' : ''}" data-inventory-product="${escapeHtml(product.id)}">
-      <div class="inventory-card__visual inventory-card__visual--dynamic" aria-hidden="true">
-        <div class="catalog-style-symbol">${escapeHtml(symbol)}</div>
-        <span class="inventory-card__badge" data-product-badge="${escapeHtml(product.id)}">${unavailable ? 'Unavailable' : `${quantity} in inventory`}</span>
-      </div>
-      <div class="inventory-card__body">
-        <p class="inventory-card__kicker">${escapeHtml(product.category)}</p>
-        <h3>${escapeHtml(product.name)}</h3>
-        <p class="inventory-card__description">${escapeHtml(product.description || 'Contact Regal Rentals for item details.')}</p>
-        <div class="inventory-card__meta${product.priceCents == null ? ' inventory-card__meta--text' : ''}"><strong>${escapeHtml(priceText)}</strong><span>${escapeHtml(product.priceUnit || 'each')}</span></div>
-        <ul class="inventory-card__features"><li>${quantity} total in current inventory</li><li>Live date-specific availability</li><li>Final reservation confirmed by Regal Rentals</li></ul>
-        <div class="card-quote-control">
-          <div class="quantity-control quantity-control--card" aria-label="${escapeHtml(product.name)} quantity selector">
-            <button type="button" data-card-step="-1" data-product-id="${escapeHtml(product.id)}" aria-label="Remove one">−</button>
-            <input id="${escapeHtml(inputId)}" data-card-quantity="${escapeHtml(product.id)}" type="number" min="${unavailable ? 0 : 1}" max="${quantity}" value="${unavailable ? 0 : 1}" inputmode="numeric" aria-label="${escapeHtml(product.name)} quantity to add" ${unavailable ? 'disabled' : ''} />
-            <button type="button" data-card-step="1" data-product-id="${escapeHtml(product.id)}" aria-label="Add one">+</button>
-          </div>
-          <button class="btn btn--secondary add-to-quote-btn" type="button" data-add-product="${escapeHtml(product.id)}" ${unavailable ? 'disabled' : ''}>${unavailable ? 'Unavailable for Date' : 'Add to Quote'}</button>
-        </div>
-      </div>
-    </article>`;
-  }).join('');
-}
-
-function cacheRequest(request) {
-  const url = new URL(request.url);
-  url.pathname = '/rentals';
-  url.search = `?catalogPage=${PAGE_CACHE_VERSION}`;
-  return new Request(url.toString(), {
-    method: 'GET',
-    headers: { Accept: 'text/html' }
-  });
-}
+const LOADING_INVENTORY_HTML = '<div class="catalog-load-state" role="status" aria-live="polite"><h3>Loading current inventory…</h3><p>The page is ready while Regal Rentals checks the latest catalog.</p></div>';
 
 class RemoveOldCatalogScripts {
   element(element) {
@@ -143,58 +27,21 @@ class ReplaceHtml {
 
 class InjectHeadAssets {
   element(element) {
-    element.append('<link rel="stylesheet" href="/catalog-dynamic.css?v=20260721-7" />', { html: true });
+    element.append('<link rel="stylesheet" href="/catalog-dynamic.css?v=20260721-8" />', { html: true });
   }
 }
 
-class InjectCatalogBootstrap {
-  constructor(products) {
-    this.products = products;
-  }
-
+class InjectCatalogLoader {
   element(element) {
-    const json = JSON.stringify({ ok: true, products: this.products }).replace(/</g, '\\u003c');
-    element.append(
-      `<script id="catalog-bootstrap" type="application/json">${json}</script><script src="/catalog-loader.js?v=20260721-10" defer></script>`,
-      { html: true }
-    );
+    element.append('<script src="/catalog-loader.js?v=20260721-11" defer></script>', { html: true });
   }
 }
 
 export async function onRequest(context) {
   const startedAt = Date.now();
-  const requestUrl = new URL(context.request.url);
-  const cache = globalThis.caches?.default;
-  const useCache = context.request.method === 'GET'
-    && !requestUrl.searchParams.has('fresh')
-    && Boolean(cache);
-  const key = useCache ? cacheRequest(context.request) : null;
 
-  if (useCache) {
-    const cached = await cache.match(key);
-    if (cached) {
-      const hit = new Response(cached.body, cached);
-      hit.headers.set('X-Regal-Catalog-Cache', 'HIT');
-      return hit;
-    }
-  }
-
-  let products = [];
-  const databaseStartedAt = Date.now();
-  try {
-    const result = await context.env.DB.prepare(
-      `SELECT id, sku, name, category, style, description, price_unit,
-              quantity_owned, price_cents, sort_order
-       FROM products
-       WHERE active = 1
-       ORDER BY category, sort_order, name`
-    ).all();
-    products = (result.results || []).map(publicProduct);
-  } catch (error) {
-    console.error('Server catalog render failed', error);
-  }
-  const databaseDuration = Date.now() - databaseStartedAt;
-
+  // Keep the initial document independent of D1. The live catalog is loaded
+  // after first paint by catalog-loader.js, just like any other page enhancement.
   const response = await context.next();
   const contentType = String(response.headers.get('content-type') || '');
   if (!contentType.includes('text/html')) return response;
@@ -203,21 +50,15 @@ export async function onRequest(context) {
     .on('script[src]', new RemoveOldCatalogScripts())
     .on('link[href^="https://fonts.googleapis.com/"]', new DeferExternalFonts())
     .on('head', new InjectHeadAssets())
-    .on('#category-grid', new ReplaceHtml(renderCategories(products)))
-    .on('#available-inventory .inventory-grid', new ReplaceHtml(renderInventory(products)))
+    .on('#available-inventory .inventory-grid', new ReplaceHtml(LOADING_INVENTORY_HTML))
     .on('.availability-notice', new ReplaceHtml(BOOKING_NOTICE_HTML))
-    .on('body', new InjectCatalogBootstrap(products))
+    .on('body', new InjectCatalogLoader())
     .transform(response);
 
   const result = new Response(transformed.body, transformed);
-  result.headers.set('Cache-Control', `public, max-age=0, s-maxage=${EDGE_CACHE_SECONDS}, stale-while-revalidate=300`);
-  result.headers.set('CDN-Cache-Control', `max-age=${EDGE_CACHE_SECONDS}, stale-while-revalidate=300`);
-  result.headers.set('X-Regal-Catalog-Render', `server-${products.length}`);
-  result.headers.set('X-Regal-Catalog-Cache', useCache ? 'MISS' : 'BYPASS');
-  result.headers.set('Server-Timing', `d1;dur=${databaseDuration}, total;dur=${Date.now() - startedAt}`);
-
-  if (useCache) {
-    context.waitUntil(cache.put(key, result.clone()));
-  }
+  result.headers.set('Cache-Control', 'public, max-age=300, s-maxage=3600, stale-while-revalidate=86400');
+  result.headers.set('CDN-Cache-Control', 'max-age=3600, stale-while-revalidate=86400');
+  result.headers.set('X-Regal-Catalog-Render', 'client-after-first-paint');
+  result.headers.set('Server-Timing', `shell;dur=${Date.now() - startedAt}`);
   return result;
 }
