@@ -136,7 +136,7 @@ class InjectCatalogBootstrap {
   element(element) {
     const json = JSON.stringify({ ok: true, products: this.products }).replace(/</g, '\\u003c');
     element.append(
-      `<script id="catalog-bootstrap" type="application/json">${json}</script><script src="/catalog-loader.js?v=20260721-8" defer></script>`,
+      `<script id="catalog-bootstrap" type="application/json">${json}</script><script src="/catalog-loader.js?v=20260721-9" defer></script>`,
       { html: true }
     );
   }

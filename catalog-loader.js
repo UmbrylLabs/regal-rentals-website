@@ -27,6 +27,68 @@
     globalThis.CSS.escape = (value) => String(value).replace(/[^a-zA-Z0-9_-]/g, (character) => `\\${character}`);
   }
 
+  const selectedQuantities = new Map();
+  const afterCurrentTask = typeof globalThis.queueMicrotask === 'function'
+    ? globalThis.queueMicrotask.bind(globalThis)
+    : (callback) => Promise.resolve().then(callback);
+
+  const findQuantityInput = (productId) => {
+    const escaped = globalThis.CSS.escape(productId);
+    const quote = document.querySelector(`[data-quote-quantity="${escaped}"]`);
+    const quoteRow = quote?.closest('[data-quote-product]');
+    if (quote && quoteRow && !quoteRow.hidden) return quote;
+    return document.querySelector(`[data-card-quantity="${escaped}"]`) || quote;
+  };
+
+  const rememberQuantity = (input) => {
+    const productId = input?.dataset?.quoteQuantity || input?.dataset?.cardQuantity;
+    const quantity = Number.parseInt(input?.value || '', 10);
+    if (productId && Number.isFinite(quantity) && quantity > 0) selectedQuantities.set(productId, quantity);
+  };
+
+  document.addEventListener('input', (event) => {
+    if (event.target.matches?.('[data-card-quantity], [data-quote-quantity]')) rememberQuantity(event.target);
+  }, true);
+
+  document.addEventListener('click', (event) => {
+    const remove = event.target.closest?.('[data-remove-product]');
+    if (remove) {
+      selectedQuantities.delete(remove.dataset.removeProduct);
+      return;
+    }
+
+    const control = event.target.closest?.('[data-card-step][data-product-id], [data-quote-step][data-product-id], [data-add-product]');
+    if (!control) return;
+    const productId = control.dataset.productId || control.dataset.addProduct;
+    afterCurrentTask(() => rememberQuantity(findQuantityInput(productId)));
+  }, true);
+
+  const restoreSelectedQuantities = () => {
+    selectedQuantities.forEach((remembered, productId) => {
+      const escaped = globalThis.CSS.escape(productId);
+      const quote = document.querySelector(`[data-quote-quantity="${escaped}"]`);
+      const quoteRow = quote?.closest('[data-quote-product]');
+      if (!quote || !quoteRow || quoteRow.hidden) return;
+
+      const card = document.querySelector(`[data-card-quantity="${escaped}"]`);
+      const maximum = Number.parseInt(quote.max || card?.max || '0', 10);
+      if (!Number.isFinite(maximum) || maximum < 1) return;
+      const quantity = Math.min(maximum, Math.max(1, remembered));
+      const value = String(quantity);
+      let changed = false;
+
+      if (quote.value !== value) {
+        quote.value = value;
+        changed = true;
+      }
+      if (card && card.value !== value) card.value = value;
+      if (changed) quote.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+  };
+
+  const observer = new MutationObserver(restoreSelectedQuantities);
+  observer.observe(document.documentElement, { childList: true, subtree: true });
+
   const originalFetch = globalThis.fetch.bind(globalThis);
   const embeddedCatalogResponse = () => new Response(
     JSON.stringify({ ok: true, products: bootstrapProducts }),
@@ -40,10 +102,33 @@
     const rawUrl = typeof input === 'string' ? input : input?.url;
     const isCatalog = rawUrl && rawUrl.includes('/api/public/catalog');
     const isAvailability = rawUrl && rawUrl.includes('/api/public/availability');
+    const isQuote = rawUrl && rawUrl.includes('/api/public/quote');
 
     // The server already queried D1 and embedded the current catalog in this page.
     // Reuse it immediately instead of making a second network and database request.
     if (isCatalog && bootstrapProducts.length) return Promise.resolve(embeddedCatalogResponse());
+
+    if (isQuote && typeof init.body === 'string') {
+      try {
+        const payload = JSON.parse(init.body);
+        if (Array.isArray(payload.items)) {
+          payload.items = payload.items.map((item) => {
+            const remembered = selectedQuantities.get(item.productId);
+            if (!Number.isFinite(remembered)) return item;
+            const inputElement = findQuantityInput(item.productId);
+            const maximum = Number.parseInt(inputElement?.max || '0', 10);
+            const quantity = Number.isFinite(maximum) && maximum > 0
+              ? Math.min(maximum, Math.max(1, remembered))
+              : Math.max(1, remembered);
+            return { ...item, quantity };
+          });
+          init = { ...init, body: JSON.stringify(payload) };
+        }
+      } catch (error) {
+        console.error('Quote quantities could not be preserved', error);
+      }
+    }
+
     if (!isCatalog && !isAvailability) return originalFetch(input, init);
 
     const url = new URL(rawUrl, globalThis.location.origin);
@@ -52,7 +137,7 @@
   };
 
   const script = document.createElement('script');
-  script.src = '/rentals.js?v=20260721-8';
+  script.src = '/rentals.js?v=20260721-9';
   script.async = true;
   script.onerror = () => {
     const grid = document.querySelector('#available-inventory .inventory-grid');
