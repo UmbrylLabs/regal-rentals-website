@@ -25,6 +25,8 @@ const STYLE_ICONS = {
   other: '◆'
 };
 
+const BOOKING_NOTICE_HTML = '<strong>Temporary hold:</strong> Submitting a request places the selected equipment on a 24-hour hold for the chosen date and time. Regal Rentals will review pricing, delivery details, and the agreement before confirming the reservation.';
+
 function escapeHtml(value) {
   return String(value ?? '')
     .replace(/&/g, '&amp;')
@@ -136,7 +138,7 @@ class InjectCatalogBootstrap {
   element(element) {
     const json = JSON.stringify({ ok: true, products: this.products }).replace(/</g, '\\u003c');
     element.append(
-      `<script id="catalog-bootstrap" type="application/json">${json}</script><script src="/catalog-loader.js?v=20260721-9" defer></script>`,
+      `<script id="catalog-bootstrap" type="application/json">${json}</script><script src="/catalog-loader.js?v=20260721-10" defer></script>`,
       { html: true }
     );
   }
@@ -166,6 +168,7 @@ export async function onRequest(context) {
     .on('head', new InjectHeadAssets())
     .on('#category-grid', new ReplaceHtml(renderCategories(products)))
     .on('#available-inventory .inventory-grid', new ReplaceHtml(renderInventory(products)))
+    .on('.availability-notice', new ReplaceHtml(BOOKING_NOTICE_HTML))
     .on('body', new InjectCatalogBootstrap(products))
     .transform(response);
 
