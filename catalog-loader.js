@@ -11,6 +11,13 @@
     console.error('Catalog bootstrap could not be parsed', error);
   }
 
+  if (!bootstrapProducts.length) {
+    const grid = document.querySelector('#available-inventory .inventory-grid');
+    if (grid && !grid.querySelector('.catalog-load-state')) {
+      grid.innerHTML = '<div class="catalog-load-state" role="status" aria-live="polite"><h3>Loading current inventory…</h3><p>The page is ready while Regal Rentals checks the latest catalog.</p></div>';
+    }
+  }
+
   const cryptoObject = globalThis.crypto || {};
   if (typeof cryptoObject.randomUUID !== 'function') {
     cryptoObject.randomUUID = () => {
@@ -161,8 +168,6 @@
     const isAvailability = rawUrl && rawUrl.includes('/api/public/availability');
     const isQuote = rawUrl && rawUrl.includes('/api/public/quote');
 
-    // The server already queried D1 and embedded the current catalog in this page.
-    // Reuse it immediately instead of making a second network and database request.
     if (isCatalog && bootstrapProducts.length) return Promise.resolve(embeddedCatalogResponse());
 
     if (isQuote && typeof init.body === 'string') {
@@ -188,16 +193,20 @@
       }
     }
 
-    if (!isCatalog && !isAvailability) return originalFetch(input, init);
+    if (isCatalog) {
+      return originalFetch(input, { ...init, cache: 'no-cache' });
+    }
+
+    if (!isAvailability) return originalFetch(input, init);
 
     const url = new URL(rawUrl, globalThis.location.origin);
-    if (isAvailability) applyAvailabilityWindow(url);
-    url.searchParams.set('_catalogRefresh', String(Date.now()));
+    applyAvailabilityWindow(url);
+    url.searchParams.set('_availabilityRefresh', String(Date.now()));
     return originalFetch(url.toString(), { ...init, cache: 'no-store' });
   };
 
   const script = document.createElement('script');
-  script.src = '/rentals.js?v=20260721-10';
+  script.src = '/rentals.js?v=20260721-11';
   script.async = true;
   script.onerror = () => {
     const grid = document.querySelector('#available-inventory .inventory-grid');
