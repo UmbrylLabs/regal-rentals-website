@@ -1,4 +1,7 @@
 (() => {
+  const BUFFER_BEFORE_MINUTES = 4 * 60;
+  const BUFFER_AFTER_MINUTES = 12 * 60;
+
   const bootstrapNode = document.getElementById('catalog-bootstrap');
   let bootstrapProducts = [];
   try {
@@ -86,8 +89,62 @@
     });
   };
 
-  const observer = new MutationObserver(restoreSelectedQuantities);
-  observer.observe(document.documentElement, { childList: true, subtree: true });
+  const updateAvailabilityUi = () => {
+    const quickMessage = document.getElementById('date-check-message');
+    const availabilityReady = Boolean(
+      quickMessage?.classList.contains('date-check-message--ready')
+      || quickMessage?.textContent?.includes('Live availability shown for')
+    );
+
+    if (availabilityReady && quickMessage) {
+      const bufferText = 'A four-hour preparation buffer and twelve-hour return/cleaning buffer are included.';
+      const nextText = String(quickMessage.textContent || '')
+        .replace(/A two-hour preparation and return buffer is included\.?/i, bufferText);
+      if (nextText !== quickMessage.textContent) quickMessage.textContent = nextText;
+
+      document.querySelectorAll('[data-product-badge]').forEach((badge) => {
+        const productId = badge.dataset.productBadge;
+        const input = document.querySelector(`[data-card-quantity="${globalThis.CSS.escape(productId)}"]`);
+        const maximum = Number.parseInt(input?.max || '0', 10);
+        const label = maximum > 0 ? `${maximum} available for your date` : 'Unavailable for your date';
+        if (badge.textContent !== label) badge.textContent = label;
+      });
+    }
+
+    const summary = document.getElementById('availability-message');
+    if (
+      summary?.textContent?.startsWith('Request ')
+      && summary.textContent.includes('was received')
+      && !summary.textContent.includes('temporarily held for 24 hours')
+    ) {
+      summary.textContent += ' The requested items are temporarily held for 24 hours while Regal Rentals reviews the order.';
+    }
+  };
+
+  const observer = new MutationObserver(() => {
+    restoreSelectedQuantities();
+    updateAvailabilityUi();
+  });
+  observer.observe(document.documentElement, { childList: true, subtree: true, characterData: true });
+
+  const localEpoch = (date, time) => {
+    if (!date || !time) return null;
+    const parsed = new Date(`${date}T${time}:00`);
+    const epoch = Math.floor(parsed.getTime() / 1000);
+    return Number.isFinite(epoch) ? epoch : null;
+  };
+
+  const applyAvailabilityWindow = (url) => {
+    const date = document.getElementById('event-date')?.value || document.getElementById('quick-event-date')?.value;
+    const startTime = document.getElementById('event-start')?.value || document.getElementById('quick-event-start')?.value;
+    const endTime = document.getElementById('event-end')?.value || document.getElementById('quick-event-end')?.value;
+    const eventStart = localEpoch(date, startTime);
+    const eventEnd = localEpoch(date, endTime);
+    if (eventStart && eventEnd && eventEnd > eventStart) {
+      url.searchParams.set('startAt', String(eventStart - BUFFER_BEFORE_MINUTES * 60));
+      url.searchParams.set('endAt', String(eventEnd + BUFFER_AFTER_MINUTES * 60));
+    }
+  };
 
   const originalFetch = globalThis.fetch.bind(globalThis);
   const embeddedCatalogResponse = () => new Response(
@@ -111,6 +168,8 @@
     if (isQuote && typeof init.body === 'string') {
       try {
         const payload = JSON.parse(init.body);
+        payload.bufferBeforeMinutes = BUFFER_BEFORE_MINUTES;
+        payload.bufferAfterMinutes = BUFFER_AFTER_MINUTES;
         if (Array.isArray(payload.items)) {
           payload.items = payload.items.map((item) => {
             const remembered = selectedQuantities.get(item.productId);
@@ -122,22 +181,23 @@
               : Math.max(1, remembered);
             return { ...item, quantity };
           });
-          init = { ...init, body: JSON.stringify(payload) };
         }
+        init = { ...init, body: JSON.stringify(payload) };
       } catch (error) {
-        console.error('Quote quantities could not be preserved', error);
+        console.error('Quote details could not be prepared', error);
       }
     }
 
     if (!isCatalog && !isAvailability) return originalFetch(input, init);
 
     const url = new URL(rawUrl, globalThis.location.origin);
+    if (isAvailability) applyAvailabilityWindow(url);
     url.searchParams.set('_catalogRefresh', String(Date.now()));
     return originalFetch(url.toString(), { ...init, cache: 'no-store' });
   };
 
   const script = document.createElement('script');
-  script.src = '/rentals.js?v=20260721-9';
+  script.src = '/rentals.js?v=20260721-10';
   script.async = true;
   script.onerror = () => {
     const grid = document.querySelector('#available-inventory .inventory-grid');
