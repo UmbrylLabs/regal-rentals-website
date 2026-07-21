@@ -32,6 +32,8 @@ jobs:
           node-version: "22"
       - name: Test database inventory guards
         run: python3 -m unittest -v tests/test_inventory_guards.py
+      - name: Test public signing link origin
+        run: node tests/test_signing_origin.mjs
       - name: Check JavaScript syntax
         run: |
           find functions admin -name '*.js' -print0 | xargs -0 -n1 node --check
