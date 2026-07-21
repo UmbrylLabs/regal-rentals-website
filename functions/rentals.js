@@ -1,5 +1,21 @@
 const BOOKING_NOTICE_HTML = '<strong>Temporary hold:</strong> Submitting a request places the selected equipment on a 24-hour hold for the chosen date and time. Regal Rentals will review pricing, delivery details, and the agreement before confirming the reservation.';
 const LOADING_INVENTORY_HTML = '<div class="catalog-load-state" role="status" aria-live="polite"><h3>Loading current inventory…</h3><p>The page is ready while Regal Rentals checks the latest catalog.</p></div>';
+const MOBILE_FIRST_PAINT_CSS = `<style id="rentals-mobile-first-paint">
+  @media (max-width: 820px) {
+    .inventory-hero__inner.reveal,
+    .date-check-card.reveal {
+      opacity: 1 !important;
+      transform: none !important;
+      transition: none !important;
+    }
+
+    .site-header {
+      background: #fffaf0 !important;
+      -webkit-backdrop-filter: none !important;
+      backdrop-filter: none !important;
+    }
+  }
+</style>`;
 
 class RemoveOldCatalogScripts {
   element(element) {
@@ -27,6 +43,7 @@ class ReplaceHtml {
 
 class InjectHeadAssets {
   element(element) {
+    element.append(MOBILE_FIRST_PAINT_CSS, { html: true });
     element.append('<link rel="stylesheet" href="/catalog-dynamic.css?v=20260721-8" />', { html: true });
   }
 }
