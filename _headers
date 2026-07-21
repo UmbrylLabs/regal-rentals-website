@@ -16,21 +16,22 @@
   Cache-Control: no-store
 
 /rentals
-  Cache-Control: no-store, max-age=0, must-revalidate
-  Clear-Site-Data: "cache"
+  Cache-Control: public, max-age=300, must-revalidate
 
 /rentals.html
-  Cache-Control: no-store, max-age=0, must-revalidate
-  Clear-Site-Data: "cache"
+  Cache-Control: public, max-age=300, must-revalidate
 
 /rentals.js
-  Cache-Control: no-store, max-age=0, must-revalidate
+  Cache-Control: public, max-age=300, must-revalidate
+
+/catalog-loader.js
+  Cache-Control: public, max-age=300, must-revalidate
 
 /catalog-dynamic.css
-  Cache-Control: no-store, max-age=0, must-revalidate
+  Cache-Control: public, max-age=300, must-revalidate
 
 /api/public/catalog
-  Cache-Control: no-store, max-age=0, must-revalidate
+  Cache-Control: public, max-age=0, s-maxage=30, stale-while-revalidate=300
 
 /api/public/availability
   Cache-Control: no-store, max-age=0, must-revalidate
