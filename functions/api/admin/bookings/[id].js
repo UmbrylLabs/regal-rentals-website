@@ -9,6 +9,8 @@ import {
 import { protectMutation, requireAdmin } from '../../../_lib/auth.js';
 import { cleanText, json, randomId, readJson, safeErrorResponse } from '../../../_lib/http.js';
 
+const HOLD_SECONDS = 24 * 60 * 60;
+
 export async function onRequestGet(context) {
   try {
     await requireAdmin(context.env, context.request);
@@ -50,8 +52,10 @@ export async function onRequestPatch(context) {
     }
     const blockStart = eventStart - Math.round(beforeMinutes * 60);
     const blockEnd = eventEnd + Math.round(afterMinutes * 60);
+    const now = Math.floor(Date.now() / 1000);
+    const requestedHoldExpiry = Number(body.holdExpiresAt || existing.hold_expires_at || 0);
     const holdExpiresAt = status === 'hold'
-      ? Number(body.holdExpiresAt || existing.hold_expires_at || Math.floor(Date.now() / 1000) + 1800)
+      ? Math.max(requestedHoldExpiry, now + HOLD_SECONDS)
       : null;
 
     const items = body.items ? normalizeItems(body.items) : existing.items.map((item) => ({
@@ -99,7 +103,6 @@ export async function onRequestPatch(context) {
       return json({ ok: false, error: { code: 'INVALID_EVENT_CITY', message: 'Enter the event city.' } }, 400);
     }
 
-    const now = Math.floor(Date.now() / 1000);
     const updateStatement = context.env.DB.prepare(
       `UPDATE bookings SET
          status = ?1,
@@ -162,7 +165,7 @@ export async function onRequestPatch(context) {
         randomId(),
         user.id,
         existing.id,
-        JSON.stringify({ status, eventStart, eventEnd, blockStart, blockEnd, items }),
+        JSON.stringify({ status, eventStart, eventEnd, blockStart, blockEnd, holdExpiresAt, items }),
         now
       )
     );
@@ -171,6 +174,16 @@ export async function onRequestPatch(context) {
     const booking = await bookingDetail(context.env.DB, existing.id);
     return json({ ok: true, booking });
   } catch (error) {
+    const code = String(error?.message || '');
+    if (code.includes('INVENTORY_CONFLICT')) {
+      return json({
+        ok: false,
+        error: {
+          code: 'INVENTORY_CONFLICT',
+          message: 'That inventory is no longer available for the selected date and time.'
+        }
+      }, 409);
+    }
     return safeErrorResponse(error);
   }
 }

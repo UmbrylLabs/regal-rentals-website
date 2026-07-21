@@ -61,9 +61,9 @@
                 <label>Start time<input name="eventStart" type="time" value="14:00" required /></label>
                 <label>End time<input name="eventEnd" type="time" value="20:00" required /></label>
                 <label>Service type<select name="serviceType"><option value="delivery">Delivery</option><option value="pickup">Customer pickup</option></select></label>
-                <label>Initial status<select name="status"><option value="inquiry">Inquiry — does not reserve</option><option value="quote">Quote — does not reserve</option><option value="hold">30-minute hold</option><option value="confirmed">Confirmed reservation</option></select></label>
-                <label>Preparation buffer before<select name="bufferBefore"><option value="60">1 hour</option><option value="120" selected>2 hours</option><option value="180">3 hours</option><option value="1440">1 day</option></select></label>
-                <label>Return/cleaning buffer after<select name="bufferAfter"><option value="60">1 hour</option><option value="120" selected>2 hours</option><option value="180">3 hours</option><option value="1440">1 day</option></select></label>
+                <label>Initial status<select name="status"><option value="inquiry">Inquiry — does not reserve</option><option value="quote">Quote — does not reserve</option><option value="hold">24-hour hold</option><option value="confirmed">Confirmed reservation</option></select></label>
+                <label>Preparation buffer before<select name="bufferBefore"><option value="60">1 hour</option><option value="120">2 hours</option><option value="180">3 hours</option><option value="240" selected>4 hours</option><option value="1440">1 day</option></select></label>
+                <label>Return/cleaning buffer after<select name="bufferAfter"><option value="60">1 hour</option><option value="120">2 hours</option><option value="180">3 hours</option><option value="720" selected>12 hours</option><option value="1440">1 day</option></select></label>
                 <label class="full">Event address<input name="eventAddress" autocomplete="street-address" /></label>
                 <label class="full">Notes<textarea name="notes" rows="4"></textarea></label>
               </div>
@@ -135,5 +135,6 @@
     </section>
   </main>
   <script src="/admin/admin.js" defer></script>
+  <script src="/admin/admin-defaults.js?v=20260721-1" defer></script>
 </body>
 </html>
