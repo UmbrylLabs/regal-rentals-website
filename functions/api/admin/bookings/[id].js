@@ -187,3 +187,101 @@ export async function onRequestPatch(context) {
     return safeErrorResponse(error);
   }
 }
+
+export async function onRequestDelete(context) {
+  try {
+    protectMutation(context.request);
+    const user = await requireAdmin(context.env, context.request);
+    if (user.role !== 'owner') {
+      return json({
+        ok: false,
+        error: { code: 'FORBIDDEN', message: 'Only an owner can permanently delete a test booking.' }
+      }, 403);
+    }
+
+    const booking = await bookingDetail(context.env.DB, context.params.id);
+    if (!booking) {
+      return json({ ok: false, error: { code: 'NOT_FOUND', message: 'Booking not found.' } }, 404);
+    }
+    if (!['cancelled', 'expired'].includes(booking.status)) {
+      return json({
+        ok: false,
+        error: {
+          code: 'CANCEL_BEFORE_DELETE',
+          message: 'Only cancelled or expired test bookings can be deleted.'
+        }
+      }, 409);
+    }
+
+    const protection = await context.env.DB.prepare(
+      `SELECT
+         (SELECT COUNT(*)
+          FROM signatures s
+          JOIN signing_requests sr ON sr.token_hash = s.signing_token_hash
+          WHERE sr.booking_id = ?1) AS signed_count,
+         (SELECT COUNT(*)
+          FROM booking_status_history
+          WHERE booking_id = ?1
+            AND new_status IN ('confirmed', 'paid', 'ready', 'out', 'returned', 'completed')) AS protected_status_count,
+         (SELECT COUNT(*)
+          FROM bookings
+          WHERE customer_id = ?2 AND id <> ?1) AS other_booking_count`
+    ).bind(booking.id, booking.customer_id).first();
+
+    if (Number(protection?.signed_count || 0) > 0 || Number(protection?.protected_status_count || 0) > 0) {
+      return json({
+        ok: false,
+        error: {
+          code: 'BOOKING_RECORD_PROTECTED',
+          message: 'This booking has a signature or real rental history and must be retained as a business record.'
+        }
+      }, 409);
+    }
+
+    const deleteCustomer = Number(protection?.other_booking_count || 0) === 0;
+    const now = Math.floor(Date.now() / 1000);
+    const statements = [
+      context.env.DB.prepare(
+        `DELETE FROM signatures
+         WHERE signing_token_hash IN (
+           SELECT token_hash FROM signing_requests WHERE booking_id = ?1
+         )`
+      ).bind(booking.id),
+      context.env.DB.prepare('DELETE FROM signing_requests WHERE booking_id = ?1').bind(booking.id),
+      context.env.DB.prepare('DELETE FROM bookings WHERE id = ?1').bind(booking.id)
+    ];
+
+    if (deleteCustomer) {
+      statements.push(
+        context.env.DB.prepare('DELETE FROM customers WHERE id = ?1').bind(booking.customer_id)
+      );
+    }
+
+    statements.push(
+      context.env.DB.prepare(
+        `INSERT INTO audit_log (
+          id, actor_user_id, action, entity_type, entity_id, metadata_json, created_at
+        ) VALUES (?1, ?2, 'booking.delete_test', 'booking', ?3, ?4, ?5)`
+      ).bind(
+        randomId(),
+        user.id,
+        booking.id,
+        JSON.stringify({
+          bookingNumber: booking.booking_number,
+          status: booking.status,
+          customerDeleted: deleteCustomer
+        }),
+        now
+      )
+    );
+
+    await context.env.DB.batch(statements);
+    return json({
+      ok: true,
+      deleted: { id: booking.id, bookingNumber: booking.booking_number },
+      customerDeleted: deleteCustomer
+    });
+  } catch (error) {
+    return safeErrorResponse(error);
+  }
+}

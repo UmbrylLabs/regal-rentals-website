@@ -26,6 +26,8 @@ const STYLE_ICONS = {
 };
 
 const BOOKING_NOTICE_HTML = '<strong>Temporary hold:</strong> Submitting a request places the selected equipment on a 24-hour hold for the chosen date and time. Regal Rentals will review pricing, delivery details, and the agreement before confirming the reservation.';
+const PAGE_CACHE_VERSION = '20260721-1';
+const EDGE_CACHE_SECONDS = 30;
 
 function escapeHtml(value) {
   return String(value ?? '')
@@ -60,11 +62,9 @@ function renderCategories(products) {
   const counts = new Map();
   products.forEach((product) => counts.set(product.category, (counts.get(product.category) || 0) + 1));
   return CATEGORY_DEFINITIONS.map(([name, icon, description]) => {
-    const count = counts.get(name) || 0;
-    const available = count > 0;
+    const available = (counts.get(name) || 0) > 0;
     return `<article class="category-card" data-category-availability="${available ? 'available' : 'coming'}"${available ? '' : ' hidden'}>
       <div class="category-card__icon category-card__icon--dynamic" aria-hidden="true">${escapeHtml(icon)}</div>
-      <span class="category-card__status${available ? ' category-card__status--available' : ''}">${available ? `${count} Available` : 'Coming Soon'}</span>
       <h3>${escapeHtml(name)}</h3>
       <p>${escapeHtml(description)}</p>
       ${available ? '<a href="#available-inventory">View Current Inventory <span aria-hidden="true">→</span></a>' : ''}
@@ -107,10 +107,27 @@ function renderInventory(products) {
   }).join('');
 }
 
+function cacheRequest(request) {
+  const url = new URL(request.url);
+  url.pathname = '/rentals';
+  url.search = `?catalogPage=${PAGE_CACHE_VERSION}`;
+  return new Request(url.toString(), {
+    method: 'GET',
+    headers: { Accept: 'text/html' }
+  });
+}
+
 class RemoveOldCatalogScripts {
   element(element) {
     const src = String(element.getAttribute('src') || '');
     if (src.includes('rentals.js') || src.includes('catalog-loader.js')) element.remove();
+  }
+}
+
+class DeferExternalFonts {
+  element(element) {
+    element.setAttribute('media', 'print');
+    element.setAttribute('onload', "this.media='all'");
   }
 }
 
@@ -145,7 +162,25 @@ class InjectCatalogBootstrap {
 }
 
 export async function onRequest(context) {
+  const startedAt = Date.now();
+  const requestUrl = new URL(context.request.url);
+  const cache = globalThis.caches?.default;
+  const useCache = context.request.method === 'GET'
+    && !requestUrl.searchParams.has('fresh')
+    && Boolean(cache);
+  const key = useCache ? cacheRequest(context.request) : null;
+
+  if (useCache) {
+    const cached = await cache.match(key);
+    if (cached) {
+      const hit = new Response(cached.body, cached);
+      hit.headers.set('X-Regal-Catalog-Cache', 'HIT');
+      return hit;
+    }
+  }
+
   let products = [];
+  const databaseStartedAt = Date.now();
   try {
     const result = await context.env.DB.prepare(
       `SELECT id, sku, name, category, style, description, price_unit,
@@ -158,6 +193,7 @@ export async function onRequest(context) {
   } catch (error) {
     console.error('Server catalog render failed', error);
   }
+  const databaseDuration = Date.now() - databaseStartedAt;
 
   const response = await context.next();
   const contentType = String(response.headers.get('content-type') || '');
@@ -165,6 +201,7 @@ export async function onRequest(context) {
 
   const transformed = new HTMLRewriter()
     .on('script[src]', new RemoveOldCatalogScripts())
+    .on('link[href^="https://fonts.googleapis.com/"]', new DeferExternalFonts())
     .on('head', new InjectHeadAssets())
     .on('#category-grid', new ReplaceHtml(renderCategories(products)))
     .on('#available-inventory .inventory-grid', new ReplaceHtml(renderInventory(products)))
@@ -173,9 +210,14 @@ export async function onRequest(context) {
     .transform(response);
 
   const result = new Response(transformed.body, transformed);
-  result.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
-  result.headers.set('Pragma', 'no-cache');
-  result.headers.set('Expires', '0');
+  result.headers.set('Cache-Control', `public, max-age=0, s-maxage=${EDGE_CACHE_SECONDS}, stale-while-revalidate=300`);
+  result.headers.set('CDN-Cache-Control', `max-age=${EDGE_CACHE_SECONDS}, stale-while-revalidate=300`);
   result.headers.set('X-Regal-Catalog-Render', `server-${products.length}`);
+  result.headers.set('X-Regal-Catalog-Cache', useCache ? 'MISS' : 'BYPASS');
+  result.headers.set('Server-Timing', `d1;dur=${databaseDuration}, total;dur=${Date.now() - startedAt}`);
+
+  if (useCache) {
+    context.waitUntil(cache.put(key, result.clone()));
+  }
   return result;
 }

@@ -8,6 +8,7 @@
   <link rel="icon" href="/assets/favicon.png" type="image/png" />
   <link rel="stylesheet" href="/admin/admin.css" />
   <link rel="stylesheet" href="/admin/catalog-manager.css" />
+  <link rel="stylesheet" href="/admin/booking-tools.css?v=20260721-1" />
 </head>
 <body>
   <main class="admin-shell">
@@ -78,7 +79,17 @@
           </section>
 
           <section class="panel" data-panel-view="bookings" hidden>
-            <div class="panel-heading"><div><p class="eyebrow">All orders</p><h2>Bookings</h2></div><button class="button button--secondary" id="refresh-bookings" type="button">Refresh</button></div>
+            <div class="panel-heading"><div><p class="eyebrow">Order history</p><h2>Bookings</h2></div><button class="button button--secondary" id="refresh-bookings" type="button">Refresh</button></div>
+            <div class="booking-tools card">
+              <div class="booking-tabs" role="tablist" aria-label="Booking groups">
+                <button class="booking-tab is-active" type="button" role="tab" aria-selected="true" data-booking-filter="active">Active <span data-booking-count="active">0</span></button>
+                <button class="booking-tab" type="button" role="tab" aria-selected="false" data-booking-filter="completed">Completed <span data-booking-count="completed">0</span></button>
+                <button class="booking-tab" type="button" role="tab" aria-selected="false" data-booking-filter="cancelled">Canceled / Expired <span data-booking-count="cancelled">0</span></button>
+                <button class="booking-tab" type="button" role="tab" aria-selected="false" data-booking-filter="all">All <span data-booking-count="all">0</span></button>
+              </div>
+              <label class="booking-search">Search bookings<input id="booking-search" type="search" placeholder="Booking number, customer, phone, email, or city" autocomplete="off" /></label>
+              <p class="booking-filter-summary" id="booking-filter-summary" aria-live="polite"></p>
+            </div>
             <div class="card table-wrap"><table><thead><tr><th>Booking</th><th>Customer</th><th>Event</th><th>Status</th><th>Units</th><th></th></tr></thead><tbody id="bookings-table-body"></tbody></table></div>
           </section>
 
@@ -134,7 +145,8 @@
       </div>
     </section>
   </main>
-  <script src="/admin/admin.js" defer></script>
+  <script src="/admin/booking-tools.js?v=20260721-1" defer></script>
+  <script src="/admin/admin.js?v=20260721-2" defer></script>
   <script src="/admin/admin-defaults.js?v=20260721-1" defer></script>
 </body>
 </html>
