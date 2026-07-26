@@ -9,6 +9,9 @@ on:
       - "admin/**"
       - "rentals.js"
       - "sign.js"
+      - "sign.html"
+      - "sign.css"
+      - "sign-security.css"
       - "package.json"
       - ".github/workflows/booking-backend-tests.yml"
   push:
@@ -36,6 +39,8 @@ jobs:
         run: node tests/test_signing_origin.mjs
       - name: Test modular agreement generation
         run: node tests/test_modular_agreement.mjs
+      - name: Test customer payment-security choice
+        run: node tests/test_customer_security_choice.mjs
       - name: Test booking document safety rules
         run: node tests/test_booking_files.mjs
       - name: Check JavaScript syntax

@@ -1,4 +1,4 @@
-import { createModularSigningRequest } from '../../../../_lib/agreement-v23.js';
+import { createCustomerChoiceSigningRequest } from '../../../../_lib/agreement-v24.js';
 import { protectMutation, requireAdmin } from '../../../../_lib/auth.js';
 import { json, readJson, safeErrorResponse } from '../../../../_lib/http.js';
 import { resolvePublicSigningOrigin } from '../../../../_lib/signing-origin.js';
@@ -12,7 +12,7 @@ export async function onRequestPost(context) {
       context.request.url,
       context.env.PUBLIC_SITE_ORIGIN
     );
-    const request = await createModularSigningRequest(
+    const request = await createCustomerChoiceSigningRequest(
       context.env,
       context.params.id,
       user,

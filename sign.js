@@ -8,8 +8,11 @@
   const form = document.getElementById('signature-form');
   const canvas = document.getElementById('signature-canvas');
   const context = canvas.getContext('2d');
+  const paymentChoice = document.getElementById('payment-security-choice');
   const strokes = [];
   let activeStroke = null;
+  let securityRequired = false;
+  let securityDepositCents = 0;
 
   const escapeHtml = (value) => String(value ?? '')
     .replaceAll('&', '&amp;')
@@ -18,7 +21,18 @@
     .replaceAll('"', '&quot;')
     .replaceAll("'", '&#039;');
 
-  const showSignedAgreement = ({ typedName, signatureSvg, evidenceSha256, signedAt }) => {
+  const money = (cents) => (Number(cents || 0) / 100).toLocaleString('en-US', {
+    style: 'currency',
+    currency: 'USD'
+  });
+
+  const securityLabel = (method, depositCents) => {
+    if (method === 'card_on_file') return 'Card on File';
+    if (method === 'security_deposit') return `Refundable Security Deposit — ${money(depositCents)}`;
+    return '';
+  };
+
+  const showSignedAgreement = ({ typedName, signatureSvg, evidenceSha256, signedAt, paymentSecurityMethod, depositCents }) => {
     const agreement = document.getElementById('agreement-content');
     let proof = document.getElementById('signed-proof');
     if (!proof) {
@@ -32,11 +46,13 @@
       dateStyle: 'long',
       timeStyle: 'short'
     }).format(new Date(Number(signedAt) * 1000));
+    const selectedSecurity = securityLabel(paymentSecurityMethod, depositCents);
     proof.innerHTML = `
       <h2>Electronic Signature</h2>
       <div class="stored-signature">${signatureSvg || ''}</div>
       <p><strong>Signed by:</strong> ${escapeHtml(typedName)}</p>
       <p><strong>Signed:</strong> ${escapeHtml(signedDate)}</p>
+      ${selectedSecurity ? `<p><strong>Payment security selected:</strong> ${escapeHtml(selectedSecurity)}</p>` : ''}
       <p><strong>Evidence reference:</strong> <code>${escapeHtml(evidenceSha256)}</code></p>
     `;
   };
@@ -102,6 +118,17 @@
     context.clearRect(0, 0, canvas.width, canvas.height);
   });
 
+  const configurePaymentChoice = (security) => {
+    securityRequired = security?.required === true;
+    securityDepositCents = Number(security?.depositCents || 0);
+    paymentChoice.hidden = !securityRequired;
+    document.getElementById('security-deposit-amount').textContent = money(securityDepositCents);
+    if (security?.selectedMethod) {
+      const selected = form.querySelector(`input[name="paymentSecurityMethod"][value="${CSS.escape(security.selectedMethod)}"]`);
+      if (selected) selected.checked = true;
+    }
+  };
+
   const loadAgreement = async () => {
     if (!token || !/^[a-f0-9]{64}$/i.test(token)) {
       showError('This signing link is invalid.');
@@ -120,13 +147,16 @@
       document.getElementById('sign-meta').textContent = `Prepared for ${data.agreement.signerName} · Version ${data.agreement.version}`;
       document.getElementById('typed-name').value = data.agreement.signerName;
       document.getElementById('agreement-content').innerHTML = data.agreement.html;
+      configurePaymentChoice(data.agreement.paymentSecurity);
       if (data.agreement.signedAt && data.agreement.signature) {
         form.hidden = true;
         showSignedAgreement({
           typedName: data.agreement.signature.typedName,
           signatureSvg: data.agreement.signature.svg,
           evidenceSha256: data.agreement.signature.evidenceSha256,
-          signedAt: data.agreement.signedAt
+          signedAt: data.agreement.signedAt,
+          paymentSecurityMethod: data.agreement.paymentSecurity?.selectedMethod,
+          depositCents: data.agreement.paymentSecurity?.depositCents
         });
         successCard.hidden = false;
         document.getElementById('evidence-hash').textContent = data.agreement.signature.evidenceSha256;
@@ -141,6 +171,13 @@
     const message = document.getElementById('signature-message');
     message.textContent = '';
     message.className = 'form-message';
+    const selectedSecurity = form.querySelector('input[name="paymentSecurityMethod"]:checked')?.value || '';
+    if (securityRequired && !selectedSecurity) {
+      message.textContent = 'Choose Card on File or the Refundable Security Deposit.';
+      message.classList.add('error');
+      paymentChoice.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
     if (!strokes.length) {
       message.textContent = 'Please draw your signature.';
       message.classList.add('error');
@@ -157,13 +194,21 @@
         body: JSON.stringify({
           typedName: document.getElementById('typed-name').value,
           consent: document.getElementById('signature-consent').checked,
+          paymentSecurityMethod: selectedSecurity || undefined,
           signatureStrokes: strokes
         })
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data?.error?.message || 'Signature could not be recorded.');
       form.hidden = true;
-      showSignedAgreement({ typedName: data.typedName, signatureSvg: data.signatureSvg, evidenceSha256: data.evidenceSha256, signedAt: data.signedAt });
+      showSignedAgreement({
+        typedName: data.typedName,
+        signatureSvg: data.signatureSvg,
+        evidenceSha256: data.evidenceSha256,
+        signedAt: data.signedAt,
+        paymentSecurityMethod: data.paymentSecurityMethod,
+        depositCents: data.securityDepositCents
+      });
       successCard.hidden = false;
       document.getElementById('evidence-hash').textContent = data.evidenceSha256;
       window.scrollTo({ top: 0, behavior: 'smooth' });

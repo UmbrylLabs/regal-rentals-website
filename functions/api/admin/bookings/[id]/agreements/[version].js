@@ -19,6 +19,14 @@ function formatDateTime(epoch) {
   }).format(new Date(Number(epoch) * 1000));
 }
 
+function paymentSecurityLabel(consentText) {
+  const match = String(consentText || '').match(/\[PAYMENT_SECURITY:(card_on_file|security_deposit):(\d+)\]/);
+  if (!match) return '';
+  if (match[1] === 'card_on_file') return 'Card on File';
+  const amount = (Number(match[2]) / 100).toLocaleString('en-US', { style: 'currency', currency: 'USD' });
+  return `Refundable Security Deposit — ${amount}`;
+}
+
 export async function onRequestGet(context) {
   try {
     await requireAdmin(context.env, context.request);
@@ -33,7 +41,7 @@ export async function onRequestGet(context) {
          sr.signer_name, sr.signer_email, sr.expires_at, sr.viewed_at,
          sr.signed_at, sr.voided_at,
          b.booking_number,
-         s.typed_name, s.signature_svg, s.evidence_sha256,
+         s.typed_name, s.signature_svg, s.consent_text, s.evidence_sha256,
          s.signed_at AS signature_signed_at
        FROM signing_requests sr
        JOIN bookings b ON b.id = sr.booking_id
@@ -49,6 +57,7 @@ export async function onRequestGet(context) {
       : signed
         ? `Signed ${formatDateTime(row.signature_signed_at || row.signed_at)}`
         : `Awaiting signature · expires ${formatDateTime(row.expires_at)}`;
+    const security = paymentSecurityLabel(row.consent_text);
 
     const signatureSection = signed ? `
       <section class="signature-proof">
@@ -56,6 +65,7 @@ export async function onRequestGet(context) {
         <div class="stored-signature">${row.signature_svg}</div>
         <p><strong>Signed by:</strong> ${escapeHtml(row.typed_name)}</p>
         <p><strong>Signed:</strong> ${escapeHtml(formatDateTime(row.signature_signed_at || row.signed_at))}</p>
+        ${security ? `<p><strong>Payment security selected:</strong> ${escapeHtml(security)}</p>` : ''}
         <p><strong>Evidence reference:</strong> <code>${escapeHtml(row.evidence_sha256)}</code></p>
       </section>` : `
       <section class="pending-notice">
