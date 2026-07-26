@@ -1,4 +1,9 @@
 (() => {
+  const securityScript = document.createElement('script');
+  securityScript.src = '/admin/agreement-security.js?v=20260726-1';
+  securityScript.async = false;
+  document.head.appendChild(securityScript);
+
   const form = document.getElementById('booking-form');
   if (!form) return;
 
