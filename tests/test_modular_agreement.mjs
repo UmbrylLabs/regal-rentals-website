@@ -42,9 +42,11 @@ assert.match(html, /Security deposit — designated by Regal Rentals \(\$150\.00
 assert.match(html, /does not authorize bounce houses or other inflatables/i);
 assert.match(html, /Release of Liability for Ordinary Negligence/i);
 
-const photoOnly = determineAgreementModules([
+const audioGuestbookModules = determineAgreementModules([
   { name: 'Rotary Audio Guestbook', category: 'Photo Booths & Guestbooks', style: 'photo-booth' }
 ]);
-assert.deepEqual(photoOnly, ['photo']);
+assert.deepEqual(audioGuestbookModules, ['photo', 'av']);
+assert.ok(audioGuestbookModules.includes('photo'), 'Audio guestbooks require the recording/privacy terms.');
+assert.ok(audioGuestbookModules.includes('av'), 'Powered audio guestbooks also require the electrical/A-V terms.');
 
 console.log('Modular agreement tests passed.');
