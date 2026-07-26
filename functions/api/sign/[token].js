@@ -43,6 +43,29 @@ function strokesToSvg(strokes) {
   return `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="200" viewBox="0 0 600 200" role="img" aria-label="Electronic signature">${paths}</svg>`;
 }
 
+function agreementSecurity(html) {
+  const source = String(html || '');
+  const depositMatch = source.match(/data-security-deposit-cents="(\d+)"/);
+  return {
+    required: /data-customer-security-choice="required"/.test(source),
+    depositCents: depositMatch ? Number(depositMatch[1]) : 0
+  };
+}
+
+function selectedSecurity(consentText) {
+  const match = String(consentText || '').match(/\[PAYMENT_SECURITY:(card_on_file|security_deposit):(\d+)\]/);
+  return match ? { method: match[1], depositCents: Number(match[2]) } : { method: null, depositCents: 0 };
+}
+
+function securityDescription(method, depositCents) {
+  if (method === 'card_on_file') return 'Card on File';
+  if (method === 'security_deposit') {
+    const amount = (Number(depositCents) / 100).toLocaleString('en-US', { style: 'currency', currency: 'USD' });
+    return `Refundable Security Deposit (${amount})`;
+  }
+  return '';
+}
+
 async function lookup(env, token) {
   const tokenHash = await sha256(token);
   const row = await env.DB.prepare(
@@ -84,6 +107,8 @@ export async function onRequestGet(context) {
       ).bind(now, tokenHash).run();
     }
 
+    const requiredSecurity = agreementSecurity(row.agreement_html);
+    const signedSecurity = selectedSecurity(row.consent_text);
     return json({
       ok: true,
       agreement: {
@@ -95,6 +120,11 @@ export async function onRequestGet(context) {
         sha256: row.agreement_sha256,
         expiresAt: Number(row.expires_at),
         signedAt: row.signed_at == null ? null : Number(row.signed_at),
+        paymentSecurity: {
+          required: requiredSecurity.required,
+          depositCents: requiredSecurity.depositCents,
+          selectedMethod: signedSecurity.method
+        },
         signature: row.signed_at ? {
           typedName: row.signed_typed_name,
           svg: row.signature_svg,
@@ -134,9 +164,23 @@ export async function onRequestPost(context) {
     if (typedName.length < 2) {
       return json({ ok: false, error: { code: 'NAME_REQUIRED', message: 'Enter your legal name.' } }, 400);
     }
+
+    const requiredSecurity = agreementSecurity(row.agreement_html);
+    const requestedMethod = cleanText(body.paymentSecurityMethod, 40);
+    const validMethod = ['card_on_file', 'security_deposit'].includes(requestedMethod) ? requestedMethod : null;
+    if (requiredSecurity.required && !validMethod) {
+      return json({
+        ok: false,
+        error: { code: 'PAYMENT_SECURITY_REQUIRED', message: 'Choose Card on File or the Refundable Security Deposit.' }
+      }, 400);
+    }
+
     const strokes = normalizeStrokes(body.signatureStrokes);
     const signatureSvg = strokesToSvg(strokes);
-    const consentText = 'I reviewed this agreement, consent to conduct this transaction electronically, and intend my electronic signature to be legally binding.';
+    const securityText = validMethod
+      ? ` Payment security selected: ${securityDescription(validMethod, requiredSecurity.depositCents)}. [PAYMENT_SECURITY:${validMethod}:${requiredSecurity.depositCents}]`
+      : '';
+    const consentText = `I reviewed this agreement, consent to conduct this transaction electronically, and intend my electronic signature to be legally binding.${securityText}`;
     const ip = clientIp(context.request);
     const userAgent = String(context.request.headers.get('user-agent') || '').slice(0, 500);
     const evidenceSha256 = await sha256(JSON.stringify({
@@ -146,6 +190,8 @@ export async function onRequestPost(context) {
       typedName,
       signatureSvg,
       consentText,
+      paymentSecurityMethod: validMethod,
+      securityDepositCents: requiredSecurity.depositCents,
       signedAt: now,
       ip,
       userAgent
@@ -163,9 +209,9 @@ export async function onRequestPost(context) {
         ).bind(now, tokenHash),
         context.env.DB.prepare(
           `INSERT INTO signatures (
-            id, signing_token_hash, typed_name, signature_svg, consent_text,
-            signer_ip, user_agent, signed_at, evidence_sha256
-          ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)`
+             id, signing_token_hash, typed_name, signature_svg, consent_text,
+             signer_ip, user_agent, signed_at, evidence_sha256
+           ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)`
         ).bind(
           randomId(),
           tokenHash,
@@ -179,8 +225,8 @@ export async function onRequestPost(context) {
         ),
         context.env.DB.prepare(
           `INSERT INTO audit_log (
-            id, actor_user_id, action, entity_type, entity_id, metadata_json, created_at
-          ) VALUES (?1, NULL, 'agreement.sign', 'booking', ?2, ?3, ?4)`
+             id, actor_user_id, action, entity_type, entity_id, metadata_json, created_at
+           ) VALUES (?1, NULL, 'agreement.sign', 'booking', ?2, ?3, ?4)`
         ).bind(
           randomId(),
           row.booking_id,
@@ -188,7 +234,9 @@ export async function onRequestPost(context) {
             agreementVersion: Number(row.agreement_version),
             agreementSha256: row.agreement_sha256,
             evidenceSha256,
-            signerEmail: row.signer_email
+            signerEmail: row.signer_email,
+            paymentSecurityMethod: validMethod,
+            securityDepositCents: requiredSecurity.depositCents
           }),
           now
         )
@@ -206,6 +254,8 @@ export async function onRequestPost(context) {
       evidenceSha256,
       signatureSvg,
       typedName,
+      paymentSecurityMethod: validMethod,
+      securityDepositCents: requiredSecurity.depositCents,
       message: 'Agreement signed successfully.'
     }, 201);
   } catch (error) {
