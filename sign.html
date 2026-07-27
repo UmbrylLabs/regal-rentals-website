@@ -7,7 +7,7 @@
   <meta name="robots" content="noindex, nofollow" />
   <link rel="icon" href="/assets/favicon.png" type="image/png" />
   <link rel="stylesheet" href="/sign.css" />
-  <link rel="stylesheet" href="/sign-security.css?v=20260726-1" />
+  <link rel="stylesheet" href="/sign-security.css?v=20260726-2" />
 </head>
 <body>
   <header class="sign-header">
@@ -22,31 +22,35 @@
       <form class="signature-card" id="signature-form">
         <h2>Review and Sign</h2>
         <fieldset class="payment-security-choice" id="payment-security-choice" hidden>
-          <legend>Choose Payment Security</legend>
-          <p>Choose one option. Your selection becomes part of the signed agreement. The card or deposit must also be completed through Regal Rentals’ secure payment process before equipment release.</p>
+          <legend>Choose How You Will Pay</legend>
+          <p>Your payment method determines whether a refundable security deposit is required. Your selection becomes part of the signed agreement.</p>
           <div class="payment-security-options">
             <label class="payment-security-option">
-              <input type="radio" name="paymentSecurityMethod" value="card_on_file" />
-              <span><strong>Card on File</strong><small>No separate refundable deposit. Authorizes documented charges permitted by the agreement.</small></span>
+              <input type="radio" name="paymentSecurityMethod" value="credit_card" />
+              <span><strong>Credit Card</strong><small>No refundable security deposit. The same valid credit card used for payment must be securely stored on file and may be charged for documented amounts permitted by the agreement.</small></span>
             </label>
             <label class="payment-security-option">
-              <input type="radio" name="paymentSecurityMethod" value="security_deposit" />
-              <span><strong>Refundable Security Deposit — <span id="security-deposit-amount"></span></strong><small>Collected before equipment release. Any unused balance is returned after inspection.</small></span>
+              <input type="radio" name="paymentSecurityMethod" value="debit_card" />
+              <span><strong>Debit Card — 50% Refundable Deposit: <span class="security-deposit-amount"></span></strong><small>The deposit is collected before equipment release and any unused balance is returned after inspection.</small></span>
+            </label>
+            <label class="payment-security-option">
+              <input type="radio" name="paymentSecurityMethod" value="cash" />
+              <span><strong>Cash — 50% Refundable Deposit: <span class="security-deposit-amount"></span></strong><small>The deposit is collected before equipment release and any unused balance is returned after inspection.</small></span>
             </label>
           </div>
         </fieldset>
         <label>Legal name<input id="typed-name" type="text" autocomplete="name" required maxlength="150" /></label>
         <div class="canvas-label"><strong>Draw your signature</strong><button type="button" id="clear-signature">Clear</button></div>
         <canvas id="signature-canvas" width="600" height="200" aria-label="Signature drawing area"></canvas>
-        <label class="consent"><input id="signature-consent" type="checkbox" required /><span>I reviewed this agreement, selected the payment-security option shown above when required, consent to conduct this transaction electronically, and intend my electronic signature to be legally binding.</span></label>
+        <label class="consent"><input id="signature-consent" type="checkbox" required /><span>I reviewed this agreement, selected my intended payment method and corresponding payment-security requirement, consent to conduct this transaction electronically, and intend my electronic signature to be legally binding.</span></label>
         <button class="sign-button" type="submit">Agree and Sign</button>
         <p class="form-message" id="signature-message" aria-live="polite"></p>
       </form>
     </section>
     <section class="success-card" id="success-card" hidden>
-      <h1>Agreement Signed</h1><p>Your electronic signature and payment-security choice were recorded successfully.</p><p><strong>Evidence reference:</strong></p><code id="evidence-hash"></code><button type="button" id="print-agreement">Print or Save a Copy</button>
+      <h1>Agreement Signed</h1><p>Your electronic signature and payment-method selection were recorded successfully.</p><p><strong>Evidence reference:</strong></p><code id="evidence-hash"></code><button type="button" id="print-agreement">Print or Save a Copy</button>
     </section>
   </main>
-  <script src="/sign.js?v=20260726-2" defer></script>
+  <script src="/sign.js?v=20260726-3" defer></script>
 </body>
 </html>
