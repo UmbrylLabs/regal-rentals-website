@@ -41,6 +41,8 @@ jobs:
         run: node tests/test_modular_agreement.mjs
       - name: Test customer payment-security choice
         run: node tests/test_customer_security_choice.mjs
+      - name: Test payment-method signing UI contract
+        run: node tests/test_payment_method_ui_contract.mjs
       - name: Test booking document safety rules
         run: node tests/test_booking_files.mjs
       - name: Check JavaScript syntax
