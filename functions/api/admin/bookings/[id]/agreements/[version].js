@@ -20,10 +20,12 @@ function formatDateTime(epoch) {
 }
 
 function paymentSecurityLabel(consentText) {
-  const match = String(consentText || '').match(/\[PAYMENT_SECURITY:(card_on_file|security_deposit):(\d+)\]/);
+  const match = String(consentText || '').match(/\[PAYMENT_SECURITY:(credit_card|debit_card|cash|card_on_file|security_deposit):(\d+)\]/);
   if (!match) return '';
-  if (match[1] === 'card_on_file') return 'Card on File';
   const amount = (Number(match[2]) / 100).toLocaleString('en-US', { style: 'currency', currency: 'USD' });
+  if (match[1] === 'credit_card' || match[1] === 'card_on_file') return 'Credit Card — no refundable deposit; card securely stored on file';
+  if (match[1] === 'debit_card') return `Debit Card — Refundable Security Deposit ${amount}`;
+  if (match[1] === 'cash') return `Cash — Refundable Security Deposit ${amount}`;
   return `Refundable Security Deposit — ${amount}`;
 }
 
@@ -65,7 +67,7 @@ export async function onRequestGet(context) {
         <div class="stored-signature">${row.signature_svg}</div>
         <p><strong>Signed by:</strong> ${escapeHtml(row.typed_name)}</p>
         <p><strong>Signed:</strong> ${escapeHtml(formatDateTime(row.signature_signed_at || row.signed_at))}</p>
-        ${security ? `<p><strong>Payment security selected:</strong> ${escapeHtml(security)}</p>` : ''}
+        ${security ? `<p><strong>Payment method and security:</strong> ${escapeHtml(security)}</p>` : ''}
         <p><strong>Evidence reference:</strong> <code>${escapeHtml(row.evidence_sha256)}</code></p>
       </section>` : `
       <section class="pending-notice">

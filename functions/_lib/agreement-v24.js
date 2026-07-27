@@ -1,11 +1,7 @@
 import { buildModularAgreementHtml, determineAgreementModules } from './agreement-v23.js';
 import { cleanText, normalizeEmail, sha256 } from './http.js';
 
-const AGREEMENT_VERSION = '2.4';
-const DEPOSIT_INCREMENT_CENTS = 2500;
-const STANDARD_MINIMUM_CENTS = 15000;
-const ELECTRONICS_MINIMUM_CENTS = 30000;
-const MAXIMUM_CENTS = 75000;
+const AGREEMENT_VERSION = '2.5';
 const MANUAL_REVIEW_SUBTOTAL_CENTS = 150000;
 
 const money = (cents) => (Number(cents) / 100).toLocaleString('en-US', {
@@ -22,35 +18,29 @@ const escapeHtml = (value) => String(value ?? '')
 
 export function calculateSecurityDeposit(booking) {
   const items = Array.isArray(booking?.items) ? booking.items : [];
-  const modules = determineAgreementModules(items);
-  const hasElectronics = modules.some((module) => ['photo', 'av', 'connectivity'].includes(module));
   const subtotalCents = Math.max(0, Math.round(Number(booking?.subtotal_cents || 0)));
-  const halfRoundedUp = Math.ceil((subtotalCents * 0.5) / DEPOSIT_INCREMENT_CENTS) * DEPOSIT_INCREMENT_CENTS;
-  const minimumCents = hasElectronics ? ELECTRONICS_MINIMUM_CENTS : STANDARD_MINIMUM_CENTS;
-  const amountCents = Math.min(MAXIMUM_CENTS, Math.max(minimumCents, halfRoundedUp));
+  const amountCents = Math.round(subtotalCents / 2);
   const hasUnpricedItems = items.some((item) => item.unit_price_cents == null);
   return {
     amountCents,
-    minimumCents,
-    maximumCents: MAXIMUM_CENTS,
-    hasElectronics,
+    hasUnpricedItems,
     requiresManualReview: subtotalCents > MANUAL_REVIEW_SUBTOTAL_CENTS || hasUnpricedItems
   };
 }
 
 function paymentSecurityTerms(deposit) {
   const manualReview = deposit.requiresManualReview
-    ? '<p class="agreement-note"><strong>Staff review:</strong> Because this booking exceeds $1,500 or contains an item without final pricing, Regal Rentals may require additional payment security or approval before equipment release.</p>'
+    ? '<p class="agreement-note"><strong>Staff review:</strong> Because this booking exceeds $1,500 or contains an item without final pricing, Regal Rentals must review final pricing and payment completion before equipment release. Any required debit-card or cash deposit remains exactly 50% of the final confirmed rental subtotal.</p>'
     : '';
-  return `<section class="payment-security-terms" data-payment-security-options="customer-choice">
-    <h2>Payment Security Options — Customer Must Choose One</h2>
-    <p>Before signing, Customer must choose one of the following payment-security methods. The selection becomes part of the signed agreement and must be completed through Regal Rentals’ secure payment process before equipment is released.</p>
+  return `<section class="payment-security-terms" data-payment-security-options="payment-method">
+    <h2>Payment Method and Security Requirement</h2>
+    <p>Before signing, Customer must identify the method that will be used to pay the rental balance. The payment method determines the required payment security and becomes part of the signed agreement.</p>
     <div class="payment-security-terms-grid">
-      <div><h3>Card on File</h3><p>No separate refundable security deposit. Customer authorizes scheduled charges and documented additional charges permitted by this Agreement and Schedule A. A valid card must be securely saved before equipment release.</p></div>
-      <div><h3>Refundable Security Deposit — ${escapeHtml(money(deposit.amountCents))}</h3><p>The deposit is collected before equipment release, may be applied to documented amounts due, and does not limit Customer responsibility. Regal Rentals will initiate return of any remaining balance within three business days after return and inspection; the customer’s bank may take additional time to post it.</p></div>
+      <div><h3>Credit Card</h3><p>No refundable security deposit is required. The same valid credit card used for payment must be securely saved on file before equipment release. Customer authorizes documented additional charges permitted by this Agreement and Schedule A, including damage, theft, missing items, excessive cleaning, late return, and retrieval charges.</p></div>
+      <div><h3>Debit Card or Cash</h3><p>A refundable security deposit of ${escapeHtml(money(deposit.amountCents))}, equal to exactly 50% of the confirmed rental subtotal, is required before equipment release. The deposit may be applied to documented amounts due and does not limit Customer responsibility. Regal Rentals will initiate return of any remaining balance within three business days after return and inspection; the customer’s bank may take additional time to post a debit-card refund.</p></div>
     </div>
-    <p>The deposit is calculated as 50% of the known rental subtotal, rounded up to the next $25, with a ${escapeHtml(money(deposit.minimumCents))} minimum for this booking and a ${escapeHtml(money(deposit.maximumCents))} maximum. A card authorization or deposit is payment security, not a damage waiver.</p>
-    <p>Choosing an option in the signing form records the contractual selection. It does not itself store a card or collect funds; the selected method must also be completed through the applicable secure payment step.</p>
+    <p>The deposit has no minimum or maximum and is calculated as exactly 50% of the final confirmed rental subtotal, rounded to the nearest cent only when necessary. If the confirmed subtotal changes, the deposit changes to remain 50% of that subtotal. A stored credit card or refundable deposit is payment security, not a damage waiver.</p>
+    <p>Choosing a payment method in the signing form records the contractual selection. It does not itself store a card or collect funds; payment and the applicable security requirement must also be completed through Regal Rentals’ secure payment process.</p>
     ${manualReview}
   </section>`;
 }
@@ -64,11 +54,11 @@ export function buildCustomerChoiceAgreementHtml(booking) {
     .replace('Customer Use Version 2.3', `Customer Use Version ${AGREEMENT_VERSION}`)
     .replace('<dd>Version 2.3</dd>', `<dd>Version ${AGREEMENT_VERSION}</dd>`)
     .replace('Version 2.3 · Generated specifically for', `Version ${AGREEMENT_VERSION} · Generated specifically for`)
-    .replace('No equipment will be released until the Agreement is accepted and the payment-security method designated by Regal Rentals is completed.', 'No equipment will be released until the Agreement is accepted and the payment-security method selected by Customer is completed.')
-    .replace('Regal Rentals will designate card on file or security deposit before equipment release', `Customer must choose Card on File or Refundable Security Deposit — ${money(deposit.amountCents)} before signing`)
-    .replace('Regal Rentals will designate either CARD ON FILE or SECURITY DEPOSIT before equipment release. This is selected by Regal Rentals, not the customer.', `Customer must select either CARD ON FILE or the REFUNDABLE SECURITY DEPOSIT of ${money(deposit.amountCents)} before signing.`)
-    .replace('If CARD ON FILE is designated, Customer authorizes scheduled charges and documented additional charges permitted by this Agreement and Schedule A. If SECURITY DEPOSIT is designated, Regal Rentals may apply it to documented amounts due and invoice any remaining balance.', 'If Customer selects CARD ON FILE, Customer authorizes scheduled charges and documented additional charges permitted by this Agreement and Schedule A. If Customer selects REFUNDABLE SECURITY DEPOSIT, Regal Rentals may apply it to documented amounts due and invoice any remaining balance.')
-    .replace('understands Regal Rentals selects the payment-security method;', 'selected either Card on File or the calculated Refundable Security Deposit in the signing form;')
+    .replace('No equipment will be released until the Agreement is accepted and the payment-security method designated by Regal Rentals is completed.', 'No equipment will be released until the Agreement is accepted and the payment requirement associated with Customer’s selected payment method is completed.')
+    .replace('Regal Rentals will designate card on file or security deposit before equipment release', `Credit card payment requires a valid card securely saved on file with no deposit; debit-card or cash payment requires a refundable deposit of ${money(deposit.amountCents)}`)
+    .replace('Regal Rentals will designate either CARD ON FILE or SECURITY DEPOSIT before equipment release. This is selected by Regal Rentals, not the customer.', `Customer must select the intended payment method before signing. CREDIT CARD payment requires the same valid credit card to be securely saved on file and does not require a refundable deposit. DEBIT CARD or CASH payment requires a refundable security deposit of ${money(deposit.amountCents)}, equal to 50% of the confirmed rental subtotal.`)
+    .replace('If CARD ON FILE is designated, Customer authorizes scheduled charges and documented additional charges permitted by this Agreement and Schedule A. If SECURITY DEPOSIT is designated, Regal Rentals may apply it to documented amounts due and invoice any remaining balance.', 'If Customer selects CREDIT CARD, Customer authorizes scheduled charges and documented additional charges permitted by this Agreement and Schedule A, and the same valid credit card must be securely saved on file. If Customer selects DEBIT CARD or CASH, Customer must pay the refundable security deposit shown in the Booking Summary; Regal Rentals may apply it to documented amounts due and invoice any remaining balance.')
+    .replace('understands Regal Rentals selects the payment-security method;', 'selected the intended payment method and understands the corresponding card-on-file or 50% refundable-deposit requirement;')
     .replace('</section><div class="included-modules">', `</section>${paymentSecurityTerms(deposit)}<div class="included-modules">`);
 
   return html;

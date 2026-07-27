@@ -27,8 +27,9 @@
   });
 
   const securityLabel = (method, depositCents) => {
-    if (method === 'card_on_file') return 'Card on File';
-    if (method === 'security_deposit') return `Refundable Security Deposit — ${money(depositCents)}`;
+    if (method === 'credit_card') return 'Credit Card — no refundable deposit; card securely stored on file';
+    if (method === 'debit_card') return `Debit Card — refundable security deposit ${money(depositCents)}`;
+    if (method === 'cash') return `Cash — refundable security deposit ${money(depositCents)}`;
     return '';
   };
 
@@ -52,7 +53,7 @@
       <div class="stored-signature">${signatureSvg || ''}</div>
       <p><strong>Signed by:</strong> ${escapeHtml(typedName)}</p>
       <p><strong>Signed:</strong> ${escapeHtml(signedDate)}</p>
-      ${selectedSecurity ? `<p><strong>Payment security selected:</strong> ${escapeHtml(selectedSecurity)}</p>` : ''}
+      ${selectedSecurity ? `<p><strong>Payment method and security:</strong> ${escapeHtml(selectedSecurity)}</p>` : ''}
       <p><strong>Evidence reference:</strong> <code>${escapeHtml(evidenceSha256)}</code></p>
     `;
   };
@@ -122,7 +123,9 @@
     securityRequired = security?.required === true;
     securityDepositCents = Number(security?.depositCents || 0);
     paymentChoice.hidden = !securityRequired;
-    document.getElementById('security-deposit-amount').textContent = money(securityDepositCents);
+    document.querySelectorAll('.security-deposit-amount').forEach((element) => {
+      element.textContent = money(securityDepositCents);
+    });
     if (security?.selectedMethod) {
       const selected = form.querySelector(`input[name="paymentSecurityMethod"][value="${CSS.escape(security.selectedMethod)}"]`);
       if (selected) selected.checked = true;
@@ -173,7 +176,7 @@
     message.className = 'form-message';
     const selectedSecurity = form.querySelector('input[name="paymentSecurityMethod"]:checked')?.value || '';
     if (securityRequired && !selectedSecurity) {
-      message.textContent = 'Choose Card on File or the Refundable Security Deposit.';
+      message.textContent = 'Choose Credit Card, Debit Card, or Cash.';
       message.classList.add('error');
       paymentChoice.scrollIntoView({ behavior: 'smooth', block: 'center' });
       return;

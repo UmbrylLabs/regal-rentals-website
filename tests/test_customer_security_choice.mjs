@@ -29,22 +29,26 @@ const projectorItem = {
   sku: 'PROJECTOR', description: ''
 };
 
-assert.equal(calculateSecurityDeposit(booking(10000, [tableItem])).amountCents, 15000);
-assert.equal(calculateSecurityDeposit(booking(25000, [tableItem])).amountCents, 15000);
+assert.equal(calculateSecurityDeposit(booking(10000, [tableItem])).amountCents, 5000);
+assert.equal(calculateSecurityDeposit(booking(25000, [tableItem])).amountCents, 12500);
 assert.equal(calculateSecurityDeposit(booking(40000, [tableItem])).amountCents, 20000);
-assert.equal(calculateSecurityDeposit(booking(25000, [projectorItem])).amountCents, 30000);
-assert.equal(calculateSecurityDeposit(booking(200000, [projectorItem])).amountCents, 75000);
+assert.equal(calculateSecurityDeposit(booking(25000, [projectorItem])).amountCents, 12500);
+assert.equal(calculateSecurityDeposit(booking(200000, [projectorItem])).amountCents, 100000);
+assert.equal(calculateSecurityDeposit(booking(10101, [tableItem])).amountCents, 5051);
 assert.equal(calculateSecurityDeposit(booking(200000, [projectorItem])).requiresManualReview, true);
 
 const agreement = buildCustomerChoiceAgreementHtml(booking(25000, [projectorItem]));
-assert.match(agreement, /data-agreement-version="2\.4"/);
+assert.match(agreement, /data-agreement-version="2\.5"/);
 assert.match(agreement, /data-customer-security-choice="required"/);
-assert.match(agreement, /data-security-deposit-cents="30000"/);
-assert.match(agreement, /Payment Security Options — Customer Must Choose One/);
-assert.match(agreement, /Card on File/);
-assert.match(agreement, /Refundable Security Deposit — \$300\.00/);
-assert.match(agreement, /50% of the known rental subtotal/);
+assert.match(agreement, /data-security-deposit-cents="12500"/);
+assert.match(agreement, /Payment Method and Security Requirement/);
+assert.match(agreement, /Credit Card/);
+assert.match(agreement, /Debit Card or Cash/);
+assert.match(agreement, /exactly 50% of the confirmed rental subtotal/);
+assert.match(agreement, /no minimum or maximum/i);
 assert.match(agreement, /does not limit Customer responsibility/);
-assert.doesNotMatch(agreement, /selected by Regal Rentals, not the customer/i);
+assert.doesNotMatch(agreement, /rounded up to the next \$25/i);
+assert.doesNotMatch(agreement, /\$150\.00 minimum/i);
+assert.doesNotMatch(agreement, /\$750\.00 maximum/i);
 
-console.log('Customer payment-security tests passed.');
+console.log('Customer payment-method and exact-deposit tests passed.');
