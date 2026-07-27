@@ -8,6 +8,7 @@
   <link rel="icon" href="/assets/favicon.png" type="image/png" />
   <link rel="stylesheet" href="/sign.css" />
   <link rel="stylesheet" href="/sign-security.css?v=20260726-2" />
+  <link rel="stylesheet" href="/sign-review.css?v=20260727-1" />
 </head>
 <body>
   <header class="sign-header">
@@ -18,7 +19,29 @@
     <section id="error-card" class="error-card" hidden><h1>Agreement Unavailable</h1><p id="error-message"></p></section>
     <section id="signing-view" hidden>
       <div class="sign-summary"><p class="eyebrow">Secure electronic signature</p><h1 id="sign-title">Rental Agreement</h1><p id="sign-meta"></p></div>
-      <div class="agreement-card" id="agreement-content"></div>
+
+      <section class="agreement-review-shell" aria-labelledby="agreement-review-title">
+        <div class="agreement-review-heading">
+          <div><p class="eyebrow">Full legal terms</p><h2 id="agreement-review-title">Review the Complete Agreement</h2><p>The complete agreement is contained in the box below.</p></div>
+          <span class="agreement-scroll-hint">Scroll inside this box</span>
+        </div>
+        <div class="agreement-card agreement-scroll-box" id="agreement-content" tabindex="0" aria-label="Complete rental agreement. Scroll within this box to review all terms."></div>
+      </section>
+
+      <section class="key-summary-card" aria-labelledby="key-summary-title">
+        <h2 id="key-summary-title">Key Points</h2>
+        <p class="key-summary-disclaimer"><strong>This is a convenience summary only.</strong> It does not replace or change the complete agreement above. The complete agreement controls.</p>
+        <ul class="key-summary-list">
+          <li><strong>Payment and security</strong><span id="key-summary-payment">Credit card requires a securely stored card with no refundable deposit. Debit card or cash requires a refundable deposit equal to 50% of the rental subtotal.</span></li>
+          <li><strong>Custody and return</strong><span>Your responsibility continues until Regal Rentals receives, inspects, and accepts the equipment as returned.</span></li>
+          <li><strong>Damage, theft, and loss</strong><span>You are responsible for documented loss, theft, missing items, damage beyond ordinary wear, excessive cleaning, and other charges allowed by the agreement.</span></li>
+          <li><strong>Cancellation</strong><span>The cancellation and rescheduling terms in Section 4 apply after the booking is reserved.</span></li>
+          <li><strong>Safety and liability</strong><span>The agreement includes assumption-of-risk and liability-release provisions. Stop use immediately if equipment or conditions appear unsafe.</span></li>
+        </ul>
+      </section>
+
+      <div id="signed-proof-host" aria-live="polite"></div>
+
       <form class="signature-card" id="signature-form">
         <h2>Review and Sign</h2>
         <fieldset class="payment-security-choice" id="payment-security-choice" hidden>
@@ -52,5 +75,6 @@
     </section>
   </main>
   <script src="/sign.js?v=20260726-3" defer></script>
+  <script src="/sign-review.js?v=20260727-1" defer></script>
 </body>
 </html>
