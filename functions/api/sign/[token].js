@@ -53,17 +53,21 @@ function agreementSecurity(html) {
 }
 
 function selectedSecurity(consentText) {
-  const match = String(consentText || '').match(/\[PAYMENT_SECURITY:(card_on_file|security_deposit):(\d+)\]/);
+  const match = String(consentText || '').match(/\[PAYMENT_SECURITY:(credit_card|debit_card|cash|card_on_file|security_deposit):(\d+)\]/);
   return match ? { method: match[1], depositCents: Number(match[2]) } : { method: null, depositCents: 0 };
 }
 
 function securityDescription(method, depositCents) {
-  if (method === 'card_on_file') return 'Card on File';
-  if (method === 'security_deposit') {
-    const amount = (Number(depositCents) / 100).toLocaleString('en-US', { style: 'currency', currency: 'USD' });
-    return `Refundable Security Deposit (${amount})`;
-  }
+  const amount = (Number(depositCents) / 100).toLocaleString('en-US', { style: 'currency', currency: 'USD' });
+  if (method === 'credit_card' || method === 'card_on_file') return 'Credit Card — no refundable deposit; card securely stored on file';
+  if (method === 'debit_card') return `Debit Card — Refundable Security Deposit (${amount})`;
+  if (method === 'cash') return `Cash — Refundable Security Deposit (${amount})`;
+  if (method === 'security_deposit') return `Refundable Security Deposit (${amount})`;
   return '';
+}
+
+function applicableDeposit(method, calculatedDepositCents) {
+  return ['debit_card', 'cash', 'security_deposit'].includes(method) ? Number(calculatedDepositCents) : 0;
 }
 
 async function lookup(env, token) {
@@ -167,18 +171,21 @@ export async function onRequestPost(context) {
 
     const requiredSecurity = agreementSecurity(row.agreement_html);
     const requestedMethod = cleanText(body.paymentSecurityMethod, 40);
-    const validMethod = ['card_on_file', 'security_deposit'].includes(requestedMethod) ? requestedMethod : null;
+    const validMethod = ['credit_card', 'debit_card', 'cash', 'card_on_file', 'security_deposit'].includes(requestedMethod)
+      ? requestedMethod
+      : null;
     if (requiredSecurity.required && !validMethod) {
       return json({
         ok: false,
-        error: { code: 'PAYMENT_SECURITY_REQUIRED', message: 'Choose Card on File or the Refundable Security Deposit.' }
+        error: { code: 'PAYMENT_SECURITY_REQUIRED', message: 'Choose Credit Card, Debit Card, or Cash.' }
       }, 400);
     }
 
+    const depositCents = validMethod ? applicableDeposit(validMethod, requiredSecurity.depositCents) : 0;
     const strokes = normalizeStrokes(body.signatureStrokes);
     const signatureSvg = strokesToSvg(strokes);
     const securityText = validMethod
-      ? ` Payment security selected: ${securityDescription(validMethod, requiredSecurity.depositCents)}. [PAYMENT_SECURITY:${validMethod}:${requiredSecurity.depositCents}]`
+      ? ` Payment method and security selected: ${securityDescription(validMethod, depositCents)}. [PAYMENT_SECURITY:${validMethod}:${depositCents}]`
       : '';
     const consentText = `I reviewed this agreement, consent to conduct this transaction electronically, and intend my electronic signature to be legally binding.${securityText}`;
     const ip = clientIp(context.request);
@@ -191,7 +198,7 @@ export async function onRequestPost(context) {
       signatureSvg,
       consentText,
       paymentSecurityMethod: validMethod,
-      securityDepositCents: requiredSecurity.depositCents,
+      securityDepositCents: depositCents,
       signedAt: now,
       ip,
       userAgent
@@ -236,7 +243,7 @@ export async function onRequestPost(context) {
             evidenceSha256,
             signerEmail: row.signer_email,
             paymentSecurityMethod: validMethod,
-            securityDepositCents: requiredSecurity.depositCents
+            securityDepositCents: depositCents
           }),
           now
         )
@@ -255,7 +262,7 @@ export async function onRequestPost(context) {
       signatureSvg,
       typedName,
       paymentSecurityMethod: validMethod,
-      securityDepositCents: requiredSecurity.depositCents,
+      securityDepositCents: depositCents,
       message: 'Agreement signed successfully.'
     }, 201);
   } catch (error) {
