@@ -7,6 +7,7 @@ on:
       - "migrations/**"
       - "tests/**"
       - "admin/**"
+      - "docs/**"
       - "rentals.js"
       - "sign.js"
       - "sign.html"
@@ -14,6 +15,10 @@ on:
       - "sign-security.css"
       - "sign-review.css"
       - "sign-review.js"
+      - "pay.html"
+      - "pay.css"
+      - "pay.js"
+      - "_headers"
       - "package.json"
       - ".github/workflows/booking-backend-tests.yml"
   push:
@@ -49,9 +54,14 @@ jobs:
         run: node tests/test_sign_review_ui.mjs
       - name: Test booking document safety rules
         run: node tests/test_booking_files.mjs
+      - name: Test Square payment policy
+        run: node tests/test_square_payment_policy.mjs
+      - name: Test Square payment interfaces
+        run: node tests/test_square_payment_ui.mjs
       - name: Check JavaScript syntax
         run: |
           find functions admin -name '*.js' -print0 | xargs -0 -n1 node --check
           node --check rentals.js
           node --check sign.js
           node --check sign-review.js
+          node --check pay.js
