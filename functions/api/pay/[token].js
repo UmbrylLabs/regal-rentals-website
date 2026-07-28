@@ -100,13 +100,24 @@ export async function onRequestPost(context) {
 
     const now = Math.floor(Date.now() / 1000);
     const claim = await context.env.DB.prepare(
-      `UPDATE payment_requests SET status = 'processing', failure_message = NULL, updated_at = ?1
-       WHERE id = ?2 AND status IN ('open', 'failed') AND expires_at > ?1`
-    ).bind(now, request.id).run();
+      `UPDATE payment_requests SET
+         status = 'processing',
+         failure_message = NULL,
+         card_consent_at = ?1,
+         cardholder_name = ?2,
+         updated_at = ?3
+       WHERE id = ?4 AND status IN ('open', 'failed') AND expires_at > ?3`
+    ).bind(cardOnFileConsent ? now : null, cardholderName || null, now, request.id).run();
     if (!Number(claim?.meta?.changes || 0)) {
       return json({ ok: false, error: { code: 'PAYMENT_NOT_AVAILABLE', message: 'This payment cannot be processed right now.' } }, 409);
     }
-    request = { ...request, status: 'processing', updated_at: now };
+    request = {
+      ...request,
+      status: 'processing',
+      updated_at: now,
+      card_consent_at: cardOnFileConsent ? now : null,
+      cardholder_name: cardholderName || null
+    };
 
     try {
       const customer = {
