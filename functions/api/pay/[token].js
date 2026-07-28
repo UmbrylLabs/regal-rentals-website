@@ -2,9 +2,9 @@ import { cleanText, json, readJson, safeErrorResponse } from '../../_lib/http.js
 import {
   expirePaymentRequestIfNeeded,
   loadPaymentRequestByToken,
-  paymentPurposeLabel,
-  recordCompletedPayment
+  paymentPurposeLabel
 } from '../../_lib/payments.js';
+import { recordCompletedPaymentSafely } from '../../_lib/payment-recording.js';
 import {
   createSquarePayment,
   ensureSquareCustomer,
@@ -167,7 +167,7 @@ export async function onRequestPost(context) {
         }
       }
 
-      await recordCompletedPayment(context.env, {
+      await recordCompletedPaymentSafely(context.env, {
         bookingId: request.booking_id,
         paymentRequestId: request.id,
         provider: 'square',
