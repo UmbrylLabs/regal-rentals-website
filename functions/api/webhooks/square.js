@@ -1,5 +1,5 @@
 import { cleanText, json } from '../../_lib/http.js';
-import { paymentPurposeLabel, recordCompletedPayment } from '../../_lib/payments.js';
+import { recordCompletedPaymentSafely } from '../../_lib/payment-recording.js';
 import {
   ensureSquareCustomer,
   saveSquareCardFromPayment,
@@ -69,18 +69,6 @@ async function paymentRequestForWebhook(db, payment) {
 }
 
 async function reconcileCompletedPayment(env, request, payment) {
-  const existing = await env.DB.prepare(
-    'SELECT id FROM booking_payments WHERE square_payment_id = ?1'
-  ).bind(payment.id).first();
-  if (existing) {
-    await env.DB.prepare(
-      `UPDATE payment_requests SET status = 'paid', square_payment_id = ?1,
-              paid_at = COALESCE(paid_at, unixepoch()), failure_message = NULL, updated_at = unixepoch()
-       WHERE id = ?2`
-    ).bind(payment.id, request.id).run();
-    return;
-  }
-
   const cardSummary = squareCardSummary(payment);
   const actualMethod = String(cardSummary.cardType || '').toUpperCase() === 'CREDIT'
     ? 'credit_card'
@@ -119,7 +107,7 @@ async function reconcileCompletedPayment(env, request, payment) {
     }
   }
 
-  await recordCompletedPayment(env, {
+  await recordCompletedPaymentSafely(env, {
     bookingId: request.booking_id,
     paymentRequestId: request.id,
     provider: 'square',
@@ -177,7 +165,7 @@ export async function onRequestPost(context) {
     await markEventProcessed(context.env.DB, eventId, eventType);
     return json({ ok: true });
   } catch (error) {
-    console.error(`Square webhook processing failed for ${paymentPurposeLabel(eventType)}`, error);
+    console.error(`Square webhook processing failed for ${eventType}`, error);
     return json({ ok: false, error: { code: 'WEBHOOK_PROCESSING_FAILED', message: 'Webhook processing failed.' } }, 500);
   }
 }
