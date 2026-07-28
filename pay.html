@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Secure Payment | Regal Rentals</title>
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="icon" href="/assets/favicon.png" type="image/png" />
+  <link rel="stylesheet" href="/pay.css?v=20260728-1" />
+</head>
+<body>
+  <header class="payment-header">
+    <a class="payment-brand" href="/"><img src="/assets/regal-shield.png" alt="" /><span>Regal Rentals</span></a>
+  </header>
+  <main class="payment-shell">
+    <section class="payment-card" id="payment-loading">
+      <p class="eyebrow">Secure payment</p>
+      <h1>Loading Payment Request</h1>
+      <p>Please wait while the booking and payment amount are verified.</p>
+    </section>
+
+    <section class="payment-card payment-error" id="payment-error" hidden>
+      <p class="eyebrow">Payment unavailable</p>
+      <h1>Unable to Continue</h1>
+      <p id="payment-error-message"></p>
+    </section>
+
+    <section id="payment-view" hidden>
+      <section class="payment-card payment-summary-card">
+        <p class="eyebrow">Secure Square payment</p>
+        <h1 id="payment-title">Regal Rentals Payment</h1>
+        <div class="payment-facts">
+          <div><span>Booking</span><strong id="payment-booking"></strong></div>
+          <div><span>Customer</span><strong id="payment-customer"></strong></div>
+          <div><span>Event</span><strong id="payment-event"></strong></div>
+          <div><span>Payment</span><strong id="payment-purpose"></strong></div>
+        </div>
+        <div class="payment-total"><span>Amount due</span><strong id="payment-amount"></strong></div>
+        <p class="payment-description" id="payment-description"></p>
+      </section>
+
+      <section class="payment-card payment-method-card">
+        <h2>Pay by Card</h2>
+        <p id="payment-method-note"></p>
+        <form id="square-payment-form">
+          <label>Cardholder name<input id="cardholder-name" name="cardholderName" autocomplete="cc-name" maxlength="300" required /></label>
+          <div class="card-field-label">Credit or debit card</div>
+          <div id="square-card-container" class="square-card-container" aria-label="Secure card entry"></div>
+          <label class="card-consent" id="card-consent-row" hidden>
+            <input id="card-on-file-consent" type="checkbox" />
+            <span>I authorize Regal Rentals and Square to securely save this credit card and allow Regal Rentals to charge documented amounts permitted by my signed rental agreement, including damage, theft, missing items, excessive cleaning, late return, and retrieval charges. Regal Rentals will not receive or store my full card number.</span>
+          </label>
+          <button class="payment-button" id="submit-payment" type="submit" disabled>Pay <span id="payment-button-amount"></span></button>
+          <p class="payment-message" id="payment-message" aria-live="polite"></p>
+        </form>
+        <div class="square-notice"><strong>Payments are processed securely by Square.</strong><span>Regal Rentals never receives or stores your complete card number or security code.</span></div>
+      </section>
+    </section>
+
+    <section class="payment-card payment-success" id="payment-success" hidden>
+      <p class="eyebrow">Payment received</p>
+      <h1>Thank You</h1>
+      <p id="payment-success-message"></p>
+      <div id="payment-success-details"></div>
+      <a id="square-receipt-link" class="receipt-link" target="_blank" rel="noopener" hidden>View Square Receipt</a>
+    </section>
+  </main>
+  <script src="/pay.js?v=20260728-1" defer></script>
+</body>
+</html>
