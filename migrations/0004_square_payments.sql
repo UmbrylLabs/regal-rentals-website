@@ -32,6 +32,8 @@ CREATE TABLE IF NOT EXISTS payment_requests (
   currency TEXT NOT NULL DEFAULT 'USD' CHECK (currency = 'USD'),
   expected_method TEXT NOT NULL DEFAULT 'unspecified' CHECK (expected_method IN ('credit_card', 'debit_card', 'unspecified')),
   require_card_on_file INTEGER NOT NULL DEFAULT 0 CHECK (require_card_on_file IN (0, 1)),
+  card_consent_at INTEGER,
+  cardholder_name TEXT,
   applies_to_rental INTEGER NOT NULL DEFAULT 1 CHECK (applies_to_rental IN (0, 1)),
   status TEXT NOT NULL DEFAULT 'open' CHECK (status IN ('open', 'processing', 'paid', 'failed', 'cancelled', 'expired')),
   expires_at INTEGER NOT NULL,
