@@ -1,6 +1,6 @@
 (() => {
   const previousFetch = globalThis.fetch.bind(globalThis);
-  const state = { booking: null, data: null, loading: false };
+  const state = { booking: null, data: null, loading: false, lastPaymentLink: '' };
   const bookingEndpoint = /^\/api\/admin\/bookings\/([^/]+)$/;
 
   const escapeHtml = (value) => String(value ?? '')
@@ -35,7 +35,10 @@
           if (!data.booking) return;
           const changed = state.booking?.id !== data.booking.id;
           state.booking = data.booking;
-          if (changed) state.data = null;
+          if (changed) {
+            state.data = null;
+            state.lastPaymentLink = '';
+          }
           queueMicrotask(() => ensurePaymentSection(changed));
         }).catch(() => {});
       }
@@ -95,6 +98,17 @@
     return cards.map((card) => `<div class="saved-card-row"><strong>${escapeHtml(card.card_brand || 'Card')} ending ${escapeHtml(card.last_4 || '—')}</strong><span>${escapeHtml(card.card_type || '')} · expires ${String(card.exp_month || '').padStart(2, '0')}/${escapeHtml(card.exp_year || '')}</span></div>`).join('');
   };
 
+  const paymentLinkMarkup = () => state.lastPaymentLink
+    ? `<div class="payment-link-result" id="payment-link-result"><strong>Payment link created</strong><a href="${escapeHtml(state.lastPaymentLink)}" target="_blank" rel="noopener">${escapeHtml(state.lastPaymentLink)}</a><button class="button button--quiet" id="copy-payment-link" type="button">Copy Link</button></div>`
+    : '<div class="payment-link-result" id="payment-link-result" hidden></div>';
+
+  const defaultAmountCents = (purpose) => {
+    const summary = state.data?.summary || {};
+    if (purpose === 'reservation' || purpose === 'security_deposit') return Math.round(Number(summary.subtotalCents || 0) / 2);
+    if (purpose === 'balance') return Number(summary.rentalBalanceCents || 0);
+    return 0;
+  };
+
   const render = () => {
     const root = document.getElementById('booking-payment-manager');
     if (!root || !state.data) return;
@@ -124,31 +138,33 @@
           <button class="button button--secondary" type="submit">Record Cash</button>
         </form>
       </div>
-      <div class="payment-link-result" id="payment-link-result" hidden></div>
+      ${paymentLinkMarkup()}
       <p class="message" id="booking-payment-message" aria-live="polite"></p>
       <div class="payment-record-columns"><section><h4>Payment Requests</h4><div id="payment-request-list">${requestsMarkup()}</div></section><section><h4>Completed Payments</h4><div id="booking-payment-list">${paymentsMarkup()}</div></section></div>
       <section class="saved-cards-section"><h4>Cards Stored Securely by Square</h4>${savedCardsMarkup()}</section>`;
 
     const createForm = document.getElementById('create-payment-request-form');
     const cashForm = document.getElementById('record-cash-form');
-    const purpose = createForm.elements.purpose;
-    const amount = createForm.elements.amount;
-    const setDefaultAmount = () => {
-      const selected = purpose.value;
-      const summary = state.data.summary;
-      const cents = selected === 'reservation' || selected === 'security_deposit'
-        ? Math.round(Number(summary.subtotalCents || 0) / 2)
-        : selected === 'balance' ? Number(summary.rentalBalanceCents || 0) : 0;
-      amount.value = cents > 0 ? (cents / 100).toFixed(2) : '';
+    const setFormAmount = (form) => {
+      const cents = defaultAmountCents(form.elements.purpose.value);
+      form.elements.amount.value = cents > 0 ? (cents / 100).toFixed(2) : '';
     };
-    purpose.addEventListener('change', setDefaultAmount);
-    setDefaultAmount();
-    cashForm.elements.amount.value = (Math.round(Number(state.data.summary.subtotalCents || 0) / 2) / 100).toFixed(2);
+    createForm.elements.purpose.addEventListener('change', () => setFormAmount(createForm));
+    cashForm.elements.purpose.addEventListener('change', () => setFormAmount(cashForm));
+    setFormAmount(createForm);
+    setFormAmount(cashForm);
     createForm.addEventListener('submit', createPaymentRequest);
     cashForm.addEventListener('submit', recordCash);
     document.querySelectorAll('[data-cancel-payment-request]').forEach((button) => {
       button.addEventListener('click', () => cancelRequest(button.dataset.cancelPaymentRequest));
     });
+    const copyButton = document.getElementById('copy-payment-link');
+    if (copyButton) {
+      copyButton.addEventListener('click', async () => {
+        await navigator.clipboard.writeText(state.lastPaymentLink);
+        showMessage('Payment link copied.', 'success');
+      });
+    }
   };
 
   const loadPayments = async () => {
@@ -208,13 +224,7 @@
         expectedMethod: values.get('expectedMethod'), expiresDays: Number(values.get('expiresDays')),
         description: values.get('description')
       });
-      const result = document.getElementById('payment-link-result');
-      result.hidden = false;
-      result.innerHTML = `<strong>Payment link created</strong><a href="${escapeHtml(data.paymentRequest.paymentUrl)}" target="_blank" rel="noopener">${escapeHtml(data.paymentRequest.paymentUrl)}</a><button class="button button--quiet" id="copy-payment-link" type="button">Copy Link</button>`;
-      document.getElementById('copy-payment-link').addEventListener('click', async () => {
-        await navigator.clipboard.writeText(data.paymentRequest.paymentUrl);
-        showMessage('Payment link copied.', 'success');
-      });
+      state.lastPaymentLink = data.paymentRequest.paymentUrl;
       showMessage('Send the private link to the customer.', 'success');
       await loadPayments();
     } catch (error) {
@@ -235,6 +245,7 @@
         action: 'record_cash', purpose: values.get('purpose'),
         amountCents: Math.round(Number(values.get('amount')) * 100), note: values.get('note')
       });
+      state.lastPaymentLink = '';
       showMessage('Cash payment recorded. Keep the signed or printed receipt with the booking record.', 'success');
       state.data = null;
       await loadPayments();
@@ -247,6 +258,7 @@
     if (!confirm('Cancel this payment link? It will no longer accept payment.')) return;
     try {
       await postAction({ action: 'cancel_request', requestId });
+      state.lastPaymentLink = '';
       state.data = null;
       await loadPayments();
     } catch (error) {
