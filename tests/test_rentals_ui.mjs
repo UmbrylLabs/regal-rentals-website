@@ -1,11 +1,12 @@
 import assert from 'node:assert/strict';
 import { readFile, stat } from 'node:fs/promises';
 
-const [rentalsHtml, homeHtml, rentalsWorker, dynamicCss, smallShield, watermarkShield] = await Promise.all([
+const [rentalsHtml, homeHtml, rentalsWorker, dynamicCss, stylesCss, smallShield, watermarkShield] = await Promise.all([
   readFile(new URL('../rentals.html', import.meta.url), 'utf8'),
   readFile(new URL('../index.html', import.meta.url), 'utf8'),
   readFile(new URL('../functions/rentals.js', import.meta.url), 'utf8'),
   readFile(new URL('../catalog-dynamic.css', import.meta.url), 'utf8'),
+  readFile(new URL('../styles.css', import.meta.url), 'utf8'),
   stat(new URL('../assets/regal-shield-small.webp', import.meta.url)),
   stat(new URL('../assets/regal-shield-watermark.webp', import.meta.url))
 ]);
@@ -26,5 +27,6 @@ assert.ok(watermarkShield.size < 60_000, 'Hero watermark should stay lightweight
 assert.doesNotMatch(rentalsWorker, /HTMLRewriter|onload=/);
 assert.match(dynamicCss, /data-catalog-state="loading"/);
 assert.doesNotMatch(dynamicCss, /category-card__status\{display:none/);
+assert.match(stylesCss, /\.btn--secondary\.is-added\s*\{[^}]*background-color:\s*#26063f\s*!important;[^}]*color:\s*#ffffff\s*!important;/s);
 
 console.log('Rentals UI readiness tests passed.');
