@@ -9,6 +9,11 @@ on:
       - "admin/**"
       - "docs/**"
       - "rentals.js"
+      - "event-time.js"
+      - "rentals.html"
+      - "rentals.css"
+      - "rentals-enhancements.css"
+      - "catalog-dynamic.css"
       - "sign.js"
       - "sign.html"
       - "sign.css"
@@ -42,6 +47,12 @@ jobs:
           node-version: "22"
       - name: Test database inventory guards
         run: python3 -m unittest -v tests/test_inventory_guards.py
+      - name: Test shared inventory policy
+        run: node tests/test_inventory_policy.mjs
+      - name: Test Pacific event-time conversion
+        run: node tests/test_event_time.mjs
+      - name: Test rentals UI readiness
+        run: node tests/test_rentals_ui.mjs
       - name: Test public signing link origin
         run: node tests/test_signing_origin.mjs
       - name: Test modular agreement generation
@@ -61,6 +72,7 @@ jobs:
       - name: Check JavaScript syntax
         run: |
           find functions admin -name '*.js' -print0 | xargs -0 -n1 node --check
+          node --check event-time.js
           node --check rentals.js
           node --check sign.js
           node --check sign-review.js

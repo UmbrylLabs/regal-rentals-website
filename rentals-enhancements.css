@@ -157,6 +157,21 @@
   }
 }
 
+@media (max-width: 820px) {
+  .inventory-hero__inner.reveal,
+  .date-check-card.reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+
+  .site-header {
+    background: #fffaf0;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+
 @media (max-width: 620px) {
   #availability-check,
   #rental-categories,

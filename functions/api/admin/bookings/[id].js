@@ -8,8 +8,7 @@ import {
 } from '../../../_lib/booking.js';
 import { protectMutation, requireAdmin } from '../../../_lib/auth.js';
 import { cleanText, json, randomId, readJson, safeErrorResponse } from '../../../_lib/http.js';
-
-const HOLD_SECONDS = 24 * 60 * 60;
+import { DEFAULT_HOLD_SECONDS, inventoryBlockWindow } from '../../../_lib/inventory-policy.js';
 
 export async function onRequestGet(context) {
   try {
@@ -39,23 +38,23 @@ export async function onRequestPatch(context) {
       body.eventStartAt ?? existing.event_start_at,
       body.eventEndAt ?? existing.event_end_at
     );
-    const beforeMinutes = Math.min(1440, Math.max(
-      0,
-      Number(body.bufferBeforeMinutes ?? Math.round((existing.event_start_at - existing.block_start_at) / 60))
-    ));
-    const afterMinutes = Math.min(1440, Math.max(
-      0,
-      Number(body.bufferAfterMinutes ?? Math.round((existing.block_end_at - existing.event_end_at) / 60))
-    ));
-    if (!Number.isFinite(beforeMinutes) || !Number.isFinite(afterMinutes)) {
+    let blockWindow;
+    try {
+      blockWindow = inventoryBlockWindow(
+        eventStart,
+        eventEnd,
+        body.bufferBeforeMinutes ?? Math.round((existing.event_start_at - existing.block_start_at) / 60),
+        body.bufferAfterMinutes ?? Math.round((existing.block_end_at - existing.event_end_at) / 60)
+      );
+    } catch (error) {
+      if (String(error?.message || '') !== 'INVALID_BUFFER') throw error;
       return json({ ok: false, error: { code: 'INVALID_BUFFER', message: 'Enter a valid inventory buffer.' } }, 400);
     }
-    const blockStart = eventStart - Math.round(beforeMinutes * 60);
-    const blockEnd = eventEnd + Math.round(afterMinutes * 60);
+    const { blockStartAt: blockStart, blockEndAt: blockEnd } = blockWindow;
     const now = Math.floor(Date.now() / 1000);
     const requestedHoldExpiry = Number(body.holdExpiresAt || existing.hold_expires_at || 0);
     const holdExpiresAt = status === 'hold'
-      ? Math.max(requestedHoldExpiry, now + HOLD_SECONDS)
+      ? Math.max(requestedHoldExpiry, now + DEFAULT_HOLD_SECONDS)
       : null;
 
     const items = body.items ? normalizeItems(body.items) : existing.items.map((item) => ({

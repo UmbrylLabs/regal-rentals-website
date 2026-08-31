@@ -15,7 +15,7 @@
 <body>
   <main class="admin-shell">
     <section class="login-card" id="login-view">
-      <img src="/assets/regal-shield.png" alt="" />
+      <img src="/assets/regal-shield-small.webp" alt="" width="128" height="161" />
       <p class="eyebrow">Private management system</p>
       <h1>Regal Rentals Admin</h1>
       <p id="login-message" class="message" aria-live="polite">Verifying your Cloudflare Access session…</p>
@@ -24,7 +24,7 @@
     <section class="dashboard" id="dashboard-view" hidden>
       <header class="admin-header">
         <a href="https://regal.rentals/" class="admin-brand">
-          <img src="/assets/regal-shield.png" alt="" />
+          <img src="/assets/regal-shield-small.webp" alt="" width="128" height="161" />
           <span>Regal Rentals</span>
         </a>
         <div>
@@ -61,8 +61,8 @@
                 <label>Phone<input name="customerPhone" type="tel" autocomplete="tel" required /></label>
                 <label>Event city<input name="eventCity" required /></label>
                 <label>Event date<input name="eventDate" type="date" required /></label>
-                <label>Start time<input name="eventStart" type="time" value="14:00" required /></label>
-                <label>End time<input name="eventEnd" type="time" value="20:00" required /></label>
+                <label>Start time (Pacific)<input name="eventStart" type="time" value="14:00" required /></label>
+                <label>End time (Pacific)<input name="eventEnd" type="time" value="20:00" required /></label>
                 <label>Service type<select name="serviceType"><option value="delivery">Delivery</option><option value="pickup">Customer pickup</option></select></label>
                 <label>Initial status<select name="status"><option value="inquiry">Inquiry — does not reserve</option><option value="quote">Quote — does not reserve</option><option value="hold">24-hour hold</option><option value="confirmed">Confirmed reservation</option></select></label>
                 <label>Preparation buffer before<select name="bufferBefore"><option value="60">1 hour</option><option value="120">2 hours</option><option value="180">3 hours</option><option value="240" selected>4 hours</option><option value="1440">1 day</option></select></label>
@@ -147,6 +147,7 @@
       </div>
     </section>
   </main>
+  <script src="/event-time.js?v=20260831-1" defer></script>
   <script src="/admin/booking-tools.js?v=20260721-1" defer></script>
   <script src="/admin/booking-documents.js?v=20260722-1" defer></script>
   <script src="/admin/payment-manager.js?v=20260728-1" defer></script>

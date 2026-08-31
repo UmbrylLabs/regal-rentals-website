@@ -340,3 +340,8 @@ textarea {
 :where(.coming-card, .carousel-btn, .btn--secondary) {
   background-color: #ffffff !important;
 }
+.btn--secondary.is-added {
+  background-color: #26063f !important;
+  color: #ffffff !important;
+  border-color: #26063f !important;
+}

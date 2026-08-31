@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Regal Rentals | Launching Soon</title>
   <meta name="description" content="Regal Rentals is launching soon with premium local event rentals for El Dorado Hills, Folsom, Cameron Park, and surrounding areas." />
+  <meta name="robots" content="noindex, nofollow" />
   <meta name="theme-color" content="#26063f" />
   <meta name="color-scheme" content="light only" />
   <meta name="supported-color-schemes" content="light" />
@@ -12,6 +13,7 @@
   <link rel="icon" href="assets/favicon.png" type="image/png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="preload" href="assets/regal-shield-watermark.webp" as="image" type="image/webp" fetchpriority="high" />
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
 </head>
@@ -38,7 +40,7 @@
   <header class="site-header" id="top">
     <div class="container header__inner">
       <a class="brand" href="/" aria-label="Regal Rentals home">
-        <img src="assets/regal-shield.png" alt="Regal Rentals shield logo" class="brand__shield" />
+        <img src="assets/regal-shield-small.webp" alt="Regal Rentals shield logo" class="brand__shield" width="128" height="161" />
         <span class="brand__wordmark"><span>Regal</span><span>Rentals</span></span>
       </a>
 
@@ -65,7 +67,7 @@
       <div class="hero__curtain hero__curtain--left" aria-hidden="true"></div>
       <div class="hero__curtain hero__curtain--right" aria-hidden="true"></div>
       <div class="sparkle-field" aria-hidden="true"></div>
-      <img class="hero__watermark" src="assets/regal-shield.png" alt="" aria-hidden="true" />
+      <img class="hero__watermark" src="assets/regal-shield-watermark.webp" alt="" aria-hidden="true" width="520" height="653" fetchpriority="high" />
 
       <div class="container hero__inner reveal">
         <div class="launch-pill">Launching Soon</div>
@@ -202,7 +204,7 @@
     <div class="container footer__grid">
       <div>
         <a class="footer-brand" href="/" aria-label="Regal Rentals home">
-          <img src="assets/regal-shield.png" alt="Regal Rentals shield" />
+          <img src="assets/regal-shield-small.webp" alt="Regal Rentals shield" width="128" height="161" />
           <span>Regal<br />Rentals</span>
         </a>
         <p>Premium local event rentals for unforgettable celebrations. Launching soon.</p>
