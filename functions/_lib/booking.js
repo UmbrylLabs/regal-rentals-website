@@ -4,6 +4,12 @@ import {
   randomId,
   sha256
 } from './http.js';
+import {
+  DEFAULT_BUFFER_AFTER_MINUTES,
+  DEFAULT_BUFFER_BEFORE_MINUTES,
+  DEFAULT_HOLD_SECONDS,
+  inventoryBlockWindow
+} from './inventory-policy.js';
 
 const VALID_STATUSES = new Set([
   'inquiry', 'quote', 'hold', 'confirmed', 'paid', 'ready',
@@ -141,18 +147,34 @@ export async function createBooking(env, request, input, actorUserId = null) {
     input.eventEndAt
   );
 
-  const beforeMinutes = Math.min(1440, Math.max(0, Number(input.bufferBeforeMinutes ?? 120)));
-  const afterMinutes = Math.min(1440, Math.max(0, Number(input.bufferAfterMinutes ?? 120)));
-  if (!Number.isFinite(beforeMinutes) || !Number.isFinite(afterMinutes)) {
-    throw new Error('INVALID_BUFFER');
-  }
-  const blockStart = eventStart - Math.round(beforeMinutes * 60);
-  const blockEnd = eventEnd + Math.round(afterMinutes * 60);
+  const {
+    blockStartAt: blockStart,
+    blockEndAt: blockEnd
+  } = inventoryBlockWindow(
+    eventStart,
+    eventEnd,
+    input.bufferBeforeMinutes ?? DEFAULT_BUFFER_BEFORE_MINUTES,
+    input.bufferAfterMinutes ?? DEFAULT_BUFFER_AFTER_MINUTES
+  );
 
   const serviceType = cleanText(input.serviceType, 20);
   if (!['delivery', 'pickup'].includes(serviceType)) throw new Error('INVALID_SERVICE_TYPE');
   const eventCity = cleanText(input.eventCity, 150);
   if (!eventCity) throw new Error('INVALID_EVENT_CITY');
+
+  const idempotencyKey = cleanText(
+    input.idempotencyKey || request.headers.get('Idempotency-Key') || '',
+    200
+  ) || null;
+
+  // Retry requests should return the original booking before its own hold is
+  // counted against availability.
+  if (idempotencyKey) {
+    const existing = await env.DB.prepare(
+      'SELECT id, booking_number, status FROM bookings WHERE idempotency_key = ?1'
+    ).bind(idempotencyKey).first();
+    if (existing) return { booking: existing, duplicate: true };
+  }
 
   const productMap = await loadProducts(env.DB, items);
   const availability = await getAvailability(env.DB, blockStart, blockEnd);
@@ -168,19 +190,8 @@ export async function createBooking(env, request, input, actorUserId = null) {
   const number = bookingNumber();
   const now = Math.floor(Date.now() / 1000);
   const holdExpiresAt = status === 'hold'
-    ? Number(input.holdExpiresAt || now + 30 * 60)
+    ? Number(input.holdExpiresAt || now + DEFAULT_HOLD_SECONDS)
     : null;
-  const idempotencyKey = cleanText(
-    input.idempotencyKey || request.headers.get('Idempotency-Key') || '',
-    200
-  ) || null;
-
-  if (idempotencyKey) {
-    const existing = await env.DB.prepare(
-      'SELECT id, booking_number, status FROM bookings WHERE idempotency_key = ?1'
-    ).bind(idempotencyKey).first();
-    if (existing) return { booking: existing, duplicate: true };
-  }
 
   let subtotalCents = 0;
   for (const item of items) {

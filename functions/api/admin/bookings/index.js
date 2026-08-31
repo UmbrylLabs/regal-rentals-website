@@ -1,8 +1,7 @@
 import { createBooking } from '../../../_lib/booking.js';
 import { protectMutation, requireAdmin } from '../../../_lib/auth.js';
 import { json, readJson, safeErrorResponse } from '../../../_lib/http.js';
-
-const HOLD_SECONDS = 24 * 60 * 60;
+import { DEFAULT_HOLD_SECONDS } from '../../../_lib/inventory-policy.js';
 
 export async function onRequestGet(context) {
   try {
@@ -55,7 +54,7 @@ export async function onRequestPost(context) {
     const user = await requireAdmin(context.env, context.request);
     const body = await readJson(context.request);
     if (String(body.status || '').toLowerCase() === 'hold') {
-      body.holdExpiresAt = Math.floor(Date.now() / 1000) + HOLD_SECONDS;
+      body.holdExpiresAt = Math.floor(Date.now() / 1000) + DEFAULT_HOLD_SECONDS;
     }
     const result = await createBooking(context.env, context.request, body, user.id);
     return json({ ok: true, duplicate: result.duplicate, booking: result.booking }, 201);

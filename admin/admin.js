@@ -44,13 +44,6 @@
     element.className = `message ${type}`.trim();
   };
 
-  const localEpoch = (date, time) => {
-    if (!date || !time) return null;
-    const parsed = new Date(`${date}T${time}:00`);
-    const epoch = Math.floor(parsed.getTime() / 1000);
-    return Number.isFinite(epoch) ? epoch : null;
-  };
-
   const formatDate = (epoch) => new Intl.DateTimeFormat('en-US', {
     timeZone: 'America/Los_Angeles', dateStyle: 'medium', timeStyle: 'short'
   }).format(new Date(Number(epoch) * 1000));
@@ -67,14 +60,14 @@
 
   const bookingWindow = () => {
     const data = new FormData(bookingForm);
-    const eventStartAt = localEpoch(data.get('eventDate'), data.get('eventStart'));
-    const eventEndAt = localEpoch(data.get('eventDate'), data.get('eventEnd'));
+    const eventStartAt = RegalEventTime.pacificEpoch(data.get('eventDate'), data.get('eventStart'));
+    const eventEndAt = RegalEventTime.pacificEpoch(data.get('eventDate'), data.get('eventEnd'));
     if (!eventStartAt || !eventEndAt || eventEndAt <= eventStartAt) {
-      throw new Error('Choose a valid date, start time, and end time.');
+      throw new Error('Choose a valid date, start time, and end time in Pacific Time.');
     }
     const before = Number(data.get('bufferBefore') || 0);
     const after = Number(data.get('bufferAfter') || 0);
-    return { eventStartAt, eventEndAt, blockStartAt: eventStartAt - before * 60, blockEndAt: eventEndAt + after * 60 };
+    return { eventStartAt, eventEndAt, bufferBeforeMinutes: before, bufferAfterMinutes: after };
   };
 
   const selectedItems = () => $$('.product-option', $('#booking-product-picker'))
@@ -270,7 +263,13 @@
     try {
       const windowData = bookingWindow();
       message.textContent = 'Checking exact availability…';
-      const data = await api(`/api/public/availability?startAt=${windowData.blockStartAt}&endAt=${windowData.blockEndAt}`, { headers: {} });
+      const params = new URLSearchParams({
+        eventStartAt: String(windowData.eventStartAt),
+        eventEndAt: String(windowData.eventEndAt),
+        bufferBeforeMinutes: String(windowData.bufferBeforeMinutes),
+        bufferAfterMinutes: String(windowData.bufferAfterMinutes)
+      });
+      const data = await api(`/api/public/availability?${params}`, { headers: {} });
       state.availability = new Map(data.products.map((product) => [product.id, Number(product.quantityAvailable)]));
       renderProductPicker();
       message.textContent = 'Availability checked. Quantities are limited to what is free for this full event and buffer window.';
@@ -292,7 +291,6 @@
           customer: { name: data.get('customerName'), email: data.get('customerEmail'), phone: data.get('customerPhone') },
           items, status, eventStartAt: windowData.eventStartAt, eventEndAt: windowData.eventEndAt,
           bufferBeforeMinutes: Number(data.get('bufferBefore')), bufferAfterMinutes: Number(data.get('bufferAfter')),
-          holdExpiresAt: status === 'hold' ? Math.floor(Date.now() / 1000) + 1800 : null,
           serviceType: data.get('serviceType'), eventCity: data.get('eventCity'), eventAddress: data.get('eventAddress'), notes: data.get('notes')
         })
       });
@@ -300,8 +298,8 @@
       bookingForm.reset();
       bookingForm.elements.eventStart.value = '14:00';
       bookingForm.elements.eventEnd.value = '20:00';
-      bookingForm.elements.bufferBefore.value = '120';
-      bookingForm.elements.bufferAfter.value = '120';
+      bookingForm.elements.bufferBefore.value = '240';
+      bookingForm.elements.bufferAfter.value = '720';
       state.availability.clear();
       renderProductPicker();
       await loadBookings();
