@@ -1,5 +1,5 @@
 (() => {
-  const state = { user: null, bookings: [], products: [], availability: new Map(), currentBooking: null, users: [] };
+  const state = { user: null, bookings: [], products: [], availability: new Map(), currentBooking: null, users: [], group: 'active', query: '', offset: 0, listSequence: 0 };
   const $ = (selector, root = document) => root.querySelector(selector);
   const $$ = (selector, root = document) => Array.from(root.querySelectorAll(selector));
   const loginView = $('#login-view');
@@ -55,13 +55,14 @@
   const openPanel = (name) => {
     $$('[data-panel-view]').forEach((panel) => { panel.hidden = panel.dataset.panelView !== name; });
     $$('.nav-button').forEach((button) => button.classList.toggle('is-active', button.dataset.panel === name));
+    document.dispatchEvent(new CustomEvent('regal:panel', { detail: { name } }));
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const bookingWindow = () => {
     const data = new FormData(bookingForm);
     const eventStartAt = RegalEventTime.pacificEpoch(data.get('eventDate'), data.get('eventStart'));
-    const eventEndAt = RegalEventTime.pacificEpoch(data.get('eventDate'), data.get('eventEnd'));
+    const eventEndAt = RegalEventTime.pacificEpoch(data.get('eventEndDate') || data.get('eventDate'), data.get('eventEnd'));
     if (!eventStartAt || !eventEndAt || eventEndAt <= eventStartAt) {
       throw new Error('Choose a valid date, start time, and end time in Pacific Time.');
     }
@@ -76,6 +77,7 @@
 
   const renderProductPicker = () => {
     const picker = $('#booking-product-picker');
+    const chosen = new Map(selectedItems().map(item => [item.productId, item.quantity]));
     const activeProducts = state.products.filter((product) => Number(product.active) === 1);
     if (!activeProducts.length) {
       picker.innerHTML = '<p>No active rental items are available. Add an item in Inventory first.</p>';
@@ -88,7 +90,7 @@
       return `<div class="product-option${available < 1 ? ' is-unavailable' : ''}" data-product-id="${escapeHtml(product.id)}">
         <h4>${escapeHtml(product.name)}</h4>
         <p>${escapeHtml(product.category)} · ${escapeHtml(money(product.price_cents))} · ${available} available</p>
-        <label>Quantity<input type="number" min="0" max="${available}" value="0" inputmode="numeric" ${available < 1 ? 'disabled' : ''} /></label>
+        <label>Quantity<input type="number" min="0" max="${available}" value="${Math.min(chosen.get(product.id) || 0, available)}" inputmode="numeric" ${available < 1 ? 'disabled' : ''} /></label>
       </div>`;
     }).join('');
   };
@@ -96,26 +98,40 @@
   const loadProducts = async () => {
     const data = await api('/api/admin/products');
     state.products = data.products || [];
+    state.photosConfigured = data.photosConfigured;
+    document.getElementById('product-photo').disabled = !data.photosConfigured;
+    document.getElementById('photo-storage-note').textContent = data.photosConfigured ? 'JPEG, PNG or WebP. Photos are resized before upload.' : 'Photo uploads will be available after storage is connected.';
     renderProductPicker();
     renderInventory();
   };
 
   const loadBookings = async () => {
-    const data = await api('/api/admin/bookings?limit=200');
+    const sequence = ++state.listSequence;
+    const params = new URLSearchParams({ limit: 50, offset: state.offset, group: state.group, q: state.query });
+    const data = await api(`/api/admin/bookings?${params}`);
+    if (sequence !== state.listSequence) return;
     state.bookings = data.bookings || [];
+    state.listData = data;
     renderBookings();
     renderOverview();
+    Object.entries(data.counts || {}).forEach(([key, count]) => {
+      const element = $(`[data-booking-count="${key}"]`);
+      if (element) element.textContent = count;
+    });
+    $('#booking-filter-summary').textContent = data.total ? `Showing ${state.offset + 1}–${state.offset + state.bookings.length} of ${data.total} matching bookings.` : 'No matching bookings.';
+    $('#bookings-previous').disabled = state.offset === 0;
+    $('#bookings-next').disabled = state.offset + 50 >= data.total;
   };
 
   const renderOverview = () => {
-    const now = Math.floor(Date.now() / 1000);
-    const active = state.bookings.filter((booking) => ['hold', 'confirmed', 'paid', 'ready', 'out', 'returned'].includes(booking.status));
-    const upcoming = state.bookings.filter((booking) => Number(booking.event_end_at) >= now && !['completed', 'cancelled', 'expired'].includes(booking.status)).slice(0, 8);
-    const inquiries = state.bookings.filter((booking) => booking.status === 'inquiry').length;
-    const onRent = state.bookings.filter((booking) => booking.status === 'out').length;
-    $('#stat-grid').innerHTML = [['Upcoming', upcoming.length], ['Active reservations', active.length], ['New inquiries', inquiries], ['Out on rental', onRent]]
+    const counts = state.listData.counts;
+    const upcoming = state.listData.upcoming;
+    $('#stat-grid').innerHTML = [['Upcoming', counts.upcoming], ['Active reservations', counts.reservations], ['New booking inquiries', counts.inquiries], ['Out on rental', counts.on_rent]]
       .map(([label, value]) => `<div class="stat"><strong>${value}</strong><span>${escapeHtml(label)}</span></div>`).join('');
     const list = $('#upcoming-list');
+    const attention = $('#attention-list');
+    attention.innerHTML = state.listData.attention.map(booking => `<div class="upcoming-row"><div><strong>${escapeHtml(booking.booking_number)} · ${escapeHtml(booking.customer_name)}</strong><p>${escapeHtml(booking.reason)}</p></div><button class="button button--quiet" type="button" data-view-booking="${escapeHtml(booking.id)}">Open</button></div>`).join('') || '<p>No overdue returns, pending payments, or return inspections.</p>';
+    $$('[data-view-booking]', attention).forEach(button => button.addEventListener('click', () => openBooking(button.dataset.viewBooking)));
     if (!upcoming.length) { list.innerHTML = '<p>No upcoming bookings yet.</p>'; return; }
     list.innerHTML = upcoming.map((booking) => `<div class="upcoming-row"><div><strong>${escapeHtml(booking.booking_number)} · ${escapeHtml(booking.customer_name)}</strong><p>${escapeHtml(formatDate(booking.event_start_at))} · ${escapeHtml(booking.event_city)}</p></div><button class="button button--quiet" type="button" data-view-booking="${escapeHtml(booking.id)}">Open</button></div>`).join('');
     $$('[data-view-booking]', list).forEach((button) => button.addEventListener('click', () => openBooking(button.dataset.viewBooking)));
@@ -182,6 +198,8 @@
     productForm.elements.quantityOwned.value = '1';
     productForm.elements.sortOrder.value = '100';
     productForm.elements.active.checked = true;
+    $('#product-photo-preview').hidden = true; $('#product-photo-preview').removeAttribute('src');
+    $('#remove-product-photo').checked = false;
     $('#product-form-eyebrow').textContent = 'New catalog item';
     $('#product-form-title').textContent = 'Add Rental Item';
     showMessage(productMessage, '');
@@ -208,6 +226,8 @@
     productForm.elements.sortOrder.value = String(Number(product.sort_order || 100));
     productForm.elements.description.value = product.description || '';
     productForm.elements.active.checked = Number(product.active) === 1;
+    productForm.elements.imageAlt.value = product.image_alt || product.name;
+    if (product.image_key) { $('#product-photo-preview').src = `/api/admin/products/${encodeURIComponent(product.id)}/image?v=${encodeURIComponent(product.image_key)}`; $('#product-photo-preview').hidden = false; }
     $('#product-form-eyebrow').textContent = 'Editing catalog item';
     $('#product-form-title').textContent = product.name;
     showProductForm(true);
@@ -221,23 +241,29 @@
       name: data.get('name'), sku: data.get('sku'), category: data.get('category'), style: data.get('style'),
       quantityOwned: Number(data.get('quantityOwned')), priceCents: price === '' ? null : Math.round(Number(price) * 100),
       priceUnit: data.get('priceUnit'), sortOrder: Number(data.get('sortOrder') || 100),
-      description: data.get('description'), active: data.get('active') === 'on'
+      description: data.get('description'), imageAlt: data.get('imageAlt'), active: data.get('active') === 'on'
     };
   };
 
   const saveCatalogProduct = async (event) => {
     event.preventDefault();
+    const button = productForm.querySelector('[type="submit"]');
+    if (button.disabled) return;
+    button.disabled = true;
     showMessage(productMessage, 'Saving rental item…');
     try {
       const payload = productPayload();
       const editing = Boolean(payload.id);
-      await api('/api/admin/products', { method: editing ? 'PATCH' : 'POST', body: JSON.stringify(payload) });
+      const saved = await api('/api/admin/products', { method: editing ? 'PATCH' : 'POST', body: JSON.stringify(payload) });
+      const productId = payload.id || saved.product.id;
+      productForm.elements.id.value = productId;
+      await RegalCatalogPhoto.save(productForm, productId);
       await loadProducts();
       showMessage(productMessage, 'Rental item saved. The public catalog will update automatically.', 'success');
       setTimeout(() => { productForm.hidden = true; resetProductForm(); }, 650);
     } catch (error) {
       showMessage(productMessage, error.message, 'error');
-    }
+    } finally { button.disabled = false; }
   };
 
   const archiveProduct = async (id) => {
@@ -278,6 +304,9 @@
 
   const createBooking = async (event) => {
     event.preventDefault();
+    const button = bookingForm.querySelector('[type="submit"]');
+    if (button.disabled) return;
+    button.disabled = true;
     showMessage(bookingMessage, 'Creating booking…');
     try {
       const data = new FormData(bookingForm);
@@ -286,7 +315,7 @@
       if (!items.length) throw new Error('Add at least one rental item.');
       const status = data.get('status');
       const result = await api('/api/admin/bookings', {
-        method: 'POST', headers: { 'Idempotency-Key': crypto.randomUUID() },
+        method: 'POST', headers: { 'Idempotency-Key': state.createKey ||= crypto.randomUUID() },
         body: JSON.stringify({
           customer: { name: data.get('customerName'), email: data.get('customerEmail'), phone: data.get('customerPhone') },
           items, status, eventStartAt: windowData.eventStartAt, eventEndAt: windowData.eventEndAt,
@@ -296,6 +325,7 @@
       });
       showMessage(bookingMessage, `Created ${result.booking.bookingNumber}.`, 'success');
       bookingForm.reset();
+      state.createKey = null;
       bookingForm.elements.eventStart.value = '14:00';
       bookingForm.elements.eventEnd.value = '20:00';
       bookingForm.elements.bufferBefore.value = '240';
@@ -305,6 +335,7 @@
       await loadBookings();
       setTimeout(() => openBooking(result.booking.id), 400);
     } catch (error) { showMessage(bookingMessage, error.message, 'error'); }
+    finally { button.disabled = false; }
   };
 
   const openBooking = async (id) => {
@@ -319,9 +350,10 @@
   const renderBookingDetail = () => {
     const booking = state.currentBooking;
     const latestSigning = (booking.signingRequests || [])[0];
-    $('#booking-detail').innerHTML = `<div class="panel-heading"><div><p class="eyebrow">${escapeHtml(booking.booking_number)}</p><h2>${escapeHtml(booking.customer_name)}</h2></div><span class="status status--${escapeHtml(booking.status)}">${escapeHtml(booking.status)}</span></div><div class="booking-summary"><div class="card"><h3>Event</h3><p><strong>Starts:</strong> ${escapeHtml(formatDate(booking.event_start_at))}</p><p><strong>Ends:</strong> ${escapeHtml(formatDate(booking.event_end_at))}</p><p><strong>Inventory blocked:</strong> ${escapeHtml(formatDate(booking.block_start_at))} through ${escapeHtml(formatDate(booking.block_end_at))}</p><p><strong>Service:</strong> ${escapeHtml(booking.service_type)} · ${escapeHtml(booking.event_city)}</p></div><div class="card"><h3>Customer</h3><p>${escapeHtml(booking.customer_name)}</p><p>${escapeHtml(booking.customer_email)}</p><p>${escapeHtml(booking.customer_phone)}</p><p><strong>Known subtotal:</strong> ${escapeHtml(money(booking.subtotal_cents))}</p></div></div><div class="card" style="margin-top:20px"><h3>Rental items</h3><ul class="item-list">${booking.items.map((item) => `<li>${Number(item.quantity)} × ${escapeHtml(item.name)} — ${escapeHtml(money(item.unit_price_cents))}</li>`).join('')}</ul><div class="detail-actions"><label>Status<select id="detail-status">${['inquiry','quote','hold','confirmed','paid','ready','out','returned','completed','cancelled','expired'].map((status) => `<option value="${status}" ${booking.status === status ? 'selected' : ''}>${status}</option>`).join('')}</select></label><button class="button" id="save-booking-status" type="button">Save Status</button><button class="button button--secondary" id="create-signing-link" type="button">Create Signing Link</button></div><p class="message" id="detail-message"></p><div class="signing-link-box" id="signing-link-box" ${latestSigning ? '' : 'hidden'}>${latestSigning ? `Latest agreement: version ${Number(latestSigning.agreement_version)} · ${latestSigning.signed_at ? `signed ${escapeHtml(formatDate(latestSigning.signed_at))}` : `expires ${escapeHtml(formatDate(latestSigning.expires_at))}`}` : ''}</div></div>`;
+    $('#booking-detail').innerHTML = `<div class="panel-heading"><div><p class="eyebrow">${escapeHtml(booking.booking_number)}</p><h2>${escapeHtml(booking.customer_name)}</h2></div><span class="status status--${escapeHtml(booking.status)}">${escapeHtml(booking.status)}</span></div><div class="booking-summary"><div class="card"><h3>Event</h3><p><strong>Starts:</strong> ${escapeHtml(formatDate(booking.event_start_at))}</p><p><strong>Ends:</strong> ${escapeHtml(formatDate(booking.event_end_at))}</p><p><strong>Inventory blocked:</strong> ${escapeHtml(formatDate(booking.block_start_at))} through ${escapeHtml(formatDate(booking.block_end_at))}</p><p><strong>Service:</strong> ${escapeHtml(booking.service_type)} · ${escapeHtml(booking.event_city)}</p></div><div class="card"><h3>Customer</h3><p>${escapeHtml(booking.customer_name)}</p><p>${escapeHtml(booking.customer_email)}</p><p>${escapeHtml(booking.customer_phone)}</p><p><strong>Quote total:</strong> ${escapeHtml(money(Number(booking.subtotal_cents) + Number(booking.tax_cents || 0)))}</p></div></div><div class="card" style="margin-top:20px"><h3>Rental items</h3><ul class="item-list">${booking.items.map((item) => `<li>${Number(item.quantity)} × ${escapeHtml(item.name)} — ${escapeHtml(money(item.unit_price_cents))}</li>`).join('')}</ul><div class="detail-actions"><label>Status<select id="detail-status">${['inquiry','quote','hold','confirmed','paid','ready','out','returned','completed','cancelled','expired'].map((status) => `<option value="${status}" ${booking.status === status ? 'selected' : ''}>${status}</option>`).join('')}</select></label><button class="button" id="save-booking-status" type="button">Save Status</button><button class="button button--secondary" id="create-signing-link" type="button">Create Signing Link</button></div><p class="message" id="detail-message"></p><div class="signing-link-box" id="signing-link-box" ${latestSigning ? '' : 'hidden'}>${latestSigning ? `Latest agreement: version ${Number(latestSigning.agreement_version)} · ${latestSigning.voided_at ? 'voided — create a new agreement' : latestSigning.signed_at ? `signed ${escapeHtml(formatDate(latestSigning.signed_at))}` : `expires ${escapeHtml(formatDate(latestSigning.expires_at))}`}` : ''}</div></div>`;
     $('#save-booking-status').addEventListener('click', saveBookingStatus);
     $('#create-signing-link').addEventListener('click', createSigningLink);
+    document.dispatchEvent(new CustomEvent('regal:booking', { detail: { booking, user: state.user, products: state.products } }));
   };
 
   const saveBookingStatus = async () => {
@@ -329,7 +361,9 @@
     showMessage(message, 'Saving…');
     try {
       const booking = state.currentBooking;
-      const data = await api(`/api/admin/bookings/${encodeURIComponent(booking.id)}`, { method: 'PATCH', body: JSON.stringify({ status: $('#detail-status').value }) });
+      const nextStatus = $('#detail-status').value;
+      if (nextStatus === 'cancelled' && !confirm('Cancel this reservation and release its inventory? Any money already received must be refunded separately in Payments.')) return;
+      const data = await api(`/api/admin/bookings/${encodeURIComponent(booking.id)}`, { method: 'PATCH', body: JSON.stringify({ status: nextStatus, revision: booking.revision }) });
       state.currentBooking = data.booking;
       await loadBookings();
       renderBookingDetail();
@@ -383,14 +417,32 @@
   $('#logout-button').addEventListener('click', () => { location.href = '/cdn-cgi/access/logout'; });
   $$('.nav-button').forEach((button) => button.addEventListener('click', () => openPanel(button.dataset.panel)));
   $$('[data-open-panel]').forEach((button) => button.addEventListener('click', () => openPanel(button.dataset.openPanel)));
-  $('#refresh-bookings').addEventListener('click', loadBookings);
+  const refreshList = () => loadBookings().catch(error => { $('#booking-filter-summary').textContent = error.message; });
+  $('#refresh-bookings').addEventListener('click', refreshList);
+  $$('[data-booking-filter]').forEach(button => button.addEventListener('click', () => {
+    state.group = button.dataset.bookingFilter; state.offset = 0;
+    $$('[data-booking-filter]').forEach(tab => { const selected = tab === button; tab.classList.toggle('is-active', selected); tab.setAttribute('aria-selected', String(selected)); });
+    refreshList();
+  }));
+  let searchTimer;
+  $('#booking-search').addEventListener('input', event => {
+    state.query = event.target.value.trim(); state.offset = 0;
+    clearTimeout(searchTimer); searchTimer = setTimeout(refreshList, 250);
+  });
+  $('#bookings-previous').addEventListener('click', () => { state.offset = Math.max(0, state.offset - 50); refreshList(); });
+  $('#bookings-next').addEventListener('click', () => { state.offset += 50; refreshList(); });
   $('#check-booking-availability').addEventListener('click', checkAvailability);
   $('#new-product-button').addEventListener('click', () => showProductForm(false));
   $('#cancel-product-button').addEventListener('click', () => { productForm.hidden = true; resetProductForm(); });
   productForm.addEventListener('submit', saveCatalogProduct);
   bookingForm.addEventListener('submit', createBooking);
-  const today = new Date();
-  today.setMinutes(today.getMinutes() - today.getTimezoneOffset());
-  bookingForm.elements.eventDate.min = today.toISOString().slice(0, 10);
+  const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Los_Angeles', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
+  bookingForm.elements.eventDate.min = today;
+  bookingForm.elements.eventEndDate.min = today;
+  bookingForm.elements.eventDate.addEventListener('change', () => {
+    if (!bookingForm.elements.eventEndDate.value || bookingForm.elements.eventEndDate.value < bookingForm.elements.eventDate.value) bookingForm.elements.eventEndDate.value = bookingForm.elements.eventDate.value;
+    bookingForm.elements.eventEndDate.min = bookingForm.elements.eventDate.value;
+  });
+  window.RegalAdmin = { openBooking, refreshBookings: loadBookings, refreshProducts: loadProducts, api, showMessage, money, escapeHtml };
   checkSession();
 })();

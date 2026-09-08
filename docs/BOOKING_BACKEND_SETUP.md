@@ -1,5 +1,7 @@
 # Regal Rentals booking backend setup
 
+> Historical first-install instructions. For the existing Cloudflare Access deployment and the September 2026 upgrade, use [RELEASE_READINESS.md](RELEASE_READINESS.md). Do not create a replacement database, re-seed live inventory, or re-enable password/bootstrap login on the existing site.
+
 This feature branch adds Cloudflare Pages Functions, a D1 database, a private admin dashboard, live date-based availability, quote capture, owner/admin logins, and built-in electronic signing.
 
 ## Do not merge yet

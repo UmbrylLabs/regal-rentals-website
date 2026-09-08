@@ -6,6 +6,10 @@ on:
       - "functions/**"
       - "migrations/**"
       - "tests/**"
+      - "scripts/**"
+      - "index.html"
+      - "script.js"
+      - "styles.css"
       - "admin/**"
       - "docs/**"
       - "rentals.js"
@@ -69,6 +73,8 @@ jobs:
         run: node tests/test_square_payment_policy.mjs
       - name: Test Square payment interfaces
         run: node tests/test_square_payment_ui.mjs
+      - name: Test real database booking, payment, refund and operations scenarios
+        run: node --experimental-vm-modules --test tests/test_booking_payment_regressions.mjs tests/test_operations_regressions.mjs
       - name: Check JavaScript syntax
         run: |
           find functions admin -name '*.js' -print0 | xargs -0 -n1 node --check
@@ -77,3 +83,4 @@ jobs:
           node --check sign.js
           node --check sign-review.js
           node --check pay.js
+          node --check script.js

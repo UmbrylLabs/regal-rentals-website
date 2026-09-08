@@ -6,10 +6,12 @@
 
   const quickForm = $('#availability-check-form');
   const quickDate = $('#quick-event-date');
+  const quickEndDate = $('#quick-event-end-date');
   const quickStart = $('#quick-event-start');
   const quickEnd = $('#quick-event-end');
   const quickMessage = $('#date-check-message');
   const eventDate = $('#event-date');
+  const eventEndDate = $('#event-end-date');
   const eventStart = $('#event-start');
   const eventEnd = $('#event-end');
   const subtotalEl = $('#quote-subtotal');
@@ -65,7 +67,7 @@
 
   const eventWindow = () => {
     const startAt = RegalEventTime.pacificEpoch(eventDate.value, eventStart.value);
-    const endAt = RegalEventTime.pacificEpoch(eventDate.value, eventEnd.value);
+    const endAt = RegalEventTime.pacificEpoch(eventEndDate.value || eventDate.value, eventEnd.value);
     if (!startAt || !endAt || endAt <= startAt) throw new Error('Choose a valid same-day event start and end time in Pacific Time.');
     return {
       eventStartAt: startAt,
@@ -129,8 +131,8 @@
     const quantity = rememberQuantity(product.id, quantities.get(product.id));
     const priceText = product.priceCents == null ? 'Pricing soon' : money(product.priceCents);
     return `<article class="inventory-card reveal${unavailable ? ' inventory-card--unavailable' : ''}" data-inventory-product="${escapeHtml(product.id)}">
-      <div class="inventory-card__visual inventory-card__visual--dynamic" aria-hidden="true">
-        <div class="catalog-style-symbol">${escapeHtml(styleIcons[product.style] || styleIcons.other)}</div>
+      <div class="inventory-card__visual inventory-card__visual--dynamic">
+        ${product.imageUrl ? `<img class="catalog-product-photo" src="${escapeHtml(product.imageUrl)}" alt="${escapeHtml(product.imageAlt || product.name)}" width="640" height="480" loading="lazy" decoding="async">` : `<div class="catalog-style-symbol" aria-hidden="true">${escapeHtml(styleIcons[product.style] || styleIcons.other)}</div>`}
         <span class="inventory-card__badge" data-product-badge="${escapeHtml(product.id)}">${unavailable ? 'Unavailable' : `${max} in inventory`}</span>
       </div>
       <div class="inventory-card__body">
@@ -283,6 +285,7 @@
 
   const syncQuickToQuote = () => {
     eventDate.value = quickDate.value;
+    eventEndDate.value = quickEndDate.value || quickDate.value;
     eventStart.value = quickStart.value;
     eventEnd.value = quickEnd.value;
     availabilityWindowKey = null;
@@ -291,6 +294,9 @@
 
   const syncQuoteToQuick = () => {
     quickDate.value = eventDate.value;
+    if (!eventEndDate.value || eventEndDate.value < eventDate.value) eventEndDate.value = eventDate.value;
+    quickEndDate.value = eventEndDate.value;
+    eventEndDate.min = eventDate.value;
     quickStart.value = eventStart.value;
     quickEnd.value = eventEnd.value;
     availabilityWindowKey = null;
@@ -333,7 +339,7 @@
     const displayDate = new Date(`${eventDate.value}T12:00:00`).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
     const beforeHours = Number(data.policy?.bufferBeforeMinutes ?? 240) / 60;
     const afterHours = Number(data.policy?.bufferAfterMinutes ?? 720) / 60;
-    setMessage(quickMessage, `Live availability shown for ${displayDate}, ${eventStart.value}–${eventEnd.value}. A ${beforeHours}-hour preparation and ${afterHours}-hour return/cleaning buffer is included.`, 'date-check-message date-check-message--ready');
+    setMessage(quickMessage, `Live availability shown for ${displayDate} ${eventStart.value} through ${eventEndDate.value} ${eventEnd.value} Pacific. A ${beforeHours}-hour preparation and ${afterHours}-hour return/cleaning buffer is included.`, 'date-check-message date-check-message--ready');
     if (scroll) $('#available-inventory')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     return windowData;
   };
@@ -414,11 +420,11 @@
     }
   });
 
-  const today = new Date();
-  today.setMinutes(today.getMinutes() - today.getTimezoneOffset());
-  const minimumDate = today.toISOString().slice(0, 10);
+  const minimumDate = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Los_Angeles', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
   eventDate.min = minimumDate;
   quickDate.min = minimumDate;
+  quickEndDate.min = minimumDate; eventEndDate.min = minimumDate;
+  quickDate.addEventListener('change', () => { if (!quickEndDate.value || quickEndDate.value < quickDate.value) quickEndDate.value = quickDate.value; quickEndDate.min = quickDate.value; });
 
   quickForm?.addEventListener('submit', async (event) => {
     event.preventDefault();
@@ -431,6 +437,7 @@
   eventDate.addEventListener('change', syncQuoteToQuick);
   eventStart.addEventListener('change', syncQuoteToQuick);
   eventEnd.addEventListener('change', syncQuoteToQuick);
+  eventEndDate.addEventListener('change', syncQuoteToQuick);
 
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
@@ -456,7 +463,7 @@
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Idempotency-Key': submitKey },
         body: JSON.stringify({
-          idempotencyKey: submitKey,
+          idempotencyKey: submitKey, website: data.get('website'),
           customer: { name: data.get('name'), email: data.get('email'), phone: data.get('phone') },
           items,
           eventStartAt: windowData.eventStartAt,
@@ -468,7 +475,8 @@
       });
       const result = await response.json();
       if (!response.ok) throw new Error(result?.error?.message || 'Your request could not be submitted.');
-      setMessage(summaryMessage, `Request ${result.booking.bookingNumber} was received, and the selected equipment is held for 24 hours while Regal Rentals reviews it.`, 'availability-message--ready');
+      const expiry = result.booking.holdExpiresAt ? new Intl.DateTimeFormat('en-US', { timeZone: 'America/Los_Angeles', dateStyle: 'medium', timeStyle: 'short' }).format(new Date(result.booking.holdExpiresAt * 1000)) : null;
+      setMessage(summaryMessage, `Request ${result.booking.bookingNumber} was received. ${result.booking.status === 'hold' && expiry ? `Your temporary hold ends ${expiry} Pacific Time.` : `Current status: ${result.booking.status}.`} Regal Rentals will review pricing and arrange your agreement and payment. Save this booking number for questions or changes.`, 'availability-message--ready');
       submitKey = createSubmitKey();
       button.textContent = 'Request Received';
     } catch (error) {

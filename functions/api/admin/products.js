@@ -75,11 +75,11 @@ export async function onRequestGet(context) {
     await requireAdmin(context.env, context.request);
     const result = await context.env.DB.prepare(
       `SELECT id, sku, name, category, style, description, price_unit,
-              quantity_owned, price_cents, active, sort_order, updated_at
+              quantity_owned, price_cents, active, sort_order, updated_at, image_key, image_alt
        FROM products
        ORDER BY active DESC, category, sort_order, name`
     ).all();
-    return json({ ok: true, products: result.results || [] });
+    return json({ ok: true, photosConfigured: Boolean(context.env.BOOKING_FILES), products: result.results || [] });
   } catch (error) {
     return safeErrorResponse(error);
   }
@@ -146,12 +146,12 @@ export async function onRequestPatch(context) {
         `UPDATE products SET
            sku = ?1, name = ?2, category = ?3, style = ?4, description = ?5,
            price_unit = ?6, quantity_owned = ?7, price_cents = ?8,
-           active = ?9, sort_order = ?10, updated_at = ?11
+           active = ?9, sort_order = ?10, updated_at = ?11, image_alt = ?13
          WHERE id = ?12`
       ).bind(
         skuInput, product.name, product.category, product.style, product.description,
         product.priceUnit, product.quantityOwned, product.priceCents, product.active,
-        product.sortOrder, now, id
+        product.sortOrder, now, id, cleanText(body.imageAlt ?? existing.image_alt, 300)
       ),
       context.env.DB.prepare(
         `INSERT INTO audit_log (

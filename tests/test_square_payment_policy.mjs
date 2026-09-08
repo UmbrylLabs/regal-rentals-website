@@ -45,6 +45,7 @@ const squareLib = readFileSync(new URL('../functions/_lib/square.js', import.met
 const paymentEndpoint = readFileSync(new URL('../functions/api/pay/[token].js', import.meta.url), 'utf8');
 const webhook = readFileSync(new URL('../functions/api/webhooks/square.js', import.meta.url), 'utf8');
 const recording = readFileSync(new URL('../functions/_lib/payment-recording.js', import.meta.url), 'utf8');
+const processing = readFileSync(new URL('../functions/_lib/payment-processing.js', import.meta.url), 'utf8');
 
 assert.match(migration, /CREATE TABLE IF NOT EXISTS payment_requests/);
 assert.match(migration, /CREATE TABLE IF NOT EXISTS booking_payments/);
@@ -56,12 +57,13 @@ assert.match(squareLib, /\/v2\/cards/);
 assert.match(squareLib, /Authorization: `Bearer \$\{env\.SQUARE_ACCESS_TOKEN\}`/);
 assert.doesNotMatch(squareLib, /SQUARE_ACCESS_TOKEN.*squarePublicConfig[\s\S]*return.*SQUARE_ACCESS_TOKEN/i);
 assert.match(paymentEndpoint, /cardOnFileConsent/);
-assert.match(paymentEndpoint, /actualMethod === 'credit_card'/);
-assert.match(paymentEndpoint, /depositStillRequired/);
-assert.match(paymentEndpoint, /recordCompletedPaymentSafely/);
+assert.match(processing, /actualMethod === 'credit_card'/);
+assert.match(processing, /depositStillRequired/);
+assert.match(processing, /recordCompletedPaymentSafely/);
+assert.match(paymentEndpoint, /reconcileProcessorPayment/);
 assert.match(webhook, /x-square-hmacsha256-signature/i);
 assert.match(webhook, /notificationUrl \+ rawBody/);
-assert.match(webhook, /recordCompletedPaymentSafely/);
+assert.match(webhook, /reconcileProcessorPayment/);
 assert.match(recording, /WHERE square_payment_id = \?1/);
 assert.match(recording, /message\.includes\('unique'\)/);
 

@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Regal Rentals | Launching Soon</title>
+  <title>Regal Rentals | Local Event Rentals</title>
   <meta name="description" content="Regal Rentals is launching soon with premium local event rentals for El Dorado Hills, Folsom, Cameron Park, and surrounding areas." />
   <meta name="robots" content="noindex, nofollow" />
   <meta name="theme-color" content="#26063f" />
@@ -53,7 +53,7 @@
 
       <nav class="site-nav" id="site-nav" aria-label="Main navigation">
         <a href="/" class="active">Home</a>
-        <a href="#browse">Browse Rentals</a>
+        <a href="/rentals">Browse Rentals</a>
         <a href="#launch">Launch Info</a>
         <a href="#quote">Contact</a>
       </nav>
@@ -70,7 +70,7 @@
       <img class="hero__watermark" src="assets/regal-shield-watermark.webp" alt="" aria-hidden="true" width="520" height="653" fetchpriority="high" />
 
       <div class="container hero__inner reveal">
-        <div class="launch-pill">Launching Soon</div>
+        <div class="launch-pill">Rental inquiries welcome</div>
         <div class="royal-divider" aria-hidden="true"><span></span><b>♛</b><span></span></div>
         <p class="eyebrow">Premium local event rentals</p>
         <h1 id="hero-title">Elevate<br />Every Event</h1>
@@ -80,13 +80,13 @@
           <i aria-hidden="true"></i>
           <span>Local launch</span>
           <i aria-hidden="true"></i>
-          <span>Bookings opening soon</span>
+          <span>Live availability checks</span>
         </div>
         <div class="hero__actions">
           <a class="btn btn--primary" href="#quote">Request a Quote <span aria-hidden="true">→</span></a>
-          <a class="btn btn--secondary" href="#browse">Browse Rentals <span aria-hidden="true">→</span></a>
+          <a class="btn btn--secondary" href="/rentals">Browse Rentals <span aria-hidden="true">→</span></a>
         </div>
-        <p class="hero__note">Online booking is not open yet. This site is live early while inventory is being added.</p>
+        <p class="hero__note">Check availability and request a 24-hour hold. Your reservation is confirmed after we review the details and arrange the agreement and payment.</p>
       </div>
     </section>
 
@@ -94,8 +94,8 @@
       <div class="container launch-strip__inner reveal">
         <span class="launch-strip__icon" aria-hidden="true">♛</span>
         <div>
-          <h2>Launching soon — inventory will be added as it becomes available.</h2>
-          <p>No fake listings. No false advertising. Items will be posted only when they are actually ready to rent.</p>
+          <h2>Browse current inventory and plan your event.</h2>
+          <p>The rental catalog shows the equipment currently offered, with date-specific quantities and clear next steps.</p>
         </div>
       </div>
     </section>
@@ -107,44 +107,10 @@
           <h2 id="browse-title">Browse Rentals</h2>
           <span class="heading-line"></span>
         </div>
-        <p class="section-intro reveal">Rental options are being built out. These placeholders will be replaced with real inventory photos and details as items are added.</p>
+        <p class="section-intro reveal">Explore the current catalog, then choose your event dates to check availability.</p>
 
-        <div class="carousel-shell reveal">
-          <button class="carousel-btn carousel-btn--prev" type="button" aria-label="Previous rental placeholder">‹</button>
-          <div class="rental-carousel" id="rental-carousel" tabindex="0" aria-label="Coming soon rental placeholders">
-            <article class="coming-card">
-              <div class="coming-card__photo"><span>Coming Soon</span></div>
-              <h3>Coming Soon</h3>
-              <p>Real rental details will be added once this item is ready.</p>
-            </article>
-            <article class="coming-card">
-              <div class="coming-card__photo"><span>Coming Soon</span></div>
-              <h3>Coming Soon</h3>
-              <p>Real rental details will be added once this item is ready.</p>
-            </article>
-            <article class="coming-card">
-              <div class="coming-card__photo"><span>Coming Soon</span></div>
-              <h3>Coming Soon</h3>
-              <p>Real rental details will be added once this item is ready.</p>
-            </article>
-            <article class="coming-card">
-              <div class="coming-card__photo"><span>Coming Soon</span></div>
-              <h3>Coming Soon</h3>
-              <p>Real rental details will be added once this item is ready.</p>
-            </article>
-            <article class="coming-card">
-              <div class="coming-card__photo"><span>Coming Soon</span></div>
-              <h3>Coming Soon</h3>
-              <p>Real rental details will be added once this item is ready.</p>
-            </article>
-            <article class="coming-card">
-              <div class="coming-card__photo"><span>Coming Soon</span></div>
-              <h3>Coming Soon</h3>
-              <p>Real rental details will be added once this item is ready.</p>
-            </article>
-          </div>
-          <button class="carousel-btn carousel-btn--next" type="button" aria-label="Next rental placeholder">›</button>
-        </div>
+<div class="rental-carousel reveal" id="rental-carousel" tabindex="0" aria-label="Current rental catalog"><p role="status">Loading current rental items…</p></div>
+        <p class="section-intro"><a class="btn btn--secondary" href="/rentals">View all rentals and check dates →</a></p>
       </div>
     </section>
 
@@ -153,16 +119,16 @@
         <div class="quote__copy reveal">
           <p class="eyebrow eyebrow--gold">Contact Regal Rentals</p>
           <h2 id="quote-title">Planning Ahead?</h2>
-          <p>Regal Rentals is launching soon. Send your event details now and we’ll let you know what is available once inventory is ready.</p>
+          <p>Have a question or need help planning? Send your event details and we’ll follow up. To select equipment and request a hold, use Browse Rentals.</p>
           <div class="quote-cues" aria-label="Contact notes">
-            <span>No confirmed bookings yet</span>
-            <span>Inventory coming soon</span>
+            <span>Personal help with your event</span>
+            <span>Browse current inventory</span>
             <span>Local service area</span>
           </div>
         </div>
 
         <form class="quote-form reveal" id="quote-form">
-          <div class="form-banner">Launching soon — this form is for early questions and future quote requests.</div>
+          <div class="form-banner">General inquiries only. This form does not reserve equipment.</div>
           <div class="form-grid">
             <label>
               Name
@@ -190,11 +156,12 @@
             </label>
             <label class="form-grid__full">
               What are you planning?
-              <textarea name="details" placeholder="Tell us about the event, approximate guest count, and what you may need once rentals are available."></textarea>
+              <textarea name="details" placeholder="Tell us about your event, guest count, and the equipment you need."></textarea>
             </label>
           </div>
           <button class="btn btn--primary btn--full" type="submit">Send Request <span aria-hidden="true">→</span></button>
-          <p class="form-note">This opens your email app and sends to bookings@regal.rentals.</p>
+          <p class="form-note" id="inquiry-message" aria-live="polite">Your inquiry is saved securely for Regal Rentals to review.</p>
+          <label class="submission-honeypot" aria-hidden="true">Website<input name="website" tabindex="-1" autocomplete="off"></label>
         </form>
       </div>
     </section>
@@ -207,12 +174,12 @@
           <img src="assets/regal-shield-small.webp" alt="Regal Rentals shield" width="128" height="161" />
           <span>Regal<br />Rentals</span>
         </a>
-        <p>Premium local event rentals for unforgettable celebrations. Launching soon.</p>
+        <p>Premium local event rentals for unforgettable celebrations.</p>
       </div>
       <div>
         <h3>Quick Links</h3>
         <a href="/">Home</a>
-        <a href="#browse">Browse Rentals</a>
+        <a href="/rentals">Browse Rentals</a>
         <a href="#quote">Contact</a>
       </div>
       <div>
@@ -225,7 +192,7 @@
     <div class="footer__bottom">
       <div class="container">
         <span>© <span id="year"></span> Regal Rentals. All rights reserved.</span>
-        <span>Launching soon — inventory being added.</span>
+        <span>Local event rentals · Inquiries welcome.</span>
       </div>
     </div>
   </footer>

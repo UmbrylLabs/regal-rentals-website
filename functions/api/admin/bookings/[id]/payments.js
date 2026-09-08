@@ -11,6 +11,9 @@ import {
 } from '../../../../_lib/payments.js';
 import { resolvePublicSigningOrigin } from '../../../../_lib/signing-origin.js';
 import { squareConfigured, squareEnvironment } from '../../../../_lib/square.js';
+import { bookingCanCollect, findProcessorPayment, PAYMENT_PENDING_MESSAGE } from '../../../../_lib/payment-attempts.js';
+import { reconcileProcessorPayment } from '../../../../_lib/payment-processing.js';
+import { requestBookingRefund } from '../../../../_lib/refunds.js';
 
 function paymentError(error) {
   const code = String(error?.message || '');
@@ -28,11 +31,11 @@ function paymentError(error) {
 
 export async function onRequestGet(context) {
   try {
-    await requireAdmin(context.env, context.request);
+    const user = await requireAdmin(context.env, context.request);
     const booking = await loadBookingForPayment(context.env.DB, context.params.id);
     if (!booking) return json({ ok: false, error: { code: 'NOT_FOUND', message: 'Booking not found.' } }, 404);
     const records = await listBookingPayments(context.env.DB, booking.id);
-    const summary = await paymentSummary(context.env.DB, booking.id, booking.subtotal_cents);
+    const summary = await paymentSummary(context.env.DB, booking.id, booking.total_cents);
     const signedMethod = await latestSignedPaymentMethod(context.env.DB, booking.id);
     const savedCards = await context.env.DB.prepare(
       `SELECT id, card_brand, last_4, card_type, exp_month, exp_year, enabled, updated_at
@@ -44,9 +47,13 @@ export async function onRequestGet(context) {
       environment: squareEnvironment(context.env),
       booking,
       summary,
+      releaseChecks: await context.env.DB.prepare('SELECT * FROM booking_release_checks WHERE id=?1').bind(booking.id).first(),
       signedPaymentMethod: signedMethod,
       requests: records.requests,
       payments: records.payments,
+      attempts: records.attempts,
+      refunds: records.refunds,
+      canRefund: user.role === 'owner',
       savedCards: savedCards.results || []
     });
   } catch (error) {
@@ -78,6 +85,8 @@ export async function onRequestPost(context) {
     }
 
     if (action === 'record_cash') {
+      const cashKey = cleanText(body.cashKey, 80);
+      if (!/^[a-f0-9-]{36}$/i.test(cashKey)) throw new Error('IDEMPOTENCY_KEY_REQUIRED');
       const purpose = normalizePaymentPurpose(body.purpose || 'reservation');
       const amountCents = Math.round(Number(body.amountCents));
       if (!Number.isInteger(amountCents) || amountCents < 1 || amountCents > 10_000_000) {
@@ -86,6 +95,7 @@ export async function onRequestPost(context) {
       const appliesToRental = purpose !== 'security_deposit' && body.appliesToRental !== false;
       const paymentId = await recordCompletedPayment(context.env, {
         bookingId: booking.id,
+        cashKey,
         provider: 'cash',
         purpose,
         amountCents,
@@ -94,6 +104,27 @@ export async function onRequestPost(context) {
         receivedBy: user.id
       });
       return json({ ok: true, paymentId }, 201);
+    }
+
+    if (action === 'refund') {
+      if (user.role !== 'owner') throw new Error('FORBIDDEN');
+      const refund = await requestBookingRefund(context.env, booking.id, user, body);
+      return json({ ok: true, refund }, refund.status === 'pending' ? 202 : 200);
+    }
+
+    if (action === 'reconcile') {
+      const attempt = await context.env.DB.prepare(`SELECT * FROM payment_attempts
+        WHERE id = ?1 AND booking_id = ?2`).bind(cleanText(body.attemptId, 100), booking.id).first();
+      if (!attempt) throw new Error('PAYMENT_ATTEMPT_NOT_FOUND');
+      const request = await context.env.DB.prepare(`SELECT pr.*, b.customer_id,
+        c.name AS customer_name, c.email AS customer_email, c.phone AS customer_phone
+        FROM payment_requests pr JOIN bookings b ON b.id = pr.booking_id
+        JOIN customers c ON c.id = b.customer_id WHERE pr.id = ?1`)
+        .bind(attempt.payment_request_id).first();
+      const payment = await findProcessorPayment(context.env, request, attempt, cleanText(body.squarePaymentId, 200) || null);
+      if (!payment) return json({ ok: true, pending: true, message: PAYMENT_PENDING_MESSAGE }, 202);
+      const result = await reconcileProcessorPayment(context.env, request, payment, attempt);
+      return json({ ok: true, payment: result }, result.status === 'processing' ? 202 : 200);
     }
 
     if (action === 'cancel_request') {

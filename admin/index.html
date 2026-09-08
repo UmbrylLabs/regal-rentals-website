@@ -39,6 +39,8 @@
           <button class="nav-button" data-panel="new-booking">New Booking</button>
           <button class="nav-button" data-panel="bookings">Bookings</button>
           <button class="nav-button" data-panel="inventory">Inventory</button>
+          <button class="nav-button" data-panel="inquiries">Inquiries</button>
+          <button class="nav-button" data-panel="notifications">Email status</button>
           <button class="nav-button" data-panel="users" id="users-nav" hidden>Access Users</button>
         </aside>
 
@@ -49,6 +51,7 @@
               <button class="button" data-open-panel="new-booking">Create Booking</button>
             </div>
             <div class="stat-grid" id="stat-grid"></div>
+            <div class="card"><h3>Needs attention</h3><div id="attention-list"></div></div>
             <div class="card"><h3>Upcoming rentals</h3><div id="upcoming-list"></div></div>
           </section>
 
@@ -62,6 +65,7 @@
                 <label>Event city<input name="eventCity" required /></label>
                 <label>Event date<input name="eventDate" type="date" required /></label>
                 <label>Start time (Pacific)<input name="eventStart" type="time" value="14:00" required /></label>
+                <label>Return date<input name="eventEndDate" type="date" required /></label>
                 <label>End time (Pacific)<input name="eventEnd" type="time" value="20:00" required /></label>
                 <label>Service type<select name="serviceType"><option value="delivery">Delivery</option><option value="pickup">Customer pickup</option></select></label>
                 <label>Initial status<select name="status"><option value="inquiry">Inquiry — does not reserve</option><option value="quote">Quote — does not reserve</option><option value="hold">24-hour hold</option><option value="confirmed">Confirmed reservation</option></select></label>
@@ -93,6 +97,7 @@
               <p class="booking-filter-summary" id="booking-filter-summary" aria-live="polite"></p>
             </div>
             <div class="card table-wrap"><table><thead><tr><th>Booking</th><th>Customer</th><th>Event</th><th>Status</th><th>Units</th><th></th></tr></thead><tbody id="bookings-table-body"></tbody></table></div>
+            <div class="detail-actions"><button class="button button--quiet" id="bookings-previous" type="button" disabled>Previous 50</button><button class="button button--quiet" id="bookings-next" type="button" disabled>Next 50</button></div>
           </section>
 
           <section class="panel" data-panel-view="inventory" hidden>
@@ -120,6 +125,10 @@
                 <label>Price label<select name="priceUnit"><option>each</option><option>per chair</option><option>per table</option><option>per canopy</option><option>per tent</option><option>per game</option><option>per set</option><option>per package</option><option>per event</option></select></label>
                 <label>Display order<input name="sortOrder" type="number" min="0" value="100" /></label>
                 <label class="full">Short website description<textarea name="description" rows="3" maxlength="1000" placeholder="Describe the item, size, seating, or best use."></textarea></label>
+                <label class="full">Product photo<input id="product-photo" name="image" type="file" accept="image/jpeg,image/png,image/webp"><span class="label-note" id="photo-storage-note"></span></label>
+                <img id="product-photo-preview" alt="Current product photo" width="240" height="180" hidden>
+                <label>Photo description<input name="imageAlt" maxlength="300" placeholder="Describe the item shown"></label>
+                <label class="toggle-label"><input id="remove-product-photo" name="removeImage" type="checkbox"><span>Remove current photo</span></label>
                 <label class="toggle-label full"><input name="active" type="checkbox" checked /><span>Show this item on the public rental website</span></label>
               </div>
               <div class="product-form-actions">
@@ -139,6 +148,19 @@
             </div>
           </section>
 
+          <section class="panel" data-panel-view="inquiries" hidden>
+            <div class="panel-heading"><h2>Website inquiries</h2><button class="button button--quiet" id="refresh-inquiries" type="button">Refresh</button></div>
+            <label>Status<select id="inquiry-status"><option value="new">New</option><option value="reviewed">Reviewed</option><option value="closed">Closed</option></select></label>
+            <p id="inquiry-list-message" aria-live="polite"></p><div id="inquiry-list"></div>
+            <div class="detail-actions"><button class="button button--quiet" type="button" id="inquiry-previous">Previous 50</button><button class="button button--quiet" type="button" id="inquiry-next">Next 50</button></div>
+          </section>
+          <section class="panel" data-panel-view="notifications" hidden>
+            <div class="panel-heading"><h2>Email status</h2><button class="button button--quiet" id="refresh-notifications" type="button">Refresh</button></div>
+            <p id="notification-status" aria-live="polite"></p><button class="button button--secondary" id="retry-notifications" type="button" disabled>Process queued emails</button>
+            <p>“Accepted” means the email provider accepted the message. Check provider delivery logs if a customer has not received it. Requests remain saved even when email delivery fails.</p>
+            <div id="notification-list"></div>
+          </section>
+
           <section class="panel" data-panel-view="booking-detail" hidden>
             <button class="back-button" type="button" data-open-panel="bookings">← Back to bookings</button>
             <div id="booking-detail"></div>
@@ -149,9 +171,12 @@
   </main>
   <script src="/event-time.js?v=20260831-1" defer></script>
   <script src="/admin/booking-tools.js?v=20260721-1" defer></script>
+  <script src="/admin/booking-editor.js?v=20260907-1" defer></script>
   <script src="/admin/booking-documents.js?v=20260722-1" defer></script>
   <script src="/admin/payment-manager.js?v=20260728-1" defer></script>
   <script src="/admin/admin.js?v=20260721-2" defer></script>
+  <script src="/admin/catalog-photos.js?v=20260907-1" defer></script>
+  <script src="/admin/inbox.js?v=20260907-1" defer></script>
   <script src="/admin/admin-defaults.js?v=20260721-1" defer></script>
 </body>
 </html>

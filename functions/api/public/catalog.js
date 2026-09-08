@@ -1,7 +1,8 @@
 import { json, safeErrorResponse } from '../../_lib/http.js';
+import { catalogImageUrl } from '../../_lib/catalog-images.js';
 
 const EDGE_CACHE_SECONDS = 30;
-const CATALOG_CACHE_VERSION = '20260721-1';
+const CATALOG_CACHE_VERSION = '20260907-1';
 
 function cacheRequest(request) {
   const url = new URL(request.url);
@@ -31,7 +32,7 @@ export async function onRequestGet(context) {
     const databaseStartedAt = Date.now();
     const result = await context.env.DB.prepare(
       `SELECT id, sku, name, category, style, description, price_unit,
-              quantity_owned, price_cents, sort_order
+              quantity_owned, price_cents, sort_order, image_key, image_alt
        FROM products
        WHERE active = 1
        ORDER BY category, sort_order, name`
@@ -47,6 +48,8 @@ export async function onRequestGet(context) {
         category: product.category,
         style: product.style,
         description: product.description,
+        imageUrl: catalogImageUrl(product),
+        imageAlt: product.image_alt || product.name,
         priceUnit: product.price_unit,
         quantityOwned: Number(product.quantity_owned),
         priceCents: product.price_cents == null ? null : Number(product.price_cents),

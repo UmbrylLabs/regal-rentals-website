@@ -212,3 +212,4 @@
     padding-bottom: 0 !important;
   }
 }
+.date-check-form { grid-template-columns: repeat(auto-fit, minmax(145px, 1fr)); }

@@ -106,11 +106,11 @@ export async function createCustomerChoiceSigningRequest(env, bookingId, user, i
   await env.DB.prepare(
     `INSERT INTO signing_requests (
        token_hash, booking_id, signer_name, signer_email, agreement_version,
-       agreement_html, agreement_sha256, expires_at, created_by, created_at
-     ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)`
+       agreement_html, agreement_sha256, expires_at, created_by, created_at, booking_revision
+     ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)`
   ).bind(
     tokenHash, booking.id, signerName, signerEmail, version,
-    agreementHtml, agreementSha256, expiresAt, user.id, now
+    agreementHtml, agreementSha256, expiresAt, user.id, now, booking.revision || 0
   ).run();
 
   const deposit = calculateSecurityDeposit(booking);

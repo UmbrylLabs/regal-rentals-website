@@ -1,10 +1,7 @@
 import { cleanText, json } from '../../_lib/http.js';
-import { recordCompletedPaymentSafely } from '../../_lib/payment-recording.js';
-import {
-  ensureSquareCustomer,
-  saveSquareCardFromPayment,
-  squareCardSummary
-} from '../../_lib/square.js';
+import { reconcileProcessorPayment } from '../../_lib/payment-processing.js';
+import { reconcileSquareRefund } from '../../_lib/refunds.js';
+import { squareRequest } from '../../_lib/square.js';
 
 function decodeBase64(value) {
   try {
@@ -42,130 +39,61 @@ async function markEventProcessed(db, eventId, eventType) {
   ).bind(eventId, eventType).run();
 }
 
-async function paymentRequestForWebhook(db, payment) {
-  const referenceId = cleanText(payment?.reference_id, 100);
-  if (referenceId) {
-    const request = await db.prepare(
-      `SELECT pr.*, b.booking_number, b.customer_id,
-              c.name AS customer_name, c.email AS customer_email, c.phone AS customer_phone
-       FROM payment_requests pr
-       JOIN bookings b ON b.id = pr.booking_id
-       JOIN customers c ON c.id = b.customer_id
-       WHERE pr.id = ?1`
-    ).bind(referenceId).first();
-    if (request) return request;
-  }
-  if (payment?.id) {
-    return db.prepare(
-      `SELECT pr.*, b.booking_number, b.customer_id,
-              c.name AS customer_name, c.email AS customer_email, c.phone AS customer_phone
-       FROM payment_requests pr
-       JOIN bookings b ON b.id = pr.booking_id
-       JOIN customers c ON c.id = b.customer_id
-       WHERE pr.square_payment_id = ?1`
-    ).bind(payment.id).first();
-  }
-  return null;
-}
-
-async function reconcileCompletedPayment(env, request, payment) {
-  const cardSummary = squareCardSummary(payment);
-  const actualMethod = String(cardSummary.cardType || '').toUpperCase() === 'CREDIT'
-    ? 'credit_card'
-    : String(cardSummary.cardType || '').toUpperCase() === 'DEBIT'
-      ? 'debit_card'
-      : 'unknown';
-  const expectedMethod = request.expected_method;
-  const methodMismatch = expectedMethod !== 'unspecified'
-    && actualMethod !== 'unknown'
-    && expectedMethod !== actualMethod;
-
-  let savedCard = null;
-  let note = '';
-  if (
-    Number(request.require_card_on_file) === 1
-    && request.card_consent_at
-    && actualMethod === 'credit_card'
-  ) {
-    try {
-      const squareCustomerId = await ensureSquareCustomer(env, {
-        id: request.customer_id,
-        name: request.customer_name,
-        email: request.customer_email,
-        phone: request.customer_phone
-      });
-      savedCard = await saveSquareCardFromPayment(env, {
-        paymentId: payment.id,
-        squareCustomerId,
-        customerId: request.customer_id,
-        cardholderName: request.cardholder_name || request.customer_name,
-        idempotencyKey: `webhook-card-${request.id}`
-      });
-    } catch (error) {
-      console.error('Square webhook card save failed', error);
-      note = 'Payment completed, but automatic card-on-file storage needs staff review.';
-    }
-  }
-
-  await recordCompletedPaymentSafely(env, {
-    bookingId: request.booking_id,
-    paymentRequestId: request.id,
-    provider: 'square',
-    purpose: request.purpose,
-    amountCents: Number(payment?.amount_money?.amount || request.amount_cents),
-    appliesToRental: Number(request.applies_to_rental) === 1,
-    squarePaymentId: payment.id,
-    squareReceiptUrl: cardSummary.receiptUrl,
-    squareCardId: savedCard?.id || null,
-    cardBrand: cardSummary.cardBrand,
-    cardLast4: cardSummary.last4,
-    cardType: cardSummary.cardType,
-    expectedMethod,
-    methodMismatch,
-    note,
-    paidAt: Math.floor(new Date(payment.created_at || Date.now()).getTime() / 1000)
-  });
+export async function paymentRequestForWebhook(db, payment) {
+  if (!payment?.id) return { request: null, attempt: null };
+  const attempt = await db.prepare(`SELECT * FROM payment_attempts
+    WHERE id = ?1 OR square_payment_id = ?2 LIMIT 1`)
+    .bind(cleanText(payment.reference_id, 100), payment.id).first();
+  const request = await db.prepare(`SELECT pr.*, b.booking_number, b.customer_id,
+      c.name AS customer_name, c.email AS customer_email, c.phone AS customer_phone
+    FROM payment_requests pr JOIN bookings b ON b.id = pr.booking_id
+    JOIN customers c ON c.id = b.customer_id
+    WHERE pr.id = ?1 OR pr.square_payment_id = ?2 LIMIT 1`)
+    .bind(attempt?.payment_request_id || cleanText(payment.reference_id, 100), payment.id).first();
+  return { request, attempt };
 }
 
 export async function onRequestPost(context) {
   const rawBody = await context.request.text();
+  if (rawBody.length > 500_000) return json({ ok: false }, 413);
   if (!await validSquareSignature(context.request, rawBody, context.env)) {
     return json({ ok: false, error: { code: 'INVALID_SIGNATURE', message: 'Invalid webhook signature.' } }, 403);
   }
-
   let event;
-  try {
-    event = JSON.parse(rawBody);
-  } catch {
-    return json({ ok: false, error: { code: 'INVALID_JSON', message: 'Invalid webhook body.' } }, 400);
-  }
-
+  try { event = JSON.parse(rawBody); }
+  catch { return json({ ok: false, error: { code: 'INVALID_JSON', message: 'Invalid webhook body.' } }, 400); }
   const eventId = cleanText(event?.event_id, 200);
   const eventType = cleanText(event?.type, 100);
   if (!eventId || !eventType) return json({ ok: true });
-
-  const duplicate = await context.env.DB.prepare(
-    'SELECT event_id FROM square_webhook_events WHERE event_id = ?1'
-  ).bind(eventId).first();
+  const duplicate = await context.env.DB.prepare('SELECT event_id FROM square_webhook_events WHERE event_id = ?1')
+    .bind(eventId).first();
   if (duplicate) return json({ ok: true, duplicate: true });
-
   try {
     if (['payment.created', 'payment.updated'].includes(eventType)) {
       const payment = event?.data?.object?.payment;
-      const request = await paymentRequestForWebhook(context.env.DB, payment);
-      if (request && payment?.status === 'COMPLETED') {
-        await reconcileCompletedPayment(context.env, request, payment);
-      } else if (request && ['FAILED', 'CANCELED'].includes(payment?.status)) {
-        await context.env.DB.prepare(
-          `UPDATE payment_requests SET status = 'failed', failure_message = ?1, updated_at = unixepoch()
-           WHERE id = ?2 AND status <> 'paid'`
-        ).bind(`Square payment ${String(payment.status).toLowerCase()}.`, request.id).run();
+      const { request, attempt } = await paymentRequestForWebhook(context.env.DB, payment);
+      if (request) await reconcileProcessorPayment(context.env, request, payment, attempt);
+    } else if (['refund.created', 'refund.updated'].includes(eventType)) {
+      const eventRefund = event?.data?.object?.refund;
+      if (!eventRefund?.id) throw new Error('INVALID_REFUND_EVENT');
+      // Query the current processor state so a late PENDING event cannot undo
+      // a completed refund, and refunds arriving before payments can reconcile.
+      const { refund } = await squareRequest(context.env, `/v2/refunds/${encodeURIComponent(eventRefund.id)}`);
+      let result = await reconcileSquareRefund(context.env, refund);
+      if (!result) {
+        const { payment } = await squareRequest(context.env, `/v2/payments/${encodeURIComponent(refund.payment_id)}`);
+        const { request, attempt } = await paymentRequestForWebhook(context.env.DB, payment);
+        if (request) {
+          await reconcileProcessorPayment(context.env, request, payment, attempt);
+          result = await reconcileSquareRefund(context.env, refund);
+          if (!result) throw new Error('REFUND_PAYMENT_NOT_RECORDED');
+        }
       }
     }
     await markEventProcessed(context.env.DB, eventId, eventType);
     return json({ ok: true });
   } catch (error) {
-    console.error(`Square webhook processing failed for ${eventType}`, error);
+    console.error('Square webhook processing failed', eventType, error?.message);
     return json({ ok: false, error: { code: 'WEBHOOK_PROCESSING_FAILED', message: 'Webhook processing failed.' } }, 500);
   }
 }

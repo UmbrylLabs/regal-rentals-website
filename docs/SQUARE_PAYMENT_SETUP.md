@@ -1,5 +1,7 @@
 # Regal Rentals Square payment setup
 
+For an existing installation, follow [the current release checklist](RELEASE_READINESS.md) first. Back up production and use an isolated preview database for testing. Do not reinitialize the existing live database.
+
 The Square payment system is installed in the website but intentionally remains inactive until the D1 migration, Square credentials, and webhook are configured. Never commit Square access tokens or webhook signature keys to GitHub.
 
 ## What the payment system provides
@@ -13,8 +15,10 @@ The Square payment system is installed in the website but intentionally remains 
 - debit-card detection and deposit reminders
 - cash-payment recording in the admin booking record
 - payment receipts, payment history, saved-card summaries, and audit entries
-- booking status changes to `confirmed` after a partial rental payment and `paid` after the rental subtotal is fully paid
-- Square webhook signature validation and payment reconciliation
+- booking status changes to `confirmed` after a partial rental payment and `paid` after the complete quote total, including tax, is paid
+- Square webhook signature validation, payment recovery and refund reconciliation
+- owner-only partial/full refunds and net-balance accounting
+- safe handling of uncertain charges without enabling a second payment attempt
 
 Regal Rentals never receives or stores a complete card number or card security code. Square returns one-time payment tokens and non-sensitive card summaries such as brand, type, and last four digits.
 
@@ -27,7 +31,7 @@ npm install
 npx wrangler d1 migrations apply regal-rentals --remote
 ```
 
-This applies `migrations/0004_square_payments.sql` to the existing `regal-rentals` D1 database. Apply migrations to the preview database first when preview and production use separate databases.
+This applies all unapplied migrations, including `0004_square_payments.sql`, `0005_payment_recovery.sql` and `0006_operations.sql`. First target a separate preview database with its actual configured name. The command above names the production database and must only be used at the approved production migration step.
 
 ## 2. Create a Square application
 
@@ -42,7 +46,7 @@ This applies `migrations/0004_square_payments.sql` to the existing `regal-rental
 
 ## 3. Add Cloudflare Pages variables
 
-Open the Regal Rentals Pages project and add these to both Preview and Production as appropriate.
+Open the Regal Rentals Pages project. Use Sandbox credentials and a separate database in Preview; use Production credentials only in Production after acceptance. The example origins below are production values. Set the corresponding preview origin and exact preview webhook URL for Sandbox so test links never point to the live site.
 
 ### Plain environment variables
 
@@ -85,6 +89,8 @@ https://regal.rentals/api/webhooks/square
 4. Subscribe to:
    - `payment.created`
    - `payment.updated`
+   - `refund.created`
+   - `refund.updated`
 5. Copy the webhook signature key into the encrypted Cloudflare secret `SQUARE_WEBHOOK_SIGNATURE_KEY`.
 6. Confirm the exact URL is also stored in `SQUARE_WEBHOOK_NOTIFICATION_URL`.
 
@@ -105,7 +111,10 @@ https://regal.rentals/api/webhooks/square
    - a debit card does not get treated as the no-deposit credit-card option
    - the refundable security deposit remains separate from rental payments
 8. Test a declined Sandbox card and confirm the link can be retried without creating a duplicate completed payment.
-9. Test recording cash and confirm it appears separately from Square payments.
+9. Test recording cash and confirm it appears separately from Square payments; retry the same receipt and verify there is no duplicate.
+10. Test partial and full refunds, including a refund issued in the Square dashboard and a delayed or duplicate webhook.
+11. Interrupt a payment after Square accepts it and verify the pending state prevents another charge. Use **Check Square payment** to reconcile it.
+12. Verify canceled/expired links cannot charge, temporary-hold links expire with the hold, and equipment cannot be marked Ready/Out until the agreement, balance and security requirements pass.
 
 Do not use a real card while `SQUARE_ENVIRONMENT=sandbox`.
 
