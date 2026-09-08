@@ -88,7 +88,7 @@
     ? `<div class="payment-link-result" id="payment-link-result"><strong>Payment link created</strong><a href="${escapeHtml(state.lastPaymentLink)}" target="_blank" rel="noopener">${escapeHtml(state.lastPaymentLink)}</a><button class="button button--quiet" id="copy-payment-link" type="button">Copy Link</button></div>`
     : '<div class="payment-link-result" id="payment-link-result" hidden></div>';
 
-  const recoveryMarkup = () => (state.data.attempts || []).map(attempt => `<div class="payment-config"><strong>Payment result needs confirmation</strong><span>The reservation stays protected while this is resolved. Do not collect a replacement payment.</span><label>Square payment ID, if available<input data-square-id="${escapeHtml(attempt.id)}" value="${escapeHtml(attempt.square_payment_id || '')}" autocomplete="off"></label><button type="button" class="button button--secondary" data-reconcile-payment="${escapeHtml(attempt.id)}">Check Square payment</button></div>`).join('');
+  const recoveryMarkup = () => (state.data.attempts || []).map(attempt => `<div class="payment-config"><strong>${attempt.status === 'completed' ? 'Payment received; card storage needs review' : 'Payment result needs confirmation'}</strong><span>${attempt.status === 'completed' ? 'Retry card storage using the recorded payment and customer consent. This does not charge the card again.' : 'The reservation stays protected while this is resolved. Do not collect a replacement payment.'}</span><label>Square payment ID, if available<input data-square-id="${escapeHtml(attempt.id)}" value="${escapeHtml(attempt.square_payment_id || '')}" autocomplete="off"></label><button type="button" class="button button--secondary" data-reconcile-payment="${escapeHtml(attempt.id)}">${attempt.status === 'completed' ? 'Retry card storage' : 'Check Square payment'}</button></div>`).join('');
 
   const refundsMarkup = () => (state.data.refunds || []).map(refund => `<article class="payment-record"><div><strong>${escapeHtml(money(refund.amount_cents))} · ${escapeHtml(refund.status)}</strong><span>${escapeHtml(refund.reason || '')} · ${escapeHtml(formatDate(refund.created_at))}</span>${refund.square_refund_id ? `<small>Square refund: ${escapeHtml(refund.square_refund_id)}</small>` : ''}</div>${state.data.canRefund && refund.status === 'pending' ? `<button type="button" class="button button--quiet" data-retry-refund="${escapeHtml(refund.id)}">Check / retry this refund</button>` : ''}</article>`).join('') || '<p class="payment-empty">No refunds recorded.</p>';
 
@@ -98,7 +98,7 @@
       const data = await postAction({ action: 'reconcile', attemptId: button.dataset.reconcilePayment,
         squarePaymentId: document.querySelector(`[data-square-id="${button.dataset.reconcilePayment}"]`).value.trim() });
       await loadPayments();
-      showMessage(data.pending || data.payment?.status === 'processing' ? 'Square has not confirmed a final result. Keep this reservation on hold and check the Square dashboard.' : 'Payment result updated from Square.', data.pending ? '' : 'success');
+      showMessage(data.pending || data.payment?.status === 'processing' ? 'Square has not confirmed a final result. Keep this reservation on hold and check the Square dashboard.' : data.payment?.cardSaveWarning || 'Payment result updated from Square.', data.pending || data.payment?.cardSaveWarning ? '' : 'success');
       await RegalAdmin.refreshBookings();
     } catch (error) { showMessage(error.message, 'error'); }
     finally { button.disabled = false; }

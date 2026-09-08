@@ -175,7 +175,11 @@ export async function listBookingPayments(db, bookingId) {
   ).bind(bookingId).all();
   const attempts = await db.prepare(`SELECT id, payment_request_id, status, square_payment_id,
     failure_message, created_at FROM payment_attempts WHERE booking_id = ?1
-    AND status IN ('processing', 'unknown') ORDER BY created_at DESC`).bind(bookingId).all();
+    AND (status IN ('processing', 'unknown') OR (status = 'completed' AND EXISTS (
+      SELECT 1 FROM payment_requests pr JOIN booking_payments p ON p.payment_request_id=pr.id
+      WHERE pr.id=payment_attempts.payment_request_id AND pr.require_card_on_file=1
+        AND pr.card_consent_at IS NOT NULL AND p.card_type='CREDIT' AND p.square_card_id IS NULL
+    ))) ORDER BY created_at DESC`).bind(bookingId).all();
   const refunds = await db.prepare(`SELECT r.* FROM booking_refunds r
     JOIN booking_payments p ON p.id = r.booking_payment_id WHERE p.booking_id = ?1
     ORDER BY r.created_at DESC`).bind(bookingId).all();

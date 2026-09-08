@@ -38,7 +38,7 @@ Use `docs/SQUARE_PAYMENT_SETUP.md` for credentials and exact webhook configurati
 - Create a hold or confirmed reservation before collecting money. On a hold, collect a rental reservation payment first; a separate security deposit follows confirmation.
 - A pending/unknown card result appears under Payments & Security and in the overview. Use **Check Square payment**; supply the Square payment ID if a search cannot locate it. The action retrieves processor state and does not charge the card again.
 - If Square cannot conclusively resolve an attempt, keep the record pending and investigate with Square. Do not delete the attempt, reset the request to open, or collect a replacement payment.
-- If card storage failed after a successful charge, verify that storage is recovered before release. Do not use another charge merely to retry card storage.
+- If card storage failed after a successful charge, use **Retry card storage** in Payments & Security and verify that storage is recovered before release. Do not use another charge merely to retry card storage.
 - Refund using the existing pending refund's **Check / retry** action. Do not create a replacement refund after a timeout. Refunds change net balances; booking cancellation is a separate inventory decision.
 - Canceled bookings with payment or attempt history cannot be deleted as test records.
 - Cash entries use stable receipt keys. Review history after an interrupted submission before recording additional cash. Refund cash only after physically returning it.
@@ -63,7 +63,7 @@ This release processes the queue on new public submissions and through the admin
 ## Verification performed
 
 - Existing twelve SQLite inventory tests, including simultaneous activation and exact buffer boundaries.
-- Twenty-three new route-level scenarios using all migrations in real in-memory SQLite, with fake processor/email boundaries. They cover interrupted charges, concurrent submissions, signed webhook validation, refund ordering, cash idempotency, invoice totals, actual agreement signing, release checks, full-history search, stored inquiries, rate limits, email recovery and public/private image isolation.
+- Twenty-four new route-level scenarios using all migrations in real in-memory SQLite, with fake processor/email boundaries. They cover interrupted charges, concurrent submissions, signed webhook validation, refund ordering, cash idempotency, invoice totals, actual agreement signing, release checks, full-history search, stored inquiries, rate limits, email recovery and public/private image isolation.
 - Existing agreement, signing, Square, file, event-time and frontend contract checks.
 - JavaScript syntax checks and diff whitespace checks.
 

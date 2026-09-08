@@ -95,12 +95,17 @@ export async function paymentLink(db, { id = 'request', bookingId = 'booking', a
 }
 
 export function squareServer() {
-  const state = { charges: [], refunds: [], onCharge: null };
+  const state = { charges: [], refunds: [], onCharge: null, cardStorageFails: false, cardRequests: 0 };
   state.fetch = async (url, options = {}) => {
     if (!String(url).startsWith('https://connect.squareupsandbox.com/')) throw new Error('TEST_NETWORK_FORBIDDEN');
     const path = new URL(url).pathname;
     const body = options.body ? JSON.parse(options.body) : {};
     if (path === '/v2/customers') return Response.json({ customer: { id: 'sq-customer' } });
+    if (path === '/v2/cards') {
+      state.cardRequests++;
+      if (state.cardStorageFails) return Response.json({ errors:[{ code:'INTERNAL_SERVER_ERROR' }] }, { status:503 });
+      return Response.json({ card: { id:'sq-card', customer_id:'sq-customer', card_brand:'VISA',last_4:'0000',card_type:'CREDIT',exp_year:2030,exp_month:12,enabled:true } });
+    }
     if (path === '/v2/payments' && options.method === 'POST') {
       if (state.onCharge) return state.onCharge(body);
       const payment = { id: 'sq-payment-'+(state.charges.length+1), status: 'COMPLETED',

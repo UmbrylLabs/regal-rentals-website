@@ -15,8 +15,27 @@ async function setup(options = {}) {
     charge: () => pay.onRequestPost({ env, params: { token }, request: request('/api/pay/'+token,
       { sourceId: 'test-card-token', cardOnFileConsent: false }) }),
     patch: body => admin.onRequestPatch({ env, params: { id: 'booking' }, request: request('/admin', body, 'PATCH') }),
-    action: body => payments.onRequestPost({ env, params: { id: 'booking' }, request: request('/admin/payments', body) }) };
+    action: body => payments.onRequestPost({ env, params: { id: 'booking' }, request: request('/admin/payments', body) }),
+    paymentHistory: () => payments.onRequestGet({ env, params: { id:'booking' }, request:new Request('https://example.invalid/admin/payments') }) };
 }
+
+test('failed credit-card storage can be retried after a recorded payment without charging again', async t => {
+  const f = await setup(); t.after(() => f.db.close());
+  f.db.sql.exec("UPDATE payment_requests SET require_card_on_file=1,expected_method='credit_card' WHERE id='request'");
+  f.square.cardStorageFails=true;
+  const response = await f.pay.onRequestPost({ env:f.env,params:{ token:f.token },request:request('/pay',{ sourceId:'test-card',cardOnFileConsent:true }) });
+  assert.equal(response.status,201,JSON.stringify(await response.clone().json()));
+  assert.equal((await response.json()).payment.cardOnFileSaved,false);
+  const history = await (await f.paymentHistory()).json();
+  assert.equal(history.attempts.length,1); assert.equal(history.attempts[0].status,'completed');
+  f.square.cardStorageFails=false;
+  const retry = await f.action({ action:'reconcile',attemptId:history.attempts[0].id });
+  assert.equal(retry.status,200,JSON.stringify(await retry.clone().json()));
+  assert.equal((await retry.json()).payment.cardOnFileSaved,true);
+  assert.equal(f.square.charges.length,1); assert.equal(f.square.cardRequests,2);
+  assert.equal(f.db.sql.prepare('SELECT square_card_id FROM booking_payments').get().square_card_id,'sq-card');
+  assert.equal((await (await f.paymentHistory()).json()).attempts.length,0);
+});
 
 test('post-event return and completion preserve agreed prices', async t => {
   const f = await setup({ status: 'out', start: Math.floor(Date.now()/1000) - 86400 }); t.after(() => f.db.close());
