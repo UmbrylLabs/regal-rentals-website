@@ -7,6 +7,8 @@ from pathlib import Path
 
 SCHEMA = Path(__file__).resolve().parents[1] / "migrations" / "0001_booking_backend.sql"
 NOW = int(time.time())
+POLICY_BEFORE_SECONDS = 4 * 60 * 60
+POLICY_AFTER_SECONDS = 12 * 60 * 60
 
 
 def connect(path=":memory:"):
@@ -24,7 +26,10 @@ def add_customer(db, customer_id):
 
 
 def add_booking(db, booking_id, customer_id, status, start_at, end_at,
-                product_id="round-table-60", quantity=1, hold_expires_at=None):
+                product_id="round-table-60", quantity=1, hold_expires_at=None,
+                block_start_at=None, block_end_at=None):
+    block_start_at = start_at if block_start_at is None else block_start_at
+    block_end_at = end_at if block_end_at is None else block_end_at
     db.execute(
         """INSERT INTO bookings (
              id, booking_number, customer_id, status,
@@ -32,7 +37,7 @@ def add_booking(db, booking_id, customer_id, status, start_at, end_at,
              hold_expires_at, service_type, event_city
            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'delivery', 'Folsom')""",
         (booking_id, booking_id, customer_id, status, start_at, end_at,
-         start_at, end_at, hold_expires_at),
+         block_start_at, block_end_at, hold_expires_at),
     )
     db.execute(
         """INSERT INTO booking_items (
@@ -65,6 +70,39 @@ class InventoryGuardTests(unittest.TestCase):
     def test_adjacent_reservations_do_not_overlap(self):
         add_booking(self.db, "b1", "c1", "confirmed", NOW + 1000, NOW + 2000, quantity=3)
         add_booking(self.db, "b2", "c2", "confirmed", NOW + 2000, NOW + 3000, quantity=3)
+
+    def test_public_buffers_block_events_less_than_sixteen_hours_apart(self):
+        first_start = NOW + 2 * 24 * 60 * 60
+        first_end = first_start + 4 * 60 * 60
+        second_start = first_end + POLICY_AFTER_SECONDS + POLICY_BEFORE_SECONDS - 60
+        second_end = second_start + 4 * 60 * 60
+        add_booking(
+            self.db, "b1", "c1", "confirmed", first_start, first_end, quantity=3,
+            block_start_at=first_start - POLICY_BEFORE_SECONDS,
+            block_end_at=first_end + POLICY_AFTER_SECONDS,
+        )
+        with self.assertRaisesRegex(sqlite3.IntegrityError, "INVENTORY_CONFLICT"):
+            add_booking(
+                self.db, "b2", "c2", "confirmed", second_start, second_end, quantity=1,
+                block_start_at=second_start - POLICY_BEFORE_SECONDS,
+                block_end_at=second_end + POLICY_AFTER_SECONDS,
+            )
+
+    def test_public_buffer_windows_can_touch_without_overlapping(self):
+        first_start = NOW + 2 * 24 * 60 * 60
+        first_end = first_start + 4 * 60 * 60
+        second_start = first_end + POLICY_AFTER_SECONDS + POLICY_BEFORE_SECONDS
+        second_end = second_start + 4 * 60 * 60
+        add_booking(
+            self.db, "b1", "c1", "confirmed", first_start, first_end, quantity=3,
+            block_start_at=first_start - POLICY_BEFORE_SECONDS,
+            block_end_at=first_end + POLICY_AFTER_SECONDS,
+        )
+        add_booking(
+            self.db, "b2", "c2", "confirmed", second_start, second_end, quantity=3,
+            block_start_at=second_start - POLICY_BEFORE_SECONDS,
+            block_end_at=second_end + POLICY_AFTER_SECONDS,
+        )
 
     def test_expired_hold_does_not_block_inventory(self):
         add_booking(self.db, "b1", "c1", "hold", NOW + 1000, NOW + 5000,

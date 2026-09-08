@@ -1,23 +1,28 @@
+import { scheduleNotifications } from '../../_lib/notifications.js';
 import { createBooking } from '../../_lib/booking.js';
 import { assertSameOrigin, json, readJson, safeErrorResponse } from '../../_lib/http.js';
-
-const HOLD_SECONDS = 24 * 60 * 60;
-const BUFFER_BEFORE_MINUTES = 4 * 60;
-const BUFFER_AFTER_MINUTES = 12 * 60;
+import {
+  DEFAULT_BUFFER_AFTER_MINUTES,
+  DEFAULT_BUFFER_BEFORE_MINUTES,
+  DEFAULT_HOLD_SECONDS
+} from '../../_lib/inventory-policy.js';
 
 export async function onRequestPost(context) {
   try {
     assertSameOrigin(context.request);
     const body = await readJson(context.request);
+    if (body.website) throw new Error('INVALID_INQUIRY');
+    if (!/^[a-zA-Z0-9_-]{16,200}$/.test(String(body.idempotencyKey || context.request.headers.get('Idempotency-Key') || ''))) throw new Error('IDEMPOTENCY_KEY_REQUIRED');
     const now = Math.floor(Date.now() / 1000);
 
     // A submitted request immediately reserves the requested inventory while it is reviewed.
     body.status = 'hold';
-    body.holdExpiresAt = now + HOLD_SECONDS;
-    body.bufferBeforeMinutes = BUFFER_BEFORE_MINUTES;
-    body.bufferAfterMinutes = BUFFER_AFTER_MINUTES;
+    body.holdExpiresAt = now + DEFAULT_HOLD_SECONDS;
+    body.bufferBeforeMinutes = DEFAULT_BUFFER_BEFORE_MINUTES;
+    body.bufferAfterMinutes = DEFAULT_BUFFER_AFTER_MINUTES;
 
     const result = await createBooking(context.env, context.request, body, null);
+    scheduleNotifications(context);
     return json({
       ok: true,
       duplicate: result.duplicate,

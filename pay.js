@@ -95,6 +95,13 @@
     document.getElementById('payment-success-message').textContent = 'This payment request has already been completed.';
   };
 
+  const showPending = () => {
+    submitButton.disabled = true;
+    showError('Your payment result is being confirmed. Do not pay again. Refresh this page to check the result, or contact Regal Rentals.');
+    const heading = errorCard.querySelector('h2');
+    if (heading) heading.textContent = 'Confirming payment';
+  };
+
   const loadPayment = async () => {
     if (!token || token.length < 30) {
       showError('This payment link is invalid.');
@@ -107,6 +114,10 @@
       const data = await response.json();
       if (!response.ok) throw new Error(data?.error?.message || 'Payment request could not be loaded.');
       paymentRequest = data.payment;
+      if (paymentRequest.status === 'processing') {
+        showPending();
+        return;
+      }
       if (paymentRequest.status === 'paid') {
         showAlreadyPaid();
         return;
@@ -140,6 +151,7 @@
 
     submitButton.disabled = true;
     submitButton.textContent = 'Processing securely…';
+    let submissionSent = false;
     try {
       const name = splitName(document.getElementById('cardholder-name').value);
       const verificationDetails = {
@@ -161,6 +173,7 @@
         throw new Error(detail || 'Check the card information and try again.');
       }
 
+      submissionSent = true;
       const response = await fetch(`/api/pay/${encodeURIComponent(token)}`, {
         method: 'POST',
         credentials: 'omit',
@@ -172,6 +185,21 @@
         })
       });
       const data = await response.json();
+      if (response.status === 202 || data.pending) {
+        showPending();
+        return;
+      }
+      if (data?.error?.code === 'ALREADY_PAID') {
+        showAlreadyPaid();
+        return;
+      }
+      // Server errors may happen after a successful charge. Only a definitive
+      // rejection permits another attempt; otherwise reload the server status.
+      if (response.status >= 500) {
+        showPending();
+        return;
+      }
+      submissionSent = false;
       if (!response.ok) throw new Error(data?.error?.message || 'The payment could not be completed.');
 
       paymentView.hidden = true;
@@ -198,6 +226,7 @@
       }
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (error) {
+      if (submissionSent) { showPending(); return; }
       showMessage(error.message, 'error');
       submitButton.disabled = false;
       submitButton.innerHTML = `Pay <span>${money(paymentRequest.amountCents)}</span>`;

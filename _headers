@@ -33,9 +33,6 @@
 /rentals.js
   Cache-Control: public, max-age=300, must-revalidate
 
-/catalog-loader.js
-  Cache-Control: public, max-age=300, must-revalidate
-
 /catalog-dynamic.css
   Cache-Control: public, max-age=300, must-revalidate
 

@@ -6,7 +6,7 @@
     configured: null,
     loading: false
   };
-  const bookingEndpoint = /^\/api\/admin\/bookings\/([^/]+)$/;
+
 
   const escapeHtml = (value) => String(value ?? '')
     .replaceAll('&', '&amp;')
@@ -31,29 +31,12 @@
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   };
 
-  globalThis.fetch = async (input, init = {}) => {
-    const response = await previousFetch(input, init);
-    try {
-      const rawUrl = typeof input === 'string' ? input : input?.url;
-      const url = new URL(rawUrl, globalThis.location.origin);
-      const method = String(init.method || (typeof input !== 'string' ? input?.method : '') || 'GET').toUpperCase();
-      if (response.ok && bookingEndpoint.test(url.pathname) && ['GET', 'PATCH'].includes(method)) {
-        response.clone().json().then((data) => {
-          if (!data.booking) return;
-          const changed = state.booking?.id !== data.booking.id;
-          state.booking = data.booking;
-          if (changed) {
-            state.files = [];
-            state.configured = null;
-          }
-          queueMicrotask(() => ensureDocumentsSection(changed));
-        }).catch(() => {});
-      }
-    } catch {
-      // Primary admin requests remain untouched if document enhancement inspection fails.
-    }
-    return response;
-  };
+  document.addEventListener('regal:booking', event => {
+    const changed = state.booking?.id !== event.detail.booking.id;
+    state.booking = event.detail.booking;
+    if (changed) { state.files = []; state.configured = null; }
+    ensureDocumentsSection(changed);
+  });
 
   const agreementsMarkup = () => {
     const agreements = [...(state.booking?.signingRequests || [])]
@@ -144,7 +127,9 @@
   };
 
   const loadFiles = async () => {
-    if (!state.booking || state.loading) return;
+    if (!state.booking) return;
+    const bookingId = state.booking.id;
+    const sequence = state.loadSequence = (state.loadSequence || 0) + 1;
     state.loading = true;
     renderFiles();
     try {
@@ -154,14 +139,15 @@
       });
       const data = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(data?.error?.message || 'Booking files could not be loaded.');
+      if (sequence !== state.loadSequence || state.booking.id !== bookingId) return;
       state.configured = data.configured === true;
       state.files = data.files || [];
     } catch (error) {
+      if (sequence !== state.loadSequence) return;
       state.configured = false;
       showUploadMessage(error.message, 'error');
     } finally {
-      state.loading = false;
-      renderFiles();
+      if (sequence === state.loadSequence) { state.loading = false; renderFiles(); }
     }
   };
 

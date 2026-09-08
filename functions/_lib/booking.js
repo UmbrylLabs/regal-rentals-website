@@ -4,20 +4,28 @@ import {
   randomId,
   sha256
 } from './http.js';
+import {
+  DEFAULT_BUFFER_AFTER_MINUTES,
+  DEFAULT_BUFFER_BEFORE_MINUTES,
+  DEFAULT_HOLD_SECONDS,
+  inventoryBlockWindow
+} from './inventory-policy.js';
+import { limitPublicSubmission } from './public-submissions.js';
+import { notificationStatements } from './notifications.js';
 
 const VALID_STATUSES = new Set([
   'inquiry', 'quote', 'hold', 'confirmed', 'paid', 'ready',
   'out', 'returned', 'completed', 'cancelled', 'expired'
 ]);
 
-export function validateEpochWindow(startAt, endAt) {
+export function validateEpochWindow(startAt, endAt, { allowPast = false } = {}) {
   const start = Number(startAt);
   const end = Number(endAt);
   const now = Math.floor(Date.now() / 1000);
   if (!Number.isInteger(start) || !Number.isInteger(end) || end <= start) {
     throw new Error('INVALID_TIME_WINDOW');
   }
-  if (start < now - 3600) throw new Error('EVENT_IN_PAST');
+  if (!allowPast && start < now - 3600) throw new Error('EVENT_IN_PAST');
   if (end - start > 60 * 60 * 24 * 7) throw new Error('EVENT_WINDOW_TOO_LONG');
   return { start, end };
 }
@@ -141,19 +149,41 @@ export async function createBooking(env, request, input, actorUserId = null) {
     input.eventEndAt
   );
 
-  const beforeMinutes = Math.min(1440, Math.max(0, Number(input.bufferBeforeMinutes ?? 120)));
-  const afterMinutes = Math.min(1440, Math.max(0, Number(input.bufferAfterMinutes ?? 120)));
-  if (!Number.isFinite(beforeMinutes) || !Number.isFinite(afterMinutes)) {
-    throw new Error('INVALID_BUFFER');
-  }
-  const blockStart = eventStart - Math.round(beforeMinutes * 60);
-  const blockEnd = eventEnd + Math.round(afterMinutes * 60);
+  const {
+    blockStartAt: blockStart,
+    blockEndAt: blockEnd
+  } = inventoryBlockWindow(
+    eventStart,
+    eventEnd,
+    input.bufferBeforeMinutes ?? DEFAULT_BUFFER_BEFORE_MINUTES,
+    input.bufferAfterMinutes ?? DEFAULT_BUFFER_AFTER_MINUTES
+  );
 
   const serviceType = cleanText(input.serviceType, 20);
   if (!['delivery', 'pickup'].includes(serviceType)) throw new Error('INVALID_SERVICE_TYPE');
   const eventCity = cleanText(input.eventCity, 150);
   if (!eventCity) throw new Error('INVALID_EVENT_CITY');
 
+  const idempotencyKey = cleanText(
+    input.idempotencyKey || request.headers.get('Idempotency-Key') || '',
+    200
+  ) || null;
+
+  const requestHash = await sha256(JSON.stringify({ customer, items: [...items].sort((a,b) => a.productId.localeCompare(b.productId)), eventStart, eventEnd, serviceType, eventCity, notes: cleanText(input.notes, 4000) }));
+
+  // Retry requests should return the original booking before its own hold is
+  // counted against availability.
+  if (idempotencyKey) {
+    const existing = await env.DB.prepare(
+      'SELECT id, booking_number, status, subtotal_cents, hold_expires_at, request_hash FROM bookings WHERE idempotency_key = ?1'
+    ).bind(idempotencyKey).first();
+    if (existing) {
+        if (existing.request_hash && existing.request_hash !== requestHash) throw new Error('IDEMPOTENCY_MISMATCH');
+        return { booking: bookingResult(existing), duplicate: true };
+      }
+  }
+
+  if (!actorUserId) await limitPublicSubmission(env, request, customer.email, 'quote');
   const productMap = await loadProducts(env.DB, items);
   const availability = await getAvailability(env.DB, blockStart, blockEnd);
   const availabilityMap = new Map(availability.map((row) => [row.id, Number(row.quantity_available)]));
@@ -168,19 +198,8 @@ export async function createBooking(env, request, input, actorUserId = null) {
   const number = bookingNumber();
   const now = Math.floor(Date.now() / 1000);
   const holdExpiresAt = status === 'hold'
-    ? Number(input.holdExpiresAt || now + 30 * 60)
+    ? Number(input.holdExpiresAt || now + DEFAULT_HOLD_SECONDS)
     : null;
-  const idempotencyKey = cleanText(
-    input.idempotencyKey || request.headers.get('Idempotency-Key') || '',
-    200
-  ) || null;
-
-  if (idempotencyKey) {
-    const existing = await env.DB.prepare(
-      'SELECT id, booking_number, status FROM bookings WHERE idempotency_key = ?1'
-    ).bind(idempotencyKey).first();
-    if (existing) return { booking: existing, duplicate: true };
-  }
 
   let subtotalCents = 0;
   for (const item of items) {
@@ -207,12 +226,12 @@ export async function createBooking(env, request, input, actorUserId = null) {
         id, booking_number, idempotency_key, customer_id, status,
         event_start_at, event_end_at, block_start_at, block_end_at,
         hold_expires_at, service_type, event_city, event_address, notes,
-        subtotal_cents, created_by, updated_by, created_at, updated_at
+        subtotal_cents, created_by, updated_by, created_at, updated_at, request_hash
       ) VALUES (
         ?1, ?2, ?3, ?4, ?5,
         ?6, ?7, ?8, ?9,
         ?10, ?11, ?12, ?13, ?14,
-        ?15, ?16, ?16, ?17, ?17
+        ?15, ?16, ?16, ?17, ?17, ?18
       )`
     ).bind(
       bookingId,
@@ -231,7 +250,8 @@ export async function createBooking(env, request, input, actorUserId = null) {
       cleanText(input.notes, 4000) || null,
       subtotalCents,
       actorUserId,
-      now
+      now,
+      requestHash
     )
   ];
 
@@ -273,7 +293,28 @@ export async function createBooking(env, request, input, actorUserId = null) {
     )
   );
 
-  await env.DB.batch(statements);
+  if (!actorUserId) {
+    const until = new Intl.DateTimeFormat('en-US', { timeZone: 'America/Los_Angeles', dateStyle: 'medium', timeStyle: 'short' }).format(new Date(holdExpiresAt * 1000));
+    statements.push(...notificationStatements(env, { eventKey: 'quote:' + bookingId, bookingId, email: customer.email,
+      subject: `Regal Rentals request ${number} received`,
+      text: `Your rental request ${number} was received.\nThe requested equipment is temporarily held until ${until} Pacific Time while Regal Rentals reviews it.\nThis is not a confirmed reservation. Final pricing, the agreement, payment and applicable security requirements still need to be completed.\nContact bookings@regal.rentals with this booking number for help.` }));
+  }
+  try {
+    await env.DB.batch(statements);
+  } catch (error) {
+    // A concurrent retry can reach the unique idempotency guard after lookup.
+    // The failed batch rolls back its customer and item rows.
+    if (idempotencyKey && /unique|INVENTORY_CONFLICT/i.test(String(error?.message))) {
+      const existing = await env.DB.prepare(
+        'SELECT id, booking_number, status, subtotal_cents, hold_expires_at, request_hash FROM bookings WHERE idempotency_key = ?1'
+      ).bind(idempotencyKey).first();
+      if (existing) {
+        if (existing.request_hash && existing.request_hash !== requestHash) throw new Error('IDEMPOTENCY_MISMATCH');
+        return { booking: bookingResult(existing), duplicate: true };
+      }
+    }
+    throw error;
+  }
   return {
     booking: {
       id: bookingId,
@@ -284,6 +325,11 @@ export async function createBooking(env, request, input, actorUserId = null) {
     },
     duplicate: false
   };
+}
+
+function bookingResult(row) {
+  return { id: row.id, bookingNumber: row.booking_number, status: row.status,
+    subtotalCents: Number(row.subtotal_cents), holdExpiresAt: row.hold_expires_at };
 }
 
 export async function bookingDetail(db, id) {
@@ -354,8 +400,8 @@ export async function createSigningRequest(env, booking, user, input = {}) {
   await env.DB.prepare(
     `INSERT INTO signing_requests (
       token_hash, booking_id, signer_name, signer_email, agreement_version,
-      agreement_html, agreement_sha256, expires_at, created_by, created_at
-    ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)`
+      agreement_html, agreement_sha256, expires_at, created_by, created_at, booking_revision
+    ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)`
   ).bind(
     tokenHash,
     booking.id,
@@ -366,7 +412,8 @@ export async function createSigningRequest(env, booking, user, input = {}) {
     agreementSha256,
     expiresAt,
     user.id,
-    now
+    now,
+    booking.revision || 0
   ).run();
 
   return {

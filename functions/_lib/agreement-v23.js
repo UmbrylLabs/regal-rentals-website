@@ -43,12 +43,15 @@ function summary(booking, items, paymentMethod, depositCents) {
       ? `Security deposit — designated by Regal Rentals${depositCents == null ? '' : ` (${money(depositCents)})`}`
       : 'Regal Rentals will designate card on file or security deposit before equipment release';
   const location = [booking.event_address, booking.event_city].filter(Boolean).join(', ') || 'To be confirmed';
+  const charges = JSON.parse(booking.charges_json || '[]');
   return `<section class="booking-summary"><h2>Booking Summary</h2><dl class="booking-facts">
     <div><dt>Booking</dt><dd>${esc(booking.booking_number)}</dd></div><div><dt>Agreement</dt><dd>Version ${AGREEMENT_VERSION}</dd></div>
     <div><dt>Customer</dt><dd>${esc(booking.customer_name)}</dd></div><div><dt>Email</dt><dd>${esc(booking.customer_email)}</dd></div>
     <div><dt>Phone</dt><dd>${esc(booking.customer_phone)}</dd></div><div><dt>Service</dt><dd>${booking.service_type === 'pickup' ? 'Customer pickup' : 'Delivery'}</dd></div>
     <div><dt>Event window</dt><dd>${esc(dateTime(booking.event_start_at))} through ${esc(dateTime(booking.event_end_at))}</dd></div>
-    <div><dt>Location</dt><dd>${esc(location)}</dd></div><div><dt>Known subtotal</dt><dd>${esc(money(booking.subtotal_cents))}</dd></div>
+    <div><dt>Location</dt><dd>${esc(location)}</dd></div><div><dt>Rental and service subtotal</dt><dd>${esc(money(booking.subtotal_cents))}</dd></div>
+    ${charges.map(charge => `<div><dt>${esc(charge.description)}</dt><dd>${esc(money(charge.amountCents))}${charge.type === 'tax' ? ' tax' : ' included in subtotal'}</dd></div>`).join('')}
+    <div><dt>Tax</dt><dd>${esc(money(booking.tax_cents || 0))}</dd></div><div><dt>Quote total</dt><dd>${esc(money(Number(booking.subtotal_cents || 0) + Number(booking.tax_cents || 0)))}</dd></div>
     <div><dt>Payment security</dt><dd>${esc(security)}</dd></div><div><dt>Balance due</dt><dd>Before release unless the confirmed quote says otherwise</dd></div>
   </dl><h3>Rental items</h3><ul class="booking-items">${items.map((item) => `<li><strong>${esc(item.quantity)} × ${esc(item.name)}</strong><span>${item.unit_price_cents == null ? 'Price to be confirmed' : `${esc(money(item.unit_price_cents))} each`}</span></li>`).join('')}</ul></section>`;
 }
@@ -136,6 +139,6 @@ export async function createModularSigningRequest(env, bookingId, user, input = 
   const tokenHash = await sha256(token);
   const now = Math.floor(Date.now() / 1000);
   const expiresAt = now + Math.min(60 * 60 * 24 * 30, Math.max(60 * 60, Number(input.expiresInSeconds || 60 * 60 * 24 * 7)));
-  await env.DB.prepare(`INSERT INTO signing_requests (token_hash, booking_id, signer_name, signer_email, agreement_version, agreement_html, agreement_sha256, expires_at, created_by, created_at) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)`).bind(tokenHash, booking.id, signerName, signerEmail, version, agreementHtml, agreementSha256, expiresAt, user.id, now).run();
+  await env.DB.prepare(`INSERT INTO signing_requests (token_hash, booking_id, signer_name, signer_email, agreement_version, agreement_html, agreement_sha256, expires_at, created_by, created_at, booking_revision) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)`).bind(tokenHash, booking.id, signerName, signerEmail, version, agreementHtml, agreementSha256, expiresAt, user.id, now, booking.revision || 0).run();
   return { token, expiresAt, version, modules: determineAgreementModules(booking.items), paymentSecurityMethod, signingUrl: `${input.origin || ''}/sign.html?token=${encodeURIComponent(token)}` };
 }

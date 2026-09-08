@@ -94,6 +94,36 @@ export async function sha256(value) {
 
 export function safeErrorResponse(error) {
   const message = String(error?.message || error || 'UNKNOWN_ERROR');
+  const known = {
+    IDEMPOTENCY_KEY_REQUIRED: ['Refresh this form before submitting.', 400],
+    INVALID_IMAGE: ['Choose a JPEG, PNG, or WebP photograph.', 415],
+    IMAGE_TOO_LARGE: ['The optimized photo must be 4 MB or smaller.', 413],
+    INVALID_INQUIRY: ['Please review your name, email and event details.', 400],
+    PUBLIC_RATE_LIMIT: ['Too many requests. Please try again in an hour or contact Regal Rentals.', 429],
+    RELEASE_NOT_READY: ['Before marking ready or out, finalize pricing, obtain the current signed agreement, collect the rental balance and complete the card-on-file or security-deposit requirement. Review Payments & Security.', 409],
+    IDEMPOTENCY_MISMATCH: ['This retry contains different payment details. Refresh the payment history first.', 409],
+    EVENT_IN_PAST: ['Choose a future event date.', 400],
+    INVALID_TIME_WINDOW: ['The return time must be after the start time.', 400],
+    EVENT_WINDOW_TOO_LONG: ['Choose a rental period of seven days or less.', 400],
+    PAYMENT_PROCESSING: ['A payment is being confirmed. Check its result before changing this booking.', 409],
+    BOOKING_NOT_PAYABLE: ['This reservation is not open for payment. Contact Regal Rentals.', 409],
+    STALE_BOOKING: ['This booking changed in another session. Refresh it before saving.', 409],
+    AGREEMENT_NOT_CURRENT: ['This agreement is no longer current. Request a new signing link.', 410],
+    BOOKING_RECORD_PROTECTED: ['This booking has payment or rental history and must be retained.', 409],
+    PAYMENT_EXCEEDS_BALANCE: ['This payment is greater than the remaining rental balance.', 409],
+    INVALID_REFUND_AMOUNT: ['Enter a valid refund amount and reason.', 400],
+    INVALID_CHARGES: ['Review the quote charges. Discounts must be negative and the subtotal cannot be negative.', 400],
+    REFUND_EXCEEDS_AVAILABLE: ['The refund exceeds the remaining refundable amount, including pending refunds.', 409],
+    REFUND_REQUEST_CHANGED: ['This refund attempt has different details. Refresh the payment history.', 409],
+    PAYMENT_NOT_REFUNDABLE: ['This payment is not available for refund.', 409],
+    CASH_REFUND_CONFIRMATION_REQUIRED: ['Confirm the cash was returned to the customer.', 400],
+    PAYMENT_ATTEMPT_NOT_FOUND: ['Payment attempt not found.', 404],
+    PAYMENT_RECONCILIATION_MISMATCH: ['That Square payment does not match this booking payment request.', 409]
+  };
+  if (/CHECK constraint failed: revision/.test(message)) return fail(known.STALE_BOOKING[0], 409, 'STALE_BOOKING');
+  for (const [code, [text, status]] of Object.entries(known)) {
+    if (message.includes(code)) return fail(text, status, code);
+  }
   if (message.includes('INVENTORY_CONFLICT')) {
     return fail(
       'That inventory was reserved by another booking. Refresh availability and choose a different quantity or time.',

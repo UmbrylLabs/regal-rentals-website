@@ -1,4 +1,5 @@
 import { cleanText, randomId, randomToken, sha256 } from './http.js';
+import { bookingCanCollect } from './payment-attempts.js';
 
 const PURPOSES = new Set(['reservation', 'balance', 'security_deposit', 'custom']);
 const EXPECTED_METHODS = new Set(['credit_card', 'debit_card', 'unspecified']);
@@ -49,8 +50,8 @@ export async function latestSignedPaymentMethod(db, bookingId) {
 export async function paymentSummary(db, bookingId, subtotalCents = null) {
   const totals = await db.prepare(
     `SELECT
-       COALESCE(SUM(CASE WHEN status IN ('completed', 'partially_refunded') AND applies_to_rental = 1 THEN amount_cents ELSE 0 END), 0) AS rental_paid_cents,
-       COALESCE(SUM(CASE WHEN status IN ('completed', 'partially_refunded') AND purpose = 'security_deposit' THEN amount_cents ELSE 0 END), 0) AS security_held_cents
+       COALESCE(SUM(CASE WHEN status IN ('completed', 'partially_refunded') AND applies_to_rental = 1 THEN amount_cents - refunded_cents ELSE 0 END), 0) AS rental_paid_cents,
+       COALESCE(SUM(CASE WHEN status IN ('completed', 'partially_refunded') AND purpose = 'security_deposit' THEN amount_cents - refunded_cents ELSE 0 END), 0) AS security_held_cents
      FROM booking_payments
      WHERE booking_id = ?1`
   ).bind(bookingId).first();
@@ -67,7 +68,8 @@ export async function paymentSummary(db, bookingId, subtotalCents = null) {
 export async function loadBookingForPayment(db, bookingId) {
   return db.prepare(
     `SELECT
-       b.id, b.booking_number, b.status, b.subtotal_cents, b.event_start_at, b.event_end_at,
+       b.id, b.booking_number, b.status, b.subtotal_cents, b.tax_cents, b.revision,
+       b.subtotal_cents + b.tax_cents AS total_cents, b.event_start_at, b.event_end_at, b.hold_expires_at,
        b.customer_id, c.name AS customer_name, c.email AS customer_email, c.phone AS customer_phone
      FROM bookings b
      JOIN customers c ON c.id = b.customer_id
@@ -76,7 +78,7 @@ export async function loadBookingForPayment(db, bookingId) {
 }
 
 function defaultPaymentAmount(purpose, booking, summary) {
-  if (purpose === 'reservation') return Math.max(1, Math.round(Number(booking.subtotal_cents || 0) / 2));
+  if (purpose === 'reservation') return Math.max(1, Math.round(Number(booking.total_cents ?? booking.subtotal_cents ?? 0) / 2));
   if (purpose === 'balance') return Math.max(1, Number(summary.rentalBalanceCents || 0));
   if (purpose === 'security_deposit') return Math.max(1, Math.round(Number(booking.subtotal_cents || 0) / 2));
   return 0;
@@ -85,10 +87,10 @@ function defaultPaymentAmount(purpose, booking, summary) {
 export async function createPaymentRequest(env, bookingId, user, input = {}) {
   const booking = await loadBookingForPayment(env.DB, bookingId);
   if (!booking) throw new Error('BOOKING_NOT_FOUND');
-  if (['cancelled', 'expired', 'completed'].includes(booking.status)) throw new Error('BOOKING_NOT_PAYABLE');
+  if (!bookingCanCollect(booking)) throw new Error('BOOKING_NOT_PAYABLE');
 
   const purpose = normalizePaymentPurpose(input.purpose || 'reservation');
-  const summary = await paymentSummary(env.DB, booking.id, booking.subtotal_cents);
+  const summary = await paymentSummary(env.DB, booking.id, booking.total_cents);
   const signed = await latestSignedPaymentMethod(env.DB, booking.id);
   const requestedMethod = cleanText(input.expectedMethod || 'auto', 40).toLowerCase();
   const expectedMethod = requestedMethod === 'auto'
@@ -108,8 +110,12 @@ export async function createPaymentRequest(env, bookingId, user, input = {}) {
   const id = randomId();
   const now = Math.floor(Date.now() / 1000);
   const expiresDays = Math.min(30, Math.max(1, Number(input.expiresDays || 7)));
-  const expiresAt = now + Math.round(expiresDays * 24 * 60 * 60);
+  if (!Number.isFinite(expiresDays)) throw new Error('INVALID_PAYMENT_AMOUNT');
+  const expiresAt = Math.min(now + Math.round(expiresDays * 24 * 60 * 60),
+    booking.status === 'hold' ? Number(booking.hold_expires_at) : Infinity);
   const appliesToRental = purpose !== 'security_deposit' && input.appliesToRental !== false;
+  if (booking.status === 'hold' && !appliesToRental) throw new Error('BOOKING_NOT_PAYABLE');
+  if (appliesToRental && amountCents > summary.rentalBalanceCents) throw new Error('PAYMENT_EXCEEDS_BALANCE');
   const requireCardOnFile = expectedMethod === 'credit_card';
   const description = cleanText(input.description, 500)
     || `${paymentPurposeLabel(purpose)} for ${booking.booking_number}`;
@@ -119,12 +125,12 @@ export async function createPaymentRequest(env, bookingId, user, input = {}) {
       `INSERT INTO payment_requests (
          id, token_hash, booking_id, purpose, description, amount_cents, currency,
          expected_method, require_card_on_file, applies_to_rental, status,
-         expires_at, created_by, created_at, updated_at
-       ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, 'USD', ?7, ?8, ?9, 'open', ?10, ?11, ?12, ?12)`
+         expires_at, created_by, created_at, updated_at, booking_revision
+       ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, 'USD', ?7, ?8, ?9, 'open', ?10, ?11, ?12, ?12, ?13)`
     ).bind(
       id, tokenHash, booking.id, purpose, description, amountCents,
       expectedMethod, requireCardOnFile ? 1 : 0, appliesToRental ? 1 : 0,
-      expiresAt, user.id, now
+      expiresAt, user.id, now, booking.revision
     ),
     env.DB.prepare(
       `INSERT INTO audit_log (
@@ -162,12 +168,23 @@ export async function listBookingPayments(db, bookingId) {
     `SELECT id, payment_request_id, provider, purpose, amount_cents, status,
             applies_to_rental, square_payment_id, square_receipt_url, square_card_id,
             card_brand, card_last_4, card_type, expected_method, method_mismatch,
-            note, paid_at, created_at
+            note, paid_at, created_at, refunded_cents, cash_key
      FROM booking_payments
      WHERE booking_id = ?1
      ORDER BY paid_at DESC, created_at DESC`
   ).bind(bookingId).all();
-  return { requests: requests.results || [], payments: payments.results || [] };
+  const attempts = await db.prepare(`SELECT id, payment_request_id, status, square_payment_id,
+    failure_message, created_at FROM payment_attempts WHERE booking_id = ?1
+    AND (status IN ('processing', 'unknown') OR (status = 'completed' AND EXISTS (
+      SELECT 1 FROM payment_requests pr JOIN booking_payments p ON p.payment_request_id=pr.id
+      WHERE pr.id=payment_attempts.payment_request_id AND pr.require_card_on_file=1
+        AND pr.card_consent_at IS NOT NULL AND p.card_type='CREDIT' AND p.square_card_id IS NULL
+    ))) ORDER BY created_at DESC`).bind(bookingId).all();
+  const refunds = await db.prepare(`SELECT r.* FROM booking_refunds r
+    JOIN booking_payments p ON p.id = r.booking_payment_id WHERE p.booking_id = ?1
+    ORDER BY r.created_at DESC`).bind(bookingId).all();
+  return { requests: requests.results || [], payments: payments.results || [],
+    attempts: attempts.results || [], refunds: refunds.results || [] };
 }
 
 export async function loadPaymentRequestByToken(db, rawToken) {
@@ -175,8 +192,8 @@ export async function loadPaymentRequestByToken(db, rawToken) {
   const request = await db.prepare(
     `SELECT
        pr.*,
-       b.booking_number, b.status AS booking_status, b.subtotal_cents,
-       b.event_start_at, b.event_end_at, b.customer_id,
+       b.booking_number, b.status AS booking_status, b.subtotal_cents, b.tax_cents,
+       b.event_start_at, b.event_end_at, b.customer_id, b.hold_expires_at,
        c.name AS customer_name, c.email AS customer_email, c.phone AS customer_phone
      FROM payment_requests pr
      JOIN bookings b ON b.id = pr.booking_id
@@ -187,31 +204,46 @@ export async function loadPaymentRequestByToken(db, rawToken) {
 }
 
 export async function expirePaymentRequestIfNeeded(db, request) {
-  if (!request || request.status !== 'open') return request;
+  if (!request || !['open', 'failed'].includes(request.status)) return request;
   const now = Math.floor(Date.now() / 1000);
-  if (Number(request.expires_at) > now) return request;
+  if (Number(request.expires_at) > now && bookingCanCollect(request, now)) return request;
   await db.prepare(
     `UPDATE payment_requests SET status = 'expired', updated_at = ?1
-     WHERE id = ?2 AND status = 'open'`
+     WHERE id = ?2 AND status IN ('open', 'failed')`
   ).bind(now, request.id).run();
   return { ...request, status: 'expired' };
 }
 
 export async function recordCompletedPayment(env, input) {
+  const existingCash = async () => {
+    if (!input.cashKey) return null;
+    const row = await env.DB.prepare('SELECT * FROM booking_payments WHERE cash_key = ?1').bind(input.cashKey).first();
+    if (row && (row.booking_id !== input.bookingId || Number(row.amount_cents) !== input.amountCents
+      || row.purpose !== input.purpose || Number(row.applies_to_rental) !== (input.appliesToRental ? 1 : 0))) {
+      throw new Error('IDEMPOTENCY_MISMATCH');
+    }
+    return row?.id || null;
+  };
+  const duplicate = await existingCash();
+  if (duplicate) return duplicate;
   const now = Number(input.paidAt || Math.floor(Date.now() / 1000));
   const paymentId = randomId();
+  try {
   await env.DB.batch([
+    ...(input.attemptId ? [env.DB.prepare(`UPDATE payment_attempts SET status = 'completed',
+      square_payment_id = ?1, failure_message = NULL, updated_at = ?2 WHERE id = ?3`)
+      .bind(input.squarePaymentId, now, input.attemptId)] : []),
     env.DB.prepare(
       `INSERT INTO booking_payments (
          id, booking_id, payment_request_id, provider, purpose, amount_cents, currency,
          status, applies_to_rental, square_payment_id, square_receipt_url, square_card_id,
          card_brand, card_last_4, card_type, expected_method, method_mismatch,
-         note, received_by, paid_at, created_at, updated_at
+         note, received_by, paid_at, created_at, updated_at, cash_key
        ) VALUES (
          ?1, ?2, ?3, ?4, ?5, ?6, 'USD',
          'completed', ?7, ?8, ?9, ?10,
          ?11, ?12, ?13, ?14, ?15,
-         ?16, ?17, ?18, ?18, ?18
+         ?16, ?17, ?18, ?18, ?18, ?19
        )`
     ).bind(
       paymentId,
@@ -231,7 +263,8 @@ export async function recordCompletedPayment(env, input) {
       input.methodMismatch ? 1 : 0,
       cleanText(input.note, 1000) || null,
       input.receivedBy || null,
-      now
+      now,
+      input.cashKey || null
     ),
     ...(input.paymentRequestId ? [
       env.DB.prepare(
@@ -257,23 +290,28 @@ export async function recordCompletedPayment(env, input) {
         methodMismatch: Boolean(input.methodMismatch)
       }),
       now
-    )
+    ),
+    bookingPaymentStatusStatement(env.DB, input.bookingId)
   ]);
-  await updateBookingPaymentStatus(env.DB, input.bookingId);
+  } catch (error) {
+    const duplicate = await existingCash();
+    if (duplicate) return duplicate;
+    throw error;
+  }
   return paymentId;
 }
 
 export async function updateBookingPaymentStatus(db, bookingId) {
-  const booking = await db.prepare('SELECT status, subtotal_cents FROM bookings WHERE id = ?1').bind(bookingId).first();
-  if (!booking || ['cancelled', 'expired', 'completed', 'ready', 'out', 'returned'].includes(booking.status)) return;
-  const summary = await paymentSummary(db, bookingId, booking.subtotal_cents);
-  const nextStatus = summary.rentalPaidCents >= Number(booking.subtotal_cents || 0) && Number(booking.subtotal_cents || 0) > 0
-    ? 'paid'
-    : summary.rentalPaidCents > 0 && ['inquiry', 'quote', 'hold'].includes(booking.status)
-      ? 'confirmed'
-      : null;
-  if (!nextStatus || nextStatus === booking.status) return;
-  await db.prepare(
-    `UPDATE bookings SET status = ?1, updated_at = unixepoch() WHERE id = ?2`
-  ).bind(nextStatus, bookingId).run();
+  await bookingPaymentStatusStatement(db, bookingId).run();
+}
+
+export function bookingPaymentStatusStatement(db, bookingId) {
+  return db.prepare(`UPDATE bookings SET status = CASE
+      WHEN subtotal_cents + tax_cents > 0 AND subtotal_cents + tax_cents <= (SELECT COALESCE(SUM(amount_cents - refunded_cents), 0)
+        FROM booking_payments WHERE booking_id = ?1 AND applies_to_rental = 1
+        AND status IN ('completed', 'partially_refunded')) THEN 'paid'
+      ELSE 'confirmed' END, hold_expires_at = NULL, revision = revision + 1, updated_at = unixepoch()
+    WHERE id = ?1 AND status IN ('inquiry', 'quote', 'hold', 'confirmed', 'paid')
+    AND EXISTS (SELECT 1 FROM booking_payments WHERE booking_id = ?1 AND applies_to_rental = 1
+      AND status IN ('completed', 'partially_refunded', 'refunded'))`).bind(bookingId);
 }
