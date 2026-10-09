@@ -42,7 +42,8 @@
         .find((input) => {
           const selected = input.value.toLowerCase().replace(/[^a-z0-9]/g, '');
           const requested = label.toLowerCase().replace(/[^a-z0-9]/g, '');
-          return selected === requested || selected.includes(requested) || requested.includes(selected);
+          return selected === requested || selected.includes(requested) || requested.includes(selected) ||
+            (requested.includes('10x10') && selected.includes('10x10'));
         });
       if (match) match.checked = true;
       if (packageSelect && !packageSelect.value) packageSelect.value = 'Custom rental / individual items';
