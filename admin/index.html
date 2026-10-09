@@ -7,6 +7,7 @@
   <meta name="robots" content="noindex, nofollow" />
   <link rel="icon" href="/assets/favicon.png" type="image/png" />
   <link rel="stylesheet" href="/admin/admin.css" />
+  <link rel="stylesheet" href="/admin/website-inquiries.css" />
   <link rel="stylesheet" href="/admin/catalog-manager.css" />
   <link rel="stylesheet" href="/admin/booking-tools.css?v=20260721-1" />
   <link rel="stylesheet" href="/admin/booking-documents.css?v=20260722-1" />
@@ -38,6 +39,7 @@
           <button class="nav-button is-active" data-panel="overview">Overview</button>
           <button class="nav-button" data-panel="new-booking">New Booking</button>
           <button class="nav-button" data-panel="bookings">Bookings</button>
+          <button class="nav-button" data-panel="website-inquiries">Website Inquiries</button>
           <button class="nav-button" data-panel="inventory">Inventory</button>
           <button class="nav-button" data-panel="users" id="users-nav" hidden>Access Users</button>
         </aside>
@@ -93,6 +95,15 @@
               <p class="booking-filter-summary" id="booking-filter-summary" aria-live="polite"></p>
             </div>
             <div class="card table-wrap"><table><thead><tr><th>Booking</th><th>Customer</th><th>Event</th><th>Status</th><th>Units</th><th></th></tr></thead><tbody id="bookings-table-body"></tbody></table></div>
+          </section>
+
+          <section class="panel" data-panel-view="website-inquiries" hidden>
+            <div class="panel-heading">
+              <div><p class="eyebrow">Requests from regal.rentals</p><h2>Website Inquiries</h2></div>
+              <button class="button button--secondary" id="refresh-website-inquiries" type="button">Refresh inquiries</button>
+            </div>
+            <p class="inquiries-summary" id="website-inquiries-count">Select this page to load the latest inquiries.</p>
+            <div class="website-inquiries-list" id="website-inquiries-list" aria-live="polite"></div>
           </section>
 
           <section class="panel" data-panel-view="inventory" hidden>
@@ -152,5 +163,6 @@
   <script src="/admin/payment-manager.js?v=20260728-1" defer></script>
   <script src="/admin/admin.js?v=20260721-2" defer></script>
   <script src="/admin/admin-defaults.js?v=20260721-1" defer></script>
+  <script src="/admin/website-inquiries.js" defer></script>
 </body>
 </html>
