@@ -1,4 +1,9 @@
 User-agent: *
 Allow: /
+Disallow: /admin/
+Disallow: /rentals
+Disallow: /pay.html
+Disallow: /sign.html
+Disallow: /api/
 
 Sitemap: https://regal.rentals/sitemap.xml
