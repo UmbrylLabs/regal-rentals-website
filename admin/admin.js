@@ -173,14 +173,17 @@
           <button class="button button--secondary" type="button" data-edit-product="${escapeHtml(product.id)}">Edit</button>
           ${isActive
             ? `<button class="button button--danger" type="button" data-archive-product="${escapeHtml(product.id)}">Remove from Site</button>`
-            : `<button class="button button--success" type="button" data-restore-product="${escapeHtml(product.id)}">Restore to Site</button>`}
+            : `<button class="button button--success" type="button" data-restore-product="${escapeHtml(product.id)}">Restore to Site</button>
+              ${state.user?.role === 'owner' ? `<button class="button button--permanent-delete" type="button" data-permanent-delete-product="${escapeHtml(product.id)}">Delete Permanently</button>` : ''}`}
         </div>
       </article>`;
     }).join('');
 
     $$('[data-edit-product]', list).forEach((button) => button.addEventListener('click', () => editProduct(button.dataset.editProduct)));
     $$('[data-archive-product]', list).forEach((button) => button.addEventListener('click', () => archiveProduct(button.dataset.archiveProduct)));
-    $$('[data-restore-product]', list).forEach((button) => button.addEventListener('click', () => restoreProduct(button.dataset.restoreProduct)));
+    $('[data-restore-product]', list).forEach((button) => button.addEventListener('click', () => restoreProduct(button.dataset.restoreProduct)));
+    $('[data-permanent-delete-product]', list).forEach((button) => button.addEventListener('click', () => permanentlyDeleteProduct(button.dataset.permanentDeleteProduct)));
+
   };
 
   const resetProductForm = () => {
@@ -255,6 +258,34 @@
       await api('/api/admin/products', { method: 'DELETE', body: JSON.stringify({ id }) });
       await loadProducts();
     } catch (error) { alert(error.message); }
+  };
+
+  const permanentlyDeleteProduct = async (id) => {
+    if (state.user?.role !== 'owner') return;
+    const product = state.products.find(item => item.id === id);
+    if (!product || Number(product.active) !== 0) return;
+
+    const confirmation = window.prompt(
+      `PERMANENT DELETE: “${product.name}” (SKU: ${product.sku}).\n\n` +
+      'This cannot be undone. Items with booking history or package references cannot be permanently deleted.\n\n' +
+      `To continue, type the exact SKU: ${product.sku}`
+    );
+    if (confirmation === null) return;
+    if (confirmation !== product.sku) {
+      window.alert('SKU did not match. The item was not deleted.');
+      return;
+    }
+
+    try {
+      await api('/api/admin/products', {
+        method: 'DELETE',
+        body: JSON.stringify({ id, permanent: true, confirmSku: confirmation })
+      });
+      await loadProducts();
+      window.alert('Inventory item permanently deleted.');
+    } catch (error) {
+      window.alert(error.message);
+    }
   };
 
   const restoreProduct = async (id) => {
