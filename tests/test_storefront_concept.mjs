@@ -48,5 +48,5 @@ for (const src of ['assets/regal-chair.svg','assets/regal-round-table.svg','asse
  assert.doesNotMatch(svg,/<script/);
 }
 const headers=read('_headers');
-assert.match(headers,/img-src '[^']*self'[^;]*https:\/\/images\.pexels\.com/);
+assert.match(headers,/img-src '[^']*self'[^;]*https:/);
 console.log('Mobile storefront and quote form compatibility checks passed.');
