@@ -6,10 +6,12 @@ const root = path.resolve(import.meta.dirname, '..');
 const read = p => fs.readFileSync(path.join(root,p),'utf8');
 const html = read('index.html');
 const css = read('regal-home-20261009.css');
-const js = read('regal-storefront-v2.js');
+const js = read('regal-catalog-v3.js');
+const catalogCss = read('regal-catalog-v3.css');
 assert.match(html,/viewport" content="width=device-width,initial-scale=1"/);
 assert.match(html,/href="\/regal-home-20261009.css"/);
-assert.match(html,/src="\/regal-storefront-v2.js"/);
+assert.match(html,/src="\/regal-catalog-v3.js"/);
+assert.match(html,/href="\/regal-catalog-v3.css"/);
 assert.match(css,/@media\(max-width:760px\)/);
 assert.match(css,/\.menu-open \.main-nav\{display:flex\}/);
 assert.match(js,/fetch\('\/api\/public\/inquiry'/);
@@ -29,6 +31,23 @@ assert.match(packageEditor,/data-package-item-remove/);
 assert.match(html,/id="quote-cart"/);
 assert.match(html,/id="storefront-products"/);
 assert.match(html,/id="storefront-packages"/);
+assert.match(html,/id="catalog-equipment-group"/);
+assert.match(html,/id="catalog-empty"/);
+assert.match(html,/id="catalog-quote-count"/);
+assert.match(html,/id="mobile-quote-bar"/);
+assert.match(js,/function applyCatalogFilter\(\)/);
+assert.match(js,/function productCategory\(product\)/);
+assert.match(js,/activeCategory==='packages'/);
+assert.match(js,/card\.hidden=!match/);
+assert.match(js,/catalogQuoteCount\.textContent/);
+assert.match(catalogCss,/\.catalog-chips \{/);
+assert.match(catalogCss,/overflow-x:auto/);
+assert.match(catalogCss,/\.mobile-quote-bar \{/);
+assert.match(catalogCss,/position:fixed/);
+for(const category of ['all','packages','chairs','tables','canopies']) {
+ assert.ok(html.includes('data-catalog-filter="'+category+'"'),'Missing category filter: '+category);
+}
+
 assert.match(html,/id="quote-form"/);
 assert.match(html,/id="form-success"/);
 assert.match(html,/id="form-status"/);

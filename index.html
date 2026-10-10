@@ -45,8 +45,9 @@
   </style>
   <!-- Unique asset names avoid stale cached styles/scripts from previous launches. -->
   <link rel="stylesheet" href="/regal-home-20261009.css">
-  <script src="/regal-storefront-v2.js" defer></script>
   <link rel="stylesheet" href="/regal-storefront-v2.css">
+  <link rel="stylesheet" href="/regal-catalog-v3.css">
+  <script src="/regal-catalog-v3.js" defer></script>
 </head>
 <body>
 <a class="skip-link" href="#content">Skip to content</a>
@@ -57,7 +58,7 @@
       <span class="site-brand__name">Regal Rentals</span>
     </a>
     <nav class="main-nav" id="main-nav" aria-label="Main navigation">
-      <a href="#equipment">Equipment</a>
+      <a href="#equipment">Browse Rentals</a>
       <a href="#packages">Packages</a>
       <a href="#how-it-works">How it works</a>
       <a class="nav-request" href="#quote">Request a quote <span aria-hidden="true">↗</span></a>
@@ -74,7 +75,7 @@
       <h1 id="hero-title">Party Rentals<br>Made Simple.</h1>
       <p class="hero__lead">Tables, chairs, and canopies for birthdays, backyard parties, family gatherings, and more.</p>
       <div class="hero__actions">
-        <a href="#equipment" class="btn btn--primary">Browse Equipment <span aria-hidden="true">→</span></a>
+        <a href="#equipment" class="btn btn--primary">Shop Rentals <span aria-hidden="true">→</span></a>
         <a href="#quote" class="btn btn--outline">Request a Quote</a>
       </div>
       <p class="hero__photo-note">Event inspiration photo · Product images are illustrative</p>
@@ -98,13 +99,40 @@
     </div>
   </section>
 
-  <section class="section equipment" id="equipment" aria-labelledby="equipment-title">
+  <section class="section rental-catalog" id="equipment" aria-labelledby="equipment-title">
     <div class="site-wrap">
-      <header class="section-heading">
-        <div><span class="kicker">OUR RENTAL COLLECTION</span><h2 id="equipment-title">Everything you need<br>for a great event.</h2></div>
-        <p>Choose the pieces you need. We’ll confirm availability and provide a personalized quote.</p>
+      <header class="catalog-intro">
+        <div>
+          <span class="kicker">THE REGAL COLLECTION</span>
+          <h2 id="equipment-title">Find your perfect<br>party setup.</h2>
+          <p>Browse the essentials, pick your quantities, and build a quote that fits your event.</p>
+        </div>
+        <div class="catalog-intro__aside"><span class="catalog-intro__sparkle" aria-hidden="true">✦</span><strong>Made for moments<br>worth celebrating.</strong><span>Mix and match rentals or start with a ready-made package.</span></div>
       </header>
-      <div class="products-grid" id="storefront-products" aria-live="polite">
+
+      <div class="catalog-toolbar" aria-label="Browse rentals by category">
+        <div class="catalog-chips" role="group" aria-label="Rental categories">
+          <button class="catalog-chip is-selected" type="button" data-catalog-filter="all" aria-pressed="true">All Rentals <span class="catalog-chip__count" data-filter-count="all"></span></button>
+          <button class="catalog-chip" type="button" data-catalog-filter="packages" aria-pressed="false">Packages <span class="catalog-chip__count" data-filter-count="packages"></span></button>
+          <button class="catalog-chip" type="button" data-catalog-filter="chairs" aria-pressed="false">Chairs <span class="catalog-chip__count" data-filter-count="chairs"></span></button>
+          <button class="catalog-chip" type="button" data-catalog-filter="tables" aria-pressed="false">Tables <span class="catalog-chip__count" data-filter-count="tables"></span></button>
+          <button class="catalog-chip" type="button" data-catalog-filter="canopies" aria-pressed="false">Canopies <span class="catalog-chip__count" data-filter-count="canopies"></span></button>
+          <button class="catalog-chip" type="button" data-catalog-filter="more" aria-pressed="false" hidden>More Rentals <span class="catalog-chip__count" data-filter-count="more"></span></button>
+        </div>
+        <a class="catalog-quote-shortcut" href="#quote" aria-label="Review your quote list">Your Quote <span id="catalog-quote-count" class="catalog-quote-shortcut__count">0</span><span aria-hidden="true">→</span></a>
+      </div>
+
+      <div class="catalog-results-header">
+        <div><span class="catalog-results-header__accent" aria-hidden="true"></span><strong id="catalog-view-title">All rentals</strong></div>
+        <span id="catalog-status" role="status" aria-live="polite">Explore equipment and packages</span>
+      </div>
+
+      <div class="catalog-group catalog-group--equipment" id="catalog-equipment-group" aria-labelledby="catalog-equipment-heading">
+        <div class="catalog-group__header">
+          <h3 id="catalog-equipment-heading">Equipment</h3>
+          <span>Choose what you need, in whatever quantity you'd like to request.</span>
+        </div>
+        <div class="products-grid" id="storefront-products" aria-live="polite">
         <article class="product-card">
           <div class="product-card__image"><img loading="lazy" src="/assets/regal-chair.svg" alt="Illustration of a white folding chair" width="420" height="290"></div>
           <div class="product-card__details"><h3>White Folding Chairs</h3><p>Comfortable, classic seating for almost any occasion.</p><span class="availability-note">Up to 100 chairs</span><a data-item="White folding chairs" href="#quote">Add to Quote <span aria-hidden="true">→</span></a></div>
@@ -125,15 +153,15 @@
           <div class="product-card__image"><img loading="lazy" src="/assets/regal-canopy-20.svg" alt="Illustration of a 10-by-20-foot white pop-up canopy" width="420" height="290"></div>
           <div class="product-card__details"><h3>10×20 Eurmax Canopy</h3><p>More covered space for your outdoor event.</p><a data-item="10x20 canopy" href="#quote">Add to Quote <span aria-hidden="true">→</span></a></div>
         </article>
+        </div>
       </div>
-      <p class="collection-note">Illustrations represent equipment types. Final equipment, availability, delivery, and pricing are confirmed in your quote.</p>
-    </div>
-  </section>
 
-  <section class="section packages" id="packages" aria-labelledby="packages-title">
-    <div class="site-wrap">
-      <header class="section-heading section-heading--packages"><div><span class="kicker">POPULAR PACKAGES</span><h2 id="packages-title">Simple bundles for easy planning.</h2></div><p>Practical starting points—customize any package for your event.</p></header>
-      <div class="packages-grid" id="storefront-packages" aria-live="polite">
+      <section class="catalog-group catalog-group--packages" id="packages" aria-labelledby="packages-title">
+        <div class="catalog-group__header">
+          <div><span class="catalog-group__eyebrow">A HEAD START ON YOUR EVENT</span><h3 id="packages-title">Easy event packages</h3></div>
+          <span>Choose a bundle and customize quantities in your quote.</span>
+        </div>
+        <div class="packages-grid" id="storefront-packages" aria-live="polite">
         <article class="package-card">
           <div class="package-card__picture package-card__picture--backyard" aria-hidden="true"></div>
           <div class="package-card__body"><span class="package-card__label">SMALL GATHERINGS</span><h3>Backyard Essentials</h3>
@@ -152,8 +180,14 @@
           <ul><li>1 × 10×20 canopy</li><li>2 rectangle tables</li><li>Optional seating</li></ul>
           <a href="#quote" data-package="Shade & Serve">Request This Package <span aria-hidden="true">→</span></a></div>
         </article>
+        </div>
+      </section>
+      <div class="catalog-empty" id="catalog-empty" hidden>
+        <span aria-hidden="true">✳</span><strong>No rentals in this category yet.</strong>
+        <p>Explore all rentals or send us a note about what you're planning.</p>
+        <button type="button" data-catalog-reset>Show all rentals</button>
       </div>
-      <p class="collection-note">Packages are examples, not reserved inventory. Prices are quoted based on your location and event details.</p>
+      <p class="collection-note catalog-disclaimer">Quotes are requests, not confirmed reservations. Availability, delivery, setup, and final totals are confirmed personally.</p>
     </div>
   </section>
 
@@ -209,6 +243,7 @@
     </div>
   </section>
 </main>
+<a class="mobile-quote-bar" id="mobile-quote-bar" href="#quote" hidden aria-label="Review items in your quote"><span>Review your quote <strong id="mobile-quote-count">0 items</strong></span><span aria-hidden="true">→</span></a>
 <footer class="site-footer">
   <div class="site-wrap site-footer__top">
     <a class="site-brand site-brand--footer" href="#top"><img src="/assets/regal-shield.png" alt="" width="40" height="44"><span class="site-brand__name">Regal Rentals</span></a>
