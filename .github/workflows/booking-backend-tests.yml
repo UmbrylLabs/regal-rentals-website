@@ -74,3 +74,4 @@ jobs:
           node --check launch-home.js
           node --check regal-home-20261009.js
           node --check regal-storefront-v2.js
+          node --check regal-catalog-v3.js
