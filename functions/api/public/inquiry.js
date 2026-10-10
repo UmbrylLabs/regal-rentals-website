@@ -101,7 +101,7 @@ export async function onRequestPost(context) {
       let verifiedPackage = null;
       if (packageId) {
         verifiedPackage = packages.find(pkg => pkg.active && pkg.id === packageId);
-        if (!verifiedPackage || !verifiedPackage.items.every(line => productMap.has(line.productId) && Number.isInteger(line.quantity) && line.quantity > 0 && line.quantity <= productMap.get(line.productId).quantityOwned)) {
+        if (!verifiedPackage || !verifiedPackage.items.every(line => productMap.has(line.productId) && Number.isInteger(line.quantity) && line.quantity > 0 && line.quantity <= 1000000)) {
           return invalid('That package is no longer available. Please refresh the page.');
         }
         verifiedPackageName = verifiedPackage.name;
@@ -112,8 +112,8 @@ export async function onRequestPost(context) {
       for (const item of chosen) {
         const product = item && productMap.get(item.productId);
         const quantity = Number(item?.quantity);
-        if (!product || !Number.isInteger(quantity) || quantity < 1 || quantity > product.quantityOwned || ids.has(item.productId)) {
-          return invalid('A selected item or quantity is no longer available. Refresh and try again.');
+        if (!product || !Number.isInteger(quantity) || quantity < 1 || quantity > 1000000 || ids.has(item.productId)) {
+          return invalid('Choose an active rental item and a positive whole-number quantity.');
         }
         ids.add(item.productId);
         labels.push(String(quantity) + ' × ' + product.name);
