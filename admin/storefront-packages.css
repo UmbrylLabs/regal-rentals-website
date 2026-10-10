@@ -8,7 +8,7 @@
 .package-admin-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
 .package-add-inventory{display:grid;grid-template-columns:minmax(0,1fr) 100px auto;gap:11px;align-items:end;margin:16px 0 18px}
 .package-add-inventory label{display:grid;gap:7px;font-size:12px;font-weight:800}
-.package-add-inventory select,.package-add-inventory input{width:100%;min-height:42px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:#fff;font:500 13px inherit;color:inherit}
+.package-add-inventory select,.package-add-inventory input{width:100%;min-height:42px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:#fff;font-size:13px;font-weight:500;color:inherit}
 .package-add-inventory button{height:42px}
 .package-product-list{display:grid;grid-template-columns:1fr;gap:9px;margin-top:12px}
 .package-product-option{display:flex;justify-content:space-between;align-items:center;gap:14px;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:#fff}
