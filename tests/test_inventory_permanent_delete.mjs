@@ -53,7 +53,7 @@ assert.match(api,/if\s*\(linked\.packageReferences\)/);
 assert.match(admin,/data-permanent-delete-product/);
 assert.match(admin,/confirmSku:\s*confirmation/);
 assert.match(admin,/state\.user\?\.role\s*===\s*'owner'/);
-assert.match(html,/storefront-packages\.js\?v=20261010-1/);
+assert.match(html,/storefront-packages\.js\?v=20261010-2/);
 assert.match(editor,/await refresh\(\);\s*beginEdit\(\);/);
 assert.match(editor,/inventoryAdd\.addEventListener\('click'/);
 assert.match(editor,/selected\.set\(id,\s*Number\(inventoryQty\.value\)\)/);
