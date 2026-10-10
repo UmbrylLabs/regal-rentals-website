@@ -16,16 +16,74 @@
     if(!res.ok||!body.ok)throw Error(body?.error?.message||'Request failed');
     return body;
   };
-  function renderSelectItems(selected=[]) {
-    const map=new Map(selected.map(i=>[i.productId,Number(i.quantity)]));
-    const active=products.filter(p=>Number(p.active)&&Number(p.quantity_owned)>0);
-    productsNode.innerHTML=active.length?active.map(p=>
-      '<label class="package-product-option"><span><strong>'+esc(p.name)+'</strong><small>Owned: '+
-      Number(p.quantity_owned)+' · '+esc(p.sku)+'</small></span><input data-package-product-id="'+esc(p.id)+
-      '" type="number" min="0" max="'+Number(p.quantity_owned)+'" step="1" value="'+
-      Math.min(Number(p.quantity_owned),map.get(p.id)||0)+'"></label>'
-    ).join(''):'<p>No active equipment. Add inventory before creating a published package.</p>';
+  const inventorySelect=document.querySelector('#package-inventory-select');
+  const inventoryQty=document.querySelector('#package-inventory-add-qty');
+  const inventoryAdd=document.querySelector('#add-package-inventory-item');
+  const selectedItems=new Map();
+  const validQty=value=>Number.isSafeInteger(Number(value))&&Number(value)>=1&&Number(value)<=1000000;
+
+  function renderInventoryOptions(){
+    const remaining=products.filter(p=>Number(p.active)&&!selectedItems.has(p.id));
+    inventorySelect.innerHTML='<option value="">Choose an inventory item…</option>'+
+      remaining.map(p=>'<option value="'+esc(p.id)+'">'+esc(p.name)+' (owned: '+
+        Number(p.quantity_owned)+')</option>').join('');
+    inventorySelect.disabled=!remaining.length;
+    inventoryAdd.disabled=!remaining.length;
   }
+  function renderSelectedItems(){
+    if(!selectedItems.size) {
+      productsNode.innerHTML='<p class="message">No equipment added yet. Select an item above and click Add Item.</p>';
+    } else {
+      productsNode.innerHTML=[...selectedItems].map(([id,qty])=>{
+        const p=products.find(item=>item.id===id);
+        const name=p?.name||'Inventory item no longer found';
+        const detail=p?(Number(p.active)?'Owned: '+Number(p.quantity_owned):'Archived · remove to publish'):'No longer in inventory';
+        return '<div class="package-product-option" data-package-line="'+esc(id)+'">'+
+          '<span><strong>'+esc(name)+'</strong><small>'+esc(detail)+'</small></span>'+
+          '<label>Qty <input aria-label="Quantity of '+esc(name)+'" data-package-product-id="'+esc(id)+
+          '" type="number" min="1" step="1" inputmode="numeric" value="'+qty+'"></label>'+
+          '<button type="button" class="button button--quiet" data-package-item-remove="'+esc(id)+'" aria-label="Remove '+esc(name)+'">Remove</button>'+
+          '</div>';
+      }).join('');
+    }
+    renderInventoryOptions();
+  }
+  function renderSelectItems(selected=[]){
+    selectedItems.clear();
+    for(const item of selected) {
+      if(item.productId && validQty(item.quantity)) selectedItems.set(item.productId,Number(item.quantity));
+    }
+    renderSelectedItems();
+  }
+  inventoryAdd.addEventListener('click',()=>{
+    const id=inventorySelect.value;
+    const product=products.find(p=>p.id===id&&Number(p.active));
+    if(!product){msg.textContent='Choose an item from Inventory first.';return;}
+    if(!validQty(inventoryQty.value)){
+      msg.textContent='Enter a positive whole-number quantity.';inventoryQty.focus();return;
+    }
+    selectedItems.set(id,Number(inventoryQty.value));
+    msg.textContent='';
+    inventoryQty.value='1';
+    renderSelectedItems();
+  });
+  productsNode.addEventListener('click',event=>{
+    const button=event.target.closest('[data-package-item-remove]');
+    if(!button)return;
+    selectedItems.delete(button.dataset.packageItemRemove);
+    renderSelectedItems();
+  });
+  productsNode.addEventListener('change',event=>{
+    const input=event.target.closest('[data-package-product-id]');
+    if(!input)return;
+    if(validQty(input.value)){
+      selectedItems.set(input.dataset.packageProductId,Number(input.value));
+      msg.textContent='';
+    } else {
+      msg.textContent='Package quantities must be positive whole numbers.';
+      input.focus();
+    }
+  });
   const renderList=()=>{
     listing.innerHTML=packages.length?packages.map(p=>{
       const contents=(p.items||[]).map(line=>{
@@ -83,9 +141,15 @@
   form.addEventListener('submit',async event=>{
     event.preventDefault();
     if(!form.reportValidity())return;
-    const items=[...productsNode.querySelectorAll('[data-package-product-id]')].map(input=>({
-      productId:input.dataset.packageProductId,quantity:Number(input.value||0)
-    })).filter(x=>x.quantity>0);
+    const inputs=[...productsNode.querySelectorAll('[data-package-product-id]')];
+    if(inputs.some(input=>!validQty(input.value))){
+      msg.textContent='Please enter a positive whole-number quantity for each included item.';
+      inputs.find(input=>!validQty(input.value))?.focus();
+      return;
+    }
+    const items=inputs.map(input=>({
+      productId:input.dataset.packageProductId,quantity:Number(input.value)
+    }));
     if(form.elements.active.checked&&!items.length){
       msg.textContent='Select at least one inventory item before publishing.';return;
     }
