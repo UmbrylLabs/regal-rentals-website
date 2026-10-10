@@ -25,7 +25,7 @@ const packageEditor=read('admin/storefront-packages.js');
 assert.match(adminPage,/id="package-inventory-select"/);
 assert.match(adminPage,/id="add-package-inventory-item"/);
 assert.match(adminPage,/id="package-inventory-add-qty"/);
-assert.match(packageEditor,/selectedItems\.set\(id,Number\(inventoryQty\.value\)\)/);
+assert.match(packageEditor,/selected\.set\(id, Number\(inventoryQty\.value\)\)/);
 assert.match(packageEditor,/data-package-item-remove/);
 
 assert.match(html,/id="quote-cart"/);

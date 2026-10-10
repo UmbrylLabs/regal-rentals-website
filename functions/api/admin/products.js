@@ -1,6 +1,7 @@
 import { protectMutation, requireAdmin } from '../../_lib/auth.js';
 import { cleanText, json, randomId, readJson, safeErrorResponse } from '../../_lib/http.js';
 import { ensureStorefrontTables, validImageUrl } from '../../_lib/storefront.js';
+import { productDeletionBlockers, deleteUnreferencedArchivedProduct } from '../../_lib/inventory-delete.js';
 
 const CATEGORIES = new Set([
   'Tables & Chairs',
@@ -192,9 +193,43 @@ export async function onRequestDelete(context) {
     const user = await requireAdmin(context.env, context.request);
     const body = await readJson(context.request);
     const id = cleanText(body.id, 80);
-    const existing = await context.env.DB.prepare('SELECT id, name, active FROM products WHERE id = ?1').bind(id).first();
+    await ensureStorefrontTables(context.env.DB);
+    const existing = await context.env.DB.prepare('SELECT id, name, sku, active FROM products WHERE id = ?1').bind(id).first();
     if (!existing) return json({ ok: false, error: { code: 'NOT_FOUND', message: 'Product not found.' } }, 404);
     const now = Math.floor(Date.now() / 1000);
+
+    if (body.permanent === true) {
+      if (user.role !== 'owner') {
+        return json({ ok: false, error: { code: 'FORBIDDEN', message: 'Only an owner can permanently delete equipment.' } }, 403);
+      }
+      if (Number(existing.active) !== 0) {
+        return json({ ok: false, error: { code: 'ARCHIVE_FIRST', message: 'Remove this item from the website before permanently deleting it.' } }, 409);
+      }
+      if (body.confirmSku !== existing.sku) {
+        return json({ ok: false, error: { code: 'CONFIRMATION_REQUIRED', message: 'Type the exact item SKU to confirm permanent deletion.' } }, 400);
+      }
+      const linked = await productDeletionBlockers(context.env.DB, id);
+      if (linked.bookingItems) {
+        return json({ ok: false, error: { code: 'BOOKING_HISTORY', message: 'Cannot permanently delete this item: it is referenced by booking history. Keep it archived to preserve records.' } }, 409);
+      }
+      if (linked.packageReferences) {
+        return json({ ok: false, error: { code: 'PACKAGE_REFERENCE', message: 'Remove this item from all draft and published packages first.' } }, 409);
+      }
+
+      const deleted = await deleteUnreferencedArchivedProduct(context.env.DB, id);
+      if (!deleted) {
+        return json({ ok: false, error: { code: 'DELETE_BLOCKED', message: 'This inventory item changed or gained a reference. Refresh and try again.' } }, 409);
+      }
+      try {
+        await context.env.DB.prepare(
+          `INSERT INTO audit_log (id, actor_user_id, action, entity_type, entity_id, metadata_json, created_at)
+           VALUES (?1, ?2, 'product.permanent_delete', 'product', ?3, ?4, ?5)`
+        ).bind(randomId(), user.id, id, JSON.stringify({ name: existing.name, sku: existing.sku }), now).run();
+      } catch (auditError) {
+        console.error('Inventory deletion audit write failed:', auditError);
+      }
+      return json({ ok: true, permanentlyDeleted: true });
+    }
 
     await context.env.DB.batch([
       context.env.DB.prepare('UPDATE products SET active = 0, updated_at = ?1 WHERE id = ?2').bind(now, id),

@@ -1,174 +1,264 @@
 (() => {
-  const tab=document.querySelector('[data-panel="packages"]');
-  const form=document.querySelector('#storefront-package-form');
-  const listing=document.querySelector('#storefront-packages-list');
-  const productsNode=document.querySelector('#storefront-package-products');
-  const listMsg=document.querySelector('#storefront-package-list-message');
-  const msg=document.querySelector('#storefront-package-message');
-  if(!tab||!form)return;
-  let packages=[],products=[];
-  const esc=s=>String(s??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;')
-    .replaceAll('"','&quot;').replaceAll("'",'&#39;');
-  const money=c=>c==null?'Quote only':(Number(c)/100).toLocaleString('en-US',{style:'currency',currency:'USD'});
-  const api=async(path,options={})=>{
-    const res=await fetch(path,{credentials:'same-origin',headers:{'Content-Type':'application/json'},...options});
-    const body=await res.json();
-    if(!res.ok||!body.ok)throw Error(body?.error?.message||'Request failed');
+  const tab = document.querySelector('[data-panel="packages"]');
+  const form = document.querySelector('#storefront-package-form');
+  const listing = document.querySelector('#storefront-packages-list');
+  const rows = document.querySelector('#storefront-package-products');
+  const notice = document.querySelector('#storefront-package-list-message');
+  const message = document.querySelector('#storefront-package-message');
+  const inventorySelect = document.querySelector('#package-inventory-select');
+  const inventoryQty = document.querySelector('#package-inventory-add-qty');
+  const inventoryAdd = document.querySelector('#add-package-inventory-item');
+  const addPackage = document.querySelector('#new-storefront-package');
+  const saveButton = document.querySelector('#save-storefront-package');
+
+  if (!tab || !form || !listing || !inventorySelect || !inventoryAdd) return;
+
+  let products = [];
+  let packages = [];
+  let loaded = false;
+  let loading = null;
+  const selected = new Map();
+  const el = name => form.querySelector('[name="' + name + '"]');
+  const esc = value => String(value ?? '').replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;').replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;').replaceAll("'", '&#39;');
+  const validQty = value => {
+    if (String(value).trim() === '') return false;
+    const n = Number(value);
+    return Number.isSafeInteger(n) && n >= 1 && n <= 1000000;
+  };
+  const currency = cents => cents == null ? 'Quote only'
+    : (Number(cents) / 100).toLocaleString('en-US', { style: 'currency', currency: 'USD' });
+  const api = async (url, options = {}) => {
+    const response = await fetch(url, {
+      credentials: 'same-origin', cache: 'no-store',
+      headers: { 'Content-Type': 'application/json' }, ...options
+    });
+    let body;
+    try { body = await response.json(); }
+    catch { throw Error('Could not reach the rental database. Refresh and try again.'); }
+    if (!response.ok || !body.ok) throw Error(body?.error?.message || 'Unable to save or load packages.');
     return body;
   };
-  const inventorySelect=document.querySelector('#package-inventory-select');
-  const inventoryQty=document.querySelector('#package-inventory-add-qty');
-  const inventoryAdd=document.querySelector('#add-package-inventory-item');
-  const selectedItems=new Map();
-  const validQty=value=>Number.isSafeInteger(Number(value))&&Number(value)>=1&&Number(value)<=1000000;
 
-  function renderInventoryOptions(){
-    const remaining=products.filter(p=>Number(p.active)&&!selectedItems.has(p.id));
-    inventorySelect.innerHTML='<option value="">Choose an inventory item…</option>'+
-      remaining.map(p=>'<option value="'+esc(p.id)+'">'+esc(p.name)+' (owned: '+
-        Number(p.quantity_owned)+')</option>').join('');
-    inventorySelect.disabled=!remaining.length;
-    inventoryAdd.disabled=!remaining.length;
+  function renderList() {
+    listing.innerHTML = packages.length ? packages.map(pkg => {
+      const lines = (pkg.items || []).map(line => {
+        const product = products.find(p => p.id === line.productId);
+        return Number(line.quantity) + ' × ' + (product?.name || 'Item no longer in inventory');
+      });
+      return '<article class="package-admin-card">' +
+        '<div><strong>' + esc(pkg.name) + '</strong><span class="package-state ' +
+        (pkg.active ? 'package-state--live' : '') + '">' + (pkg.active ? 'Published' : 'Draft') + '</span></div>' +
+        '<p>' + esc(pkg.description || 'No description') + '</p><p>' +
+        esc(lines.join(', ') || 'No equipment added') + '</p><p><b>' +
+        esc(currency(pkg.priceCents)) + '</b> · Display order ' + Number(pkg.sortOrder) + '</p>' +
+        '<div class="package-admin-actions"><button class="button button--secondary" type="button" data-package-edit="' +
+        esc(pkg.id) + '">Edit Package</button>' +
+        (pkg.active ? '<button class="button button--quiet" type="button" data-package-unpublish="' +
+        esc(pkg.id) + '">Unpublish</button>' : '') + '</div></article>';
+    }).join('') : '<p class="message">No packages yet. Choose Add Package to build one using your inventory.</p>';
   }
-  function renderSelectedItems(){
-    if(!selectedItems.size) {
-      productsNode.innerHTML='<p class="message">No equipment added yet. Select an item above and click Add Item.</p>';
+
+  async function refresh() {
+    // Share in-flight loads, so clicking Add Package right after opening the
+    // tab can never open an empty picker before the inventory has arrived.
+    if (loading) return loading;
+    loading = (async () => {
+      notice.textContent = 'Loading current inventory and packages…';
+      const [catalog, result] = await Promise.all([
+        api('/api/admin/products'), api('/api/admin/packages')
+      ]);
+      products = Array.isArray(catalog.products) ? catalog.products : [];
+      packages = Array.isArray(result.packages) ? result.packages : [];
+      loaded = true;
+      notice.textContent = products.filter(p => Number(p.active)).length +
+        ' active inventory items · ' + packages.length +
+        ' packages. Published changes appear on the homepage after a refresh.';
+      renderList();
+      return true;
+    })();
+    try { return await loading; }
+    catch (error) {
+      loaded = false;
+      notice.textContent = 'Could not load inventory or packages: ' + error.message;
+      throw error;
+    } finally { loading = null; }
+  }
+
+  function availableInventory() {
+    return products.filter(p => Number(p.active) === 1 && !selected.has(p.id));
+  }
+
+  function renderPicker() {
+    const options = availableInventory();
+    inventorySelect.innerHTML = '<option value="">Choose an item from Inventory…</option>' +
+      options.map(p => '<option value="' + esc(p.id) + '">' +
+        esc(p.name) + ' (owned: ' + Number(p.quantity_owned) + ')</option>').join('');
+    inventorySelect.disabled = !options.length;
+    inventoryAdd.disabled = !options.length;
+  }
+
+  function renderRows() {
+    if (!selected.size) {
+      rows.innerHTML = '<p class="message">Nothing included yet. Choose an inventory item above and click Add Item.</p>';
     } else {
-      productsNode.innerHTML=[...selectedItems].map(([id,qty])=>{
-        const p=products.find(item=>item.id===id);
-        const name=p?.name||'Inventory item no longer found';
-        const detail=p?(Number(p.active)?'Owned: '+Number(p.quantity_owned):'Archived · remove to publish'):'No longer in inventory';
-        return '<div class="package-product-option" data-package-line="'+esc(id)+'">'+
-          '<span><strong>'+esc(name)+'</strong><small>'+esc(detail)+'</small></span>'+
-          '<label>Qty <input aria-label="Quantity of '+esc(name)+'" data-package-product-id="'+esc(id)+
-          '" type="number" min="1" step="1" inputmode="numeric" value="'+qty+'"></label>'+
-          '<button type="button" class="button button--quiet" data-package-item-remove="'+esc(id)+'" aria-label="Remove '+esc(name)+'">Remove</button>'+
-          '</div>';
+      rows.innerHTML = [...selected].map(([id, qty]) => {
+        const product = products.find(p => p.id === id);
+        const name = product?.name || 'Missing inventory item';
+        const detail = !product ? 'Product deleted' :
+          (Number(product.active) ? 'Owned: ' + Number(product.quantity_owned) : 'Archived — cannot publish');
+        return '<div class="package-product-option" data-package-line="' + esc(id) + '">' +
+          '<span><strong>' + esc(name) + '</strong><small>' + esc(detail) + '</small></span>' +
+          '<label>Qty <input type="number" min="1" step="1" inputmode="numeric" data-package-product-id="' +
+          esc(id) + '" value="' + qty + '" aria-label="Quantity of ' + esc(name) + '"></label>' +
+          '<button type="button" class="button button--quiet" data-package-item-remove="' +
+          esc(id) + '" aria-label="Remove ' + esc(name) + '">Remove</button></div>';
       }).join('');
     }
-    renderInventoryOptions();
+    renderPicker();
   }
-  function renderSelectItems(selected=[]){
-    selectedItems.clear();
-    for(const item of selected) {
-      if(item.productId && validQty(item.quantity)) selectedItems.set(item.productId,Number(item.quantity));
-    }
-    renderSelectedItems();
-  }
-  inventoryAdd.addEventListener('click',()=>{
-    const id=inventorySelect.value;
-    const product=products.find(p=>p.id===id&&Number(p.active));
-    if(!product){msg.textContent='Choose an item from Inventory first.';return;}
-    if(!validQty(inventoryQty.value)){
-      msg.textContent='Enter a positive whole-number quantity.';inventoryQty.focus();return;
-    }
-    selectedItems.set(id,Number(inventoryQty.value));
-    msg.textContent='';
-    inventoryQty.value='1';
-    renderSelectedItems();
-  });
-  productsNode.addEventListener('click',event=>{
-    const button=event.target.closest('[data-package-item-remove]');
-    if(!button)return;
-    selectedItems.delete(button.dataset.packageItemRemove);
-    renderSelectedItems();
-  });
-  productsNode.addEventListener('change',event=>{
-    const input=event.target.closest('[data-package-product-id]');
-    if(!input)return;
-    if(validQty(input.value)){
-      selectedItems.set(input.dataset.packageProductId,Number(input.value));
-      msg.textContent='';
-    } else {
-      msg.textContent='Package quantities must be positive whole numbers.';
-      input.focus();
-    }
-  });
-  const renderList=()=>{
-    listing.innerHTML=packages.length?packages.map(p=>{
-      const contents=(p.items||[]).map(line=>{
-        const prod=products.find(x=>x.id===line.productId);
-        return String(Number(line.quantity))+' × '+(prod?.name||'Unavailable inventory item');
-      }).join(', ')||'No items selected';
-      return '<article class="package-admin-card"><div><strong>'+esc(p.name)+'</strong>'+
-        '<span class="package-state '+(p.active?'package-state--live':'')+'">'+(p.active?'Published':'Draft')+'</span></div>'+
-        '<p>'+esc(p.description||'No description')+'</p><p>'+esc(contents)+'</p><p><b>'+
-        esc(money(p.priceCents))+'</b> · Display order '+Number(p.sortOrder)+'</p>'+
-        '<div class="package-admin-actions"><button type="button" class="button button--secondary" data-package-edit="'+esc(p.id)+'">Edit</button>'+
-        (p.active?'<button type="button" class="button button--quiet" data-package-unpublish="'+esc(p.id)+'">Unpublish</button>':'')+
-        '</div></article>';
-    }).join(''):'<div class="card">No packages yet. Click “Add Package” to create one.</div>';
-  };
-  const load=async()=>{
-    listMsg.textContent='Loading packages…';
-    try{
-      const [catalog,results]=await Promise.all([api('/api/admin/products'),api('/api/admin/packages')]);
-      products=catalog.products||[];packages=results.packages||[];
-      listMsg.textContent='Published packages update the homepage automatically when customers open or refresh it.';
-      renderList();
-    }catch(e){listMsg.textContent=e.message;}
-  };
-  const edit=p=>{
+
+  function beginEdit(pkg = null) {
+    if (!loaded) return;
     form.reset();
-    form.elements.id.value=p?.id||'';
-    form.elements.name.value=p?.name||'';
-    form.elements.description.value=p?.description||'';
-    form.elements.imageUrl.value=p?.imageUrl||'';
-    form.elements.price.value=p?.priceCents==null?'':(Number(p.priceCents)/100).toFixed(2);
-    form.elements.sortOrder.value=String(p?.sortOrder??100);
-    form.elements.active.checked=Boolean(p?.active);
-    renderSelectItems(p?.items||[]);
-    document.querySelector('#storefront-package-form-title').textContent=p?'Edit Package':'Add Package';
-    msg.textContent='';
-    form.hidden=false;
-    form.scrollIntoView({behavior:'smooth',block:'start'});
-  };
-  document.querySelector('#new-storefront-package').addEventListener('click',()=>edit(null));
-  document.querySelector('#cancel-storefront-package').addEventListener('click',()=>{form.hidden=true;});
-  tab.addEventListener('click',load);
-  listing.addEventListener('click',async event=>{
-    const editButton=event.target.closest('[data-package-edit]');
-    if(editButton){edit(packages.find(p=>p.id===editButton.dataset.packageEdit));return;}
-    const unpublish=event.target.closest('[data-package-unpublish]');
-    if(!unpublish)return;
-    if(!confirm('Hide this package from the public website?'))return;
-    unpublish.disabled=true;
-    try{
-      await api('/api/admin/packages',{method:'DELETE',body:JSON.stringify({id:unpublish.dataset.packageUnpublish})});
-      await load();
-    }catch(e){listMsg.textContent=e.message;unpublish.disabled=false;}
+    selected.clear();
+    for (const item of pkg?.items || []) {
+      if (item?.productId && validQty(item.quantity)) selected.set(item.productId, Number(item.quantity));
+    }
+    el('id').value = pkg?.id || '';
+    el('name').value = pkg?.name || '';
+    el('description').value = pkg?.description || '';
+    el('imageUrl').value = pkg?.imageUrl || '';
+    el('price').value = pkg?.priceCents == null ? '' : (Number(pkg.priceCents) / 100).toFixed(2);
+    el('sortOrder').value = String(pkg?.sortOrder ?? 100);
+    el('active').checked = Boolean(pkg?.active);
+    document.querySelector('#storefront-package-form-title').textContent = pkg ? 'Edit Package' : 'Create Package';
+    message.textContent = '';
+    inventoryQty.value = '1';
+    renderRows();
+    form.hidden = false;
+    form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  tab.addEventListener('click', () => { refresh().catch(() => {}); });
+  addPackage.addEventListener('click', async () => {
+    addPackage.disabled = true;
+    try {
+      // Always refresh; items added in the Inventory tab are now available
+      // even without reloading the whole dashboard.
+      await refresh();
+      beginEdit();
+    } catch (error) {
+      notice.textContent = 'Unable to open package builder: ' + error.message;
+    } finally { addPackage.disabled = false; }
   });
-  form.addEventListener('submit',async event=>{
-    event.preventDefault();
-    if(!form.reportValidity())return;
-    const inputs=[...productsNode.querySelectorAll('[data-package-product-id]')];
-    if(inputs.some(input=>!validQty(input.value))){
-      msg.textContent='Please enter a positive whole-number quantity for each included item.';
-      inputs.find(input=>!validQty(input.value))?.focus();
+  document.querySelector('#cancel-storefront-package').addEventListener('click', () => {
+    form.hidden = true;
+    selected.clear();
+  });
+
+  inventoryAdd.addEventListener('click', () => {
+    const id = inventorySelect.value;
+    if (!id) { message.textContent = 'Choose an inventory item first.'; inventorySelect.focus(); return; }
+    const product = products.find(p => p.id === id);
+    if (!product || !Number(product.active)) {
+      message.textContent = 'This item is no longer active in Inventory. Refresh and try again.';
       return;
     }
-    const items=inputs.map(input=>({
-      productId:input.dataset.packageProductId,quantity:Number(input.value)
-    }));
-    if(form.elements.active.checked&&!items.length){
-      msg.textContent='Select at least one inventory item before publishing.';return;
+    if (!validQty(inventoryQty.value)) {
+      message.textContent = 'Enter a positive whole-number quantity.';
+      inventoryQty.focus();
+      return;
     }
-    const price=String(form.elements.price.value).trim();
-    const payload={
-      id:form.elements.id.value||undefined,
-      name:form.elements.name.value,
-      description:form.elements.description.value,
-      imageUrl:form.elements.imageUrl.value,
-      sortOrder:Number(form.elements.sortOrder.value),
-      priceCents:price===''?null:Math.round(Number(price)*100),
-      items,active:form.elements.active.checked
+    selected.set(id, Number(inventoryQty.value));
+    inventoryQty.value = '1';
+    message.textContent = product.name + ' added to this package.';
+    renderRows();
+  });
+
+  rows.addEventListener('input', event => {
+    const field = event.target.closest('[data-package-product-id]');
+    if (!field) return;
+    if (validQty(field.value)) {
+      selected.set(field.dataset.packageProductId, Number(field.value));
+      message.textContent = '';
+    }
+  });
+  rows.addEventListener('click', event => {
+    const button = event.target.closest('[data-package-item-remove]');
+    if (!button) return;
+    selected.delete(button.dataset.packageItemRemove);
+    renderRows();
+  });
+
+  listing.addEventListener('click', async event => {
+    const editButton = event.target.closest('[data-package-edit]');
+    const unpublish = event.target.closest('[data-package-unpublish]');
+    if (editButton) {
+      const id = editButton.dataset.packageEdit;
+      try {
+        await refresh();
+        const pkg = packages.find(p => p.id === id);
+        if (!pkg) throw Error('Package was not found after refreshing. Try again.');
+        beginEdit(pkg);
+      } catch (error) { notice.textContent = error.message; }
+      return;
+    }
+    if (!unpublish || !confirm('Unpublish this package from the website?')) return;
+    unpublish.disabled = true;
+    try {
+      await api('/api/admin/packages', {
+        method: 'DELETE', body: JSON.stringify({ id: unpublish.dataset.packageUnpublish })
+      });
+      await refresh();
+    } catch (error) {
+      notice.textContent = error.message;
+      unpublish.disabled = false;
+    }
+  });
+
+  form.addEventListener('submit', async event => {
+    event.preventDefault();
+    if (!form.reportValidity()) return;
+    const controls = [...rows.querySelectorAll('[data-package-product-id]')];
+    const bad = controls.find(input => !validQty(input.value));
+    if (bad) { message.textContent = 'Enter a positive whole-number quantity for each item.'; bad.focus(); return; }
+    const items = controls.map(input => ({
+      productId: input.dataset.packageProductId, quantity: Number(input.value)
+    }));
+    if (el('active').checked && !items.length) {
+      message.textContent = 'Add at least one inventory item before publishing.';
+      return;
+    }
+    const invalid = items.find(item => {
+      const product = products.find(p => p.id === item.productId);
+      return !product || (el('active').checked && !Number(product.active));
+    });
+    if (invalid) { message.textContent = 'One selected inventory item is no longer available. Remove it or save as a draft.'; return; }
+    const price = el('price').value.trim();
+    const payload = {
+      id: el('id').value || undefined,
+      name: el('name').value.trim(),
+      description: el('description').value.trim(),
+      imageUrl: el('imageUrl').value.trim(),
+      sortOrder: Number(el('sortOrder').value),
+      priceCents: price === '' ? null : Math.round(Number(price) * 100),
+      active: el('active').checked,
+      items
     };
-    const save=document.querySelector('#save-storefront-package');
-    save.disabled=true;msg.textContent='Saving package…';
-    try{
-      await api('/api/admin/packages',{method:payload.id?'PATCH':'POST',body:JSON.stringify(payload)});
-      form.hidden=true;msg.textContent='';await load();
-    }catch(e){msg.textContent=e.message;}
-    finally{save.disabled=false;}
+    saveButton.disabled = true;
+    message.textContent = 'Saving package…';
+    try {
+      await api('/api/admin/packages', {
+        method: payload.id ? 'PATCH' : 'POST', body: JSON.stringify(payload)
+      });
+      form.hidden = true;
+      selected.clear();
+      await refresh();
+      notice.textContent = 'Package saved. Published packages will appear on the website.';
+    } catch (error) {
+      message.textContent = 'Could not save package: ' + error.message;
+    } finally { saveButton.disabled = false; }
   });
 })();
