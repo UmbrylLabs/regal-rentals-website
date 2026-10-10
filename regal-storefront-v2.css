@@ -1,0 +1,27 @@
+
+/* Dynamic catalog & quote-list styling layered onto approved Regal design. */
+.product-card__details .add-to-quote,.package-to-quote{background:transparent;cursor:pointer;font:800 12px/1.4 var(--sans);color:var(--purple);transition:background .18s}
+.product-card__details .add-to-quote{width:100%;margin-top:auto;padding:13px 0 0;border:0;border-top:1px solid #eee8e4;text-align:left;display:flex;align-items:center;justify-content:space-between}
+.product-card__details .add-to-quote span,.package-to-quote span{font-size:20px}
+.package-card__picture img{height:100%;width:100%;object-fit:cover}
+.package-card__description{font-size:12px;line-height:1.6;color:#65606c;margin:0 0 9px}
+.package-to-quote{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;margin-top:auto;padding:11px 14px;border:1px solid #ac854b;border-radius:5px}
+.package-to-quote:hover{background:#faf2e7}
+.quote-cart{padding:17px;margin-bottom:23px;border:1px solid #dacee1;border-radius:9px;background:#fcfafe}
+.quote-cart__header{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:14px}
+.quote-cart__header strong{font-size:15px;color:#29163f}
+.quote-cart__header span{font-size:11px;color:#886b4b;font-weight:800}
+.quote-cart__items>p,.quote-cart__note{color:#716976;font-size:12px;line-height:1.65}
+.quote-cart__note{margin-top:12px}
+.quote-line{border-top:1px solid #e5dce9;padding:11px 0;display:flex;align-items:center;justify-content:space-between;gap:14px}
+.quote-line__title{min-width:0}
+.quote-line__title strong{display:block;font-size:12px;line-height:1.5}
+.quote-line__title>span{font-size:11px;color:#726979}
+.quote-line__actions{display:flex;align-items:center;gap:7px;flex-shrink:0}
+.quote-form-card .quote-line__actions label{font-weight:600;font-size:11px;display:flex;align-items:center;gap:4px}
+.quote-form-card .quote-line__actions input{width:64px;min-height:36px;padding:4px 6px;margin:0;border-radius:4px}
+.quote-line__actions button{background:transparent;border:0;color:#7e4264;text-decoration:underline;font-weight:700;font-size:11px;cursor:pointer}
+@media(max-width:420px){
+.quote-line{align-items:start;flex-direction:column;gap:7px}
+.quote-line__actions{width:100%;justify-content:space-between}
+}
