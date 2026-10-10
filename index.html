@@ -3,185 +3,217 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="theme-color" content="#ffffff">
   <meta name="color-scheme" content="light">
-  <meta name="description" content="Regal Rentals provides clean, dependable tables, chairs and pop-up canopies for parties and gatherings. Browse rental options and request a quote directly online.">
-  <title>Regal Rentals | Tables, Chairs & Canopies for Your Event</title>
+  <meta name="theme-color" content="#ffffff">
+  <meta name="description" content="Regal Rentals offers tables, white folding chairs and event canopies for your next party. Browse rentals, explore packages, and request a personalized quote online.">
+  <meta property="og:title" content="Regal Rentals | Party Rentals Made Simple">
+  <meta property="og:description" content="Tables, chairs, and canopies for celebrations big and small.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://regal.rentals/">
+  <title>Regal Rentals | Party Rentals Made Simple</title>
   <link rel="canonical" href="https://regal.rentals/">
   <link rel="icon" href="/assets/favicon.png" type="image/png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="preconnect" href="https://images.unsplash.com">
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/launch-home.css">
-  <script src="/launch-home.js" defer></script>
+  <link rel="preconnect" href="https://images.pexels.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+  <!-- Critical layout stays legible while external CSS loads. -->
+  <style>
+    html{box-sizing:border-box}*,*:before,*:after{box-sizing:inherit}
+    body{margin:0;font-family:"DM Sans",Arial,sans-serif;color:#241632;background:#fff}
+    .site-wrap{width:min(1180px,calc(100% - 36px));margin-inline:auto}
+    .site-header{background:#fff;border-bottom:1px solid #eee7e0}
+    .site-header__inner{display:flex;align-items:center;justify-content:space-between;min-height:76px;gap:16px}
+    .site-brand{display:inline-flex;gap:10px;align-items:center;text-decoration:none;color:#241632}
+    .site-brand img{width:44px;height:48px;object-fit:contain}
+    .site-brand__name{font-family:Georgia,serif;font-size:clamp(20px,4.5vw,26px);font-weight:700}
+    .menu-toggle{width:44px;height:44px;border:1px solid #e9e0dc;background:white;color:#271337;border-radius:7px;font-size:23px}
+    .hero__content{padding:66px 0}
+    .hero h1{font-family:Georgia,serif;font-size:clamp(40px,8vw,66px);line-height:1.12;margin:12px 0 20px}
+    .hero__lead{max-width:490px;line-height:1.8}
+    .trust__grid{display:flex;gap:12px;padding:18px 0}
+    .trust__item{flex:1;min-width:0}
+    .trust__item svg{width:28px;height:28px;stroke:#a77b3c;stroke-width:2;flex:none}
+    .trust__item strong{display:block;font-size:12px}.trust__item span{display:block;font-size:11px;line-height:1.5}
+    .products-grid,.packages-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+    .product-card,.package-card{min-width:0;border:1px solid #e7e1db;padding:10px}
+    .product-card__image img{width:100%;height:auto}
+    @media(min-width:800px){.products-grid,.packages-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+    .btn{display:inline-flex;align-items:center;justify-content:center;text-decoration:none;min-height:49px;padding:13px 21px;border-radius:5px;font-weight:700}
+    .btn--primary{color:#fff;background:#2c1745}
+    @media(max-width:760px){.main-nav{display:none}.hero__content{padding:52px 0}.hero h1{max-width:390px}}
+  </style>
+  <!-- Unique asset names avoid stale cached styles/scripts from previous launches. -->
+  <link rel="stylesheet" href="/regal-home-20261009.css">
+  <script src="/regal-home-20261009.js" defer></script>
 </head>
 <body>
-  <a class="skip-link" href="#main">Skip to content</a>
-  <header class="header">
-    <div class="shell header__inside">
-      <a class="brand" href="/" aria-label="Regal Rentals, home">
-        <img src="/assets/regal-shield.png" width="44" height="44" alt="">
-        <span class="brand__type">Regal<span>Rentals</span></span>
-      </a>
-      <button class="menu-button" type="button" aria-expanded="false" aria-controls="nav"><span class="menu-lines" aria-hidden="true"></span><span class="sr-only">Toggle menu</span></button>
-      <nav class="nav" id="nav" aria-label="Main menu">
-        <a href="#equipment">Equipment</a>
-        <a href="#packages">Packages</a>
-        <a href="#how">How it works</a>
-        <a class="nav__cta" href="#quote">Get a quote <span aria-hidden="true">↗</span></a>
-      </nav>
-    </div>
-  </header>
-
-  <main id="main">
-    <section class="hero">
-      <div class="shell hero__grid">
-        <div class="hero__text">
-          <span class="eyebrow"><span class="eyebrow__dot"></span> Event essentials, made simple</span>
-          <h1>Everything you need to <span>bring people together.</span></h1>
-          <p>Quality tables, chairs, and canopies for birthdays, backyard parties, family gatherings, and more. Straightforward rentals, personalized service.</p>
-          <div class="hero__actions">
-            <a class="btn btn--primary" href="#quote">Request a quote <span aria-hidden="true">→</span></a>
-            <a class="btn btn--outline" href="#equipment">See our equipment</a>
-          </div>
-          <div class="hero__badges">
-            <span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg> Quality event essentials</span>
-            <span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg> Flexible package options</span>
-          </div>
-        </div>
-        <figure class="hero__photo">
-          <img src="https://images.unsplash.com/photo-1557296440-0dc5e8ba9bc8?auto=format&fit=crop&w=1200&q=82" alt="Outdoor celebration setup with white tables and chairs among trees" width="1200" height="900" fetchpriority="high">
-          <figcaption>Event inspiration photo · Ask us about available equipment</figcaption>
-        </figure>
+<a class="skip-link" href="#content">Skip to content</a>
+<header class="site-header" id="top">
+  <div class="site-wrap site-header__inner">
+    <a class="site-brand" href="#top" aria-label="Regal Rentals home">
+      <img src="/assets/regal-shield.png" alt="" width="44" height="48">
+      <span class="site-brand__name">Regal Rentals</span>
+    </a>
+    <nav class="main-nav" id="main-nav" aria-label="Main navigation">
+      <a href="#equipment">Equipment</a>
+      <a href="#packages">Packages</a>
+      <a href="#how-it-works">How it works</a>
+      <a class="nav-request" href="#quote">Request a quote <span aria-hidden="true">↗</span></a>
+    </nav>
+    <button class="menu-toggle" type="button" aria-controls="main-nav" aria-expanded="false" aria-label="Open menu"><span class="menu-toggle__lines" aria-hidden="true">☰</span></button>
+  </div>
+</header>
+<main id="content">
+  <section class="hero" aria-labelledby="hero-title">
+    <div class="hero__photo" role="img" aria-label="Outdoor event inspiration with white chairs and tables beneath a white canopy"></div>
+    <div class="hero__wash" aria-hidden="true"></div>
+    <div class="site-wrap hero__content">
+      <div class="hero__eyebrow">EVENTS ARE BETTER TOGETHER</div>
+      <h1 id="hero-title">Party Rentals<br>Made Simple.</h1>
+      <p class="hero__lead">Tables, chairs, and canopies for birthdays, backyard parties, family gatherings, and more.</p>
+      <div class="hero__actions">
+        <a href="#equipment" class="btn btn--primary">Browse Equipment <span aria-hidden="true">→</span></a>
+        <a href="#quote" class="btn btn--outline">Request a Quote</a>
       </div>
-    </section>
+      <p class="hero__photo-note">Event inspiration photo · Product images are illustrative</p>
+    </div>
+  </section>
 
-    <section class="confidence" aria-label="Our approach">
-      <div class="shell confidence__grid">
+  <section class="trust" aria-label="What to expect">
+    <div class="site-wrap trust__grid">
+      <div class="trust__item">
+        <svg viewBox="0 0 32 32" fill="none" aria-hidden="true"><rect x="5" y="7" width="22" height="21" rx="3"/><path d="M10 4v6M22 4v6M5 14h22M11 20h4"/></svg>
         <div><strong>Simple booking</strong><span>Tell us what you need. We'll put together your quote.</span></div>
-        <div><strong>Honest availability</strong><span>Every rental is confirmed by our team.</span></div>
-        <div><strong>Delivery & setup</strong><span>Ask us about options for your event.</span></div>
       </div>
-    </section>
-
-    <section class="section equipment" id="equipment">
-      <div class="shell">
-        <div class="section__heading">
-          <div><span class="section__kicker">OUR RENTAL COLLECTION</span><h2>The essentials for<br>every kind of gathering.</h2></div>
-          <p>Start with a few pieces or outfit the whole party. Choose what you need and we'll confirm quantities, dates, and pricing.</p>
-        </div>
-        <div class="equipment__grid">
-          <article class="item">
-            <div class="item__icon" aria-hidden="true"><span>01</span><strong>CHAIRS</strong></div>
-            <div class="item__content"><div class="item__title"><h3>White Folding Chairs</h3><span>Up to 100</span></div><p>Clean, simple seating that fits nearly any occasion.</p><a href="#quote" data-item="White folding chairs">Add to my quote <span aria-hidden="true">→</span></a></div>
-          </article>
-          <article class="item">
-            <div class="item__icon" aria-hidden="true"><span>02</span><strong>ROUND TABLES</strong></div>
-            <div class="item__content"><div class="item__title"><h3>60″ Round Tables</h3><span>Up to 8</span></div><p>Great for dining, conversations, and guest seating.</p><a href="#quote" data-item="60-inch round tables">Add to my quote <span aria-hidden="true">→</span></a></div>
-          </article>
-          <article class="item">
-            <div class="item__icon" aria-hidden="true"><span>03</span><strong>6 FOOT TABLES</strong></div>
-            <div class="item__content"><div class="item__title"><h3>6′ Rectangle Tables</h3><span>Up to 2</span></div><p>Perfect for buffets, gifts, serving, or displays.</p><a href="#quote" data-item="6-foot rectangle tables">Add to my quote <span aria-hidden="true">→</span></a></div>
-          </article>
-          <article class="item">
-            <div class="item__icon item__icon--canopy" aria-hidden="true"><span>04</span><strong>10 × 10</strong></div>
-            <div class="item__content"><div class="item__title"><h3>10×10 Pop-Up Canopy</h3><span>Shade</span></div><p>Flexible shade for a smaller outdoor setup.</p><a href="#quote" data-item="10x10 canopy">Add to my quote <span aria-hidden="true">→</span></a></div>
-          </article>
-          <article class="item">
-            <div class="item__icon item__icon--canopy" aria-hidden="true"><span>05</span><strong>10 × 20</strong></div>
-            <div class="item__content"><div class="item__title"><h3>10×20 Eurmax Canopy</h3><span>Shade</span></div><p>More coverage for guests and outdoor stations.</p><a href="#quote" data-item="10x20 canopy">Add to my quote <span aria-hidden="true">→</span></a></div>
-          </article>
-        </div>
-        <p class="equipment__footnote">Product photos and detailed pricing are being added. We’ll confirm the exact equipment and total cost before you book.</p>
+      <div class="trust__item">
+        <svg viewBox="0 0 32 32" fill="none" aria-hidden="true"><circle cx="16" cy="16" r="12"/><path d="m9 16 5 5 9-10"/></svg>
+        <div><strong>Honest availability</strong><span>We confirm every rental before you commit.</span></div>
       </div>
-    </section>
-
-    <section class="section packages" id="packages">
-      <div class="shell">
-        <div class="section__heading"><div><span class="section__kicker">RENTAL PACKAGES</span><h2>A great place to start.</h2></div><p>Our most practical combinations. Customize any package to fit the occasion.</p></div>
-        <div class="package__grid">
-          <article class="package">
-            <div class="package__top"><span>01 / SMALL EVENTS</span><h3>Backyard Essentials</h3><p>An easy setup for close friends and family.</p></div>
-            <ul><li>2 round tables</li><li>16 white folding chairs</li><li>Add shade or other tables as needed</li></ul>
-            <div class="package__bottom"><span>Quote based on your event</span><a href="#quote" data-package="Backyard Essentials">Request package <span aria-hidden="true">→</span></a></div>
-          </article>
-          <article class="package package--highlight">
-            <div class="package__top"><span>02 / MORE ROOM</span><h3>Party Ready</h3><p>Room for a larger group to gather.</p></div>
-            <ul><li>4 round tables</li><li>32 white folding chairs</li><li>Add a canopy if you need shade</li></ul>
-            <div class="package__bottom"><span>Quote based on your event</span><a href="#quote" data-package="Party Ready">Request package <span aria-hidden="true">→</span></a></div>
-          </article>
-          <article class="package">
-            <div class="package__top"><span>03 / OUTDOOR EVENTS</span><h3>Shade & Serve</h3><p>Coverage and space for your outdoor setup.</p></div>
-            <ul><li>1 commercial-style 10×20 canopy</li><li>2 six-foot tables</li><li>Chairs available as an add-on</li></ul>
-            <div class="package__bottom"><span>Quote based on your event</span><a href="#quote" data-package="Shade & Serve">Request package <span aria-hidden="true">→</span></a></div>
-          </article>
-        </div>
-        <p class="package__note">All packages are subject to availability. Delivery, setup, applicable fees, and total price are included in your personalized quote.</p>
+      <div class="trust__item">
+        <svg viewBox="0 0 32 32" fill="none" aria-hidden="true"><path d="M3 9h17v15H3zM20 14h5l4 5v5h-9z"/><circle cx="9" cy="25" r="3"/><circle cx="25" cy="25" r="3"/></svg>
+        <div><strong>Delivery &amp; setup</strong><span>Ask about convenient options for your event.</span></div>
       </div>
-    </section>
-
-    <section class="section how" id="how">
-      <div class="shell how__grid">
-        <div><span class="section__kicker">HOW RENTING WORKS</span><h2>Three easy steps,<br>then you're all set.</h2><p>We’ll handle the details directly, without a complicated checkout process.</p></div>
-        <ol>
-          <li><b>01</b><div><h3>Tell us about your event.</h3><p>Fill out the form with your date, location, and rental needs.</p></div></li>
-          <li><b>02</b><div><h3>Get a personal quote.</h3><p>We confirm availability, pricing, and delivery or setup options.</p></div></li>
-          <li><b>03</b><div><h3>Confirm your booking.</h3><p>Sign the rental agreement and pay securely using the link we send.</p></div></li>
-        </ol>
-      </div>
-    </section>
-
-    <section class="section quote" id="quote">
-      <div class="shell quote__grid">
-        <div class="quote__intro">
-          <span class="section__kicker">LET'S PLAN YOUR EVENT</span>
-          <h2>Ready to get started?</h2>
-          <p>Send your rental request right here. We'll review the details and follow up with a quote.</p>
-          <div class="quote__email"><span>Questions? Email us</span><a href="mailto:bookings@regal.rentals">bookings@regal.rentals <span aria-hidden="true">↗</span></a></div>
-          <p class="quote__note">A quote request is not a reservation. Equipment is only held after we confirm the booking.</p>
-        </div>
-        <div class="form-panel">
-          <h3>Request a free quote</h3>
-          <p>Just a few details — no commitment required.</p>
-          <form id="quote-form" novalidate>
-            <div class="form-fields">
-              <label>Name <span>*</span><input name="name" type="text" autocomplete="name" maxlength="120" placeholder="Your name" required></label>
-              <label>Email <span>*</span><input name="email" type="email" autocomplete="email" maxlength="180" placeholder="you@example.com" required></label>
-              <label>Event date <span>*</span><input name="date" type="date" required></label>
-              <label>Event city <span>*</span><input name="city" type="text" autocomplete="address-level2" maxlength="120" placeholder="City" required></label>
-              <label>Phone (optional)<input name="phone" type="tel" autocomplete="tel" maxlength="35" placeholder="(555) 123-4567"></label>
-              <label>Package (optional)<select name="package" id="package-select"><option value="">Choose your package</option><option>Backyard Essentials</option><option>Party Ready</option><option>Shade &amp; Serve</option><option>Custom rental</option></select></label>
-            </div>
-            <fieldset class="interest"><legend>What equipment do you need?</legend>
-              <label><input type="checkbox" name="item" value="White folding chairs"><span>Chairs</span></label>
-              <label><input type="checkbox" name="item" value="60-inch round tables"><span>Round tables</span></label>
-              <label><input type="checkbox" name="item" value="6-foot rectangle tables"><span>6′ tables</span></label>
-              <label><input type="checkbox" name="item" value="10x10 canopy"><span>10×10 canopy</span></label>
-              <label><input type="checkbox" name="item" value="10x20 canopy"><span>10×20 canopy</span></label>
-            </fieldset>
-            <label class="details">Anything else we should know?<textarea name="details" maxlength="2500" rows="4" placeholder="How many guests? Quantities? Delivery or setup needs?"></textarea></label>
-            <div class="sr-only" aria-hidden="true"><label>Leave empty<input type="text" tabindex="-1" autocomplete="off" name="website"></label></div>
-            <button class="btn btn--primary form-submit" type="submit"><span>Send quote request</span><span aria-hidden="true">→</span></button>
-            <p class="form-status" role="status" aria-live="polite" id="form-status">Your request goes directly to Regal Rentals. We'll confirm availability and get back to you.</p>
-            <div class="form-success" id="form-success" role="status" hidden>
-              <strong>Request received.</strong>
-              <p>Thanks! Your inquiry has been saved. We'll review the details and follow up by email.</p>
-              <p>Reference: <span id="form-reference"></span></p>
-              <button class="reset-button" type="button" id="new-inquiry">Send another request</button>
-            </div>
-          </form>
-        </div>
-      </div>
-    </section>
-  </main>
-  <footer class="footer">
-    <div class="shell footer__inside">
-      <a href="/" class="brand brand--footer" aria-label="Regal Rentals home"><img src="/assets/regal-shield.png" width="42" height="42" alt=""><span class="brand__type">Regal<span>Rentals</span></span></a>
-      <span>Event essentials for the moments that matter.</span>
-      <a href="mailto:bookings@regal.rentals">bookings@regal.rentals</a>
     </div>
-    <div class="shell footer__bottom">© <span id="year">2026</span> Regal Rentals. All rights reserved.</div>
-  </footer>
+  </section>
+
+  <section class="section equipment" id="equipment" aria-labelledby="equipment-title">
+    <div class="site-wrap">
+      <header class="section-heading">
+        <div><span class="kicker">OUR RENTAL COLLECTION</span><h2 id="equipment-title">Everything you need<br>for a great event.</h2></div>
+        <p>Choose the pieces you need. We’ll confirm availability and provide a personalized quote.</p>
+      </header>
+      <div class="products-grid">
+        <article class="product-card">
+          <div class="product-card__image"><img loading="lazy" src="/assets/regal-chair.svg" alt="Illustration of a white folding chair" width="420" height="290"></div>
+          <div class="product-card__details"><h3>White Folding Chairs</h3><p>Comfortable, classic seating for almost any occasion.</p><span class="availability-note">Up to 100 chairs</span><a data-item="White folding chairs" href="#quote">Add to Quote <span aria-hidden="true">→</span></a></div>
+        </article>
+        <article class="product-card">
+          <div class="product-card__image"><img loading="lazy" src="/assets/regal-round-table.svg" alt="Illustration of a 60-inch round folding table" width="420" height="290"></div>
+          <div class="product-card__details"><h3>60″ Round Tables</h3><p>Room for guests to gather, dine, and enjoy.</p><span class="availability-note">Up to 8 tables</span><a data-item="60-inch round tables" href="#quote">Add to Quote <span aria-hidden="true">→</span></a></div>
+        </article>
+        <article class="product-card">
+          <div class="product-card__image"><img loading="lazy" src="/assets/regal-rectangle-table.svg" alt="Illustration of a 6-foot rectangle folding table" width="420" height="290"></div>
+          <div class="product-card__details"><h3>6′ Rectangle Tables</h3><p>Perfect for food stations, gifts, and displays.</p><span class="availability-note">Up to 2 tables</span><a data-item="6-foot rectangle tables" href="#quote">Add to Quote <span aria-hidden="true">→</span></a></div>
+        </article>
+        <article class="product-card product-card--canopy">
+          <div class="product-card__image"><img loading="lazy" src="/assets/regal-canopy-10.svg" alt="Illustration of a 10-by-10-foot white pop-up canopy" width="420" height="290"></div>
+          <div class="product-card__details"><h3>10×10 Pop-Up Canopy</h3><p>Easy shade for parties and outdoor gatherings.</p><a data-item="10x10 canopy" href="#quote">Add to Quote <span aria-hidden="true">→</span></a></div>
+        </article>
+        <article class="product-card product-card--canopy">
+          <div class="product-card__image"><img loading="lazy" src="/assets/regal-canopy-20.svg" alt="Illustration of a 10-by-20-foot white pop-up canopy" width="420" height="290"></div>
+          <div class="product-card__details"><h3>10×20 Eurmax Canopy</h3><p>More covered space for your outdoor event.</p><a data-item="10x20 canopy" href="#quote">Add to Quote <span aria-hidden="true">→</span></a></div>
+        </article>
+      </div>
+      <p class="collection-note">Illustrations represent equipment types. Final equipment, availability, delivery, and pricing are confirmed in your quote.</p>
+    </div>
+  </section>
+
+  <section class="section packages" id="packages" aria-labelledby="packages-title">
+    <div class="site-wrap">
+      <header class="section-heading section-heading--packages"><div><span class="kicker">POPULAR PACKAGES</span><h2 id="packages-title">Simple bundles for easy planning.</h2></div><p>Practical starting points—customize any package for your event.</p></header>
+      <div class="packages-grid">
+        <article class="package-card">
+          <div class="package-card__picture package-card__picture--backyard" aria-hidden="true"></div>
+          <div class="package-card__body"><span class="package-card__label">SMALL GATHERINGS</span><h3>Backyard Essentials</h3>
+          <ul><li>2 round tables</li><li>16 folding chairs</li><li>Optional extras</li></ul>
+          <a href="#quote" data-package="Backyard Essentials">Request This Package <span aria-hidden="true">→</span></a></div>
+        </article>
+        <article class="package-card">
+          <div class="package-card__picture package-card__picture--party" aria-hidden="true"></div>
+          <div class="package-card__body"><span class="package-card__label">MORE ROOM TO CELEBRATE</span><h3>Party Ready</h3>
+          <ul><li>4 round tables</li><li>32 folding chairs</li><li>Canopy available as an add-on</li></ul>
+          <a href="#quote" data-package="Party Ready">Request This Package <span aria-hidden="true">→</span></a></div>
+        </article>
+        <article class="package-card">
+          <div class="package-card__picture package-card__picture--shade" aria-hidden="true"></div>
+          <div class="package-card__body"><span class="package-card__label">COVERED OUTDOOR SPACE</span><h3>Shade &amp; Serve</h3>
+          <ul><li>1 × 10×20 canopy</li><li>2 rectangle tables</li><li>Optional seating</li></ul>
+          <a href="#quote" data-package="Shade & Serve">Request This Package <span aria-hidden="true">→</span></a></div>
+        </article>
+      </div>
+      <p class="collection-note">Packages are examples, not reserved inventory. Prices are quoted based on your location and event details.</p>
+    </div>
+  </section>
+
+  <section class="how-section" id="how-it-works" aria-labelledby="how-title">
+    <div class="site-wrap how-section__grid">
+      <div><span class="kicker">HOW IT WORKS</span><h2 id="how-title">Your event, without<br>the hassle.</h2><p>You'll work directly with us from your first question to your confirmed booking.</p></div>
+      <ol class="how-steps">
+        <li><span>01</span><div><strong>Tell us what you need.</strong><p>Select equipment, your date, and event location.</p></div></li>
+        <li><span>02</span><div><strong>Get a personalized quote.</strong><p>We'll verify availability and send the total cost.</p></div></li>
+        <li><span>03</span><div><strong>Confirm your reservation.</strong><p>Sign the agreement and pay securely through the link we send.</p></div></li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="section quote" id="quote" aria-labelledby="quote-title">
+    <div class="site-wrap quote__layout">
+      <div class="quote__intro">
+        <span class="kicker">REQUEST A QUOTE</span><h2 id="quote-title">Tell us about<br>your event.</h2>
+        <p>Share a few details and we'll get back to you with a custom quote and availability.</p>
+        <div class="quote__email"><span>Prefer email?</span><a href="mailto:bookings@regal.rentals">bookings@regal.rentals ↗</a></div>
+        <p class="quote__disclaimer">Sending an inquiry doesn't reserve equipment. We confirm all bookings personally.</p>
+      </div>
+      <div class="quote-form-card">
+        <form id="quote-form" novalidate>
+          <div class="form-grid">
+            <label>Full name <span aria-hidden="true">*</span><input name="name" type="text" required maxlength="120" autocomplete="name" placeholder="Your name"></label>
+            <label>Email address <span aria-hidden="true">*</span><input name="email" type="email" required maxlength="180" autocomplete="email" placeholder="you@example.com"></label>
+            <label>Event date <span aria-hidden="true">*</span><input name="date" type="date" required></label>
+            <label>Event city <span aria-hidden="true">*</span><input name="city" type="text" maxlength="120" required autocomplete="address-level2" placeholder="Where is your event?"></label>
+            <label>Phone (optional)<input name="phone" type="tel" maxlength="35" autocomplete="tel" placeholder="Only if you'd like a call"></label>
+            <label>Rental package (optional)<select name="package" id="package-select"><option value="">Select a package</option><option>Backyard Essentials</option><option>Party Ready</option><option>Shade &amp; Serve</option><option>Custom rental</option></select></label>
+          </div>
+          <fieldset class="equipment-interest"><legend>I'm interested in</legend>
+            <label><input type="checkbox" name="item" value="White folding chairs"><span>Chairs</span></label>
+            <label><input type="checkbox" name="item" value="60-inch round tables"><span>Round tables</span></label>
+            <label><input type="checkbox" name="item" value="6-foot rectangle tables"><span>6′ tables</span></label>
+            <label><input type="checkbox" name="item" value="10x10 canopy"><span>10×10 canopy</span></label>
+            <label><input type="checkbox" name="item" value="10x20 canopy"><span>10×20 canopy</span></label>
+          </fieldset>
+          <label class="form-details">Event details<textarea name="details" rows="4" maxlength="2500" placeholder="Guest count, equipment quantities, delivery needs, or anything else we should know…"></textarea></label>
+          <div class="sr-only" aria-hidden="true"><label>Leave blank<input name="website" type="text" autocomplete="off" tabindex="-1"></label></div>
+          <button class="btn btn--primary form-submit" type="submit"><span>Send Quote Request</span><span aria-hidden="true">→</span></button>
+          <p class="form-status" id="form-status" role="status" aria-live="polite">Your request is submitted directly to Regal Rentals.</p>
+          <div id="form-success" class="form-success" role="status" hidden>
+            <strong>We've received your request.</strong>
+            <p>Your inquiry is saved. We'll follow up by email with availability and a quote.</p>
+            <p>Reference: <span id="form-reference"></span></p>
+            <button id="new-inquiry" type="button" class="reset-button">Send another request</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </section>
+</main>
+<footer class="site-footer">
+  <div class="site-wrap site-footer__top">
+    <a class="site-brand site-brand--footer" href="#top"><img src="/assets/regal-shield.png" alt="" width="40" height="44"><span class="site-brand__name">Regal Rentals</span></a>
+    <p>Tables. Chairs. Canopies.<br>Great events start here.</p>
+    <a class="site-footer__email" href="mailto:bookings@regal.rentals">bookings@regal.rentals</a>
+  </div>
+  <div class="site-wrap site-footer__bottom"><span>© <span id="year">2026</span> Regal Rentals. All rights reserved.</span><span>Quotes and availability confirmed individually.</span></div>
+</footer>
 </body>
 </html>

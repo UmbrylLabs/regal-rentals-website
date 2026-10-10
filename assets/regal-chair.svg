@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 290" role="img"><rect width="420" height="290" fill="#f5f5f2"/><defs>
+ <linearGradient id="white" x1="0" x2=".2" y1="0" y2="1"><stop stop-color="#ffffff"/><stop offset=".55" stop-color="#f8f8f6"/><stop offset="1" stop-color="#e4e6e7"/></linearGradient>
+ <linearGradient id="edge" x1="0" x2="0" y1="0" y2="1"><stop stop-color="#eef0f0"/><stop offset="1" stop-color="#b5babc"/></linearGradient>
+ <linearGradient id="metal" x1="0" x2="1" y1="0" y2="0"><stop stop-color="#535963"/><stop offset=".47" stop-color="#a3a7ab"/><stop offset="1" stop-color="#545961"/></linearGradient>
+ <linearGradient id="tent" x1="0" x2=".8" y1="0" y2="1"><stop stop-color="#ffffff"/><stop offset=".65" stop-color="#f4f1ea"/><stop offset="1" stop-color="#cfd4d5"/></linearGradient>
+ <linearGradient id="lawn" x1="0" x2="0" y1="0" y2="1"><stop stop-color="#e8eee1"/><stop offset="1" stop-color="#d0ddc4"/></linearGradient>
+ <filter id="shadow" x="-30%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="6"/></filter>
+</defs>
+ <ellipse cx="212" cy="253" rx="100" ry="11" fill="#2b3040" opacity=".12" filter="url(#shadow)"/>
+ <g stroke-linecap="round" stroke-linejoin="round">
+ <path d="M148 116 133 250" stroke="url(#metal)" stroke-width="9"/>
+ <path d="M262 116 278 250" stroke="url(#metal)" stroke-width="9"/>
+ <path d="M162 172 264 239M265 172 158 240" stroke="url(#metal)" stroke-width="8"/>
+ <path d="M151 109 264 109 257 129 159 129Z" fill="#f5f5f2" stroke="#a7afb5" stroke-width="3"/>
+ <path d="M148 124 266 124 275 151 137 151Z" fill="url(#white)" stroke="#bbc1c2" stroke-width="3"/>
+ <path d="M142 42q0-13 13-13h111q13 0 13 13l-5 78q-1 12-14 12H151q-12 0-13-12Z" fill="url(#white)" stroke="#abb4b9" stroke-width="4"/>
+ <path d="M157 47h105q3 0 3 4l-3 53q-1 7-8 7h-89q-7 0-8-7l-3-53q-1-4 3-4Z" fill="#fdfdfc" stroke="#dde2e3" stroke-width="2"/>
+ <path d="M157 135 151 240M259 135l8 105" stroke="url(#metal)" stroke-width="9"/>
+ <path d="M150 245h14M260 245h14M129 255h13M273 255h14" stroke="#646c72" stroke-width="9"/>
+ </g></svg>

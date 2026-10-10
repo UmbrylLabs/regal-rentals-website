@@ -58,6 +58,8 @@ jobs:
         run: node tests/test_square_payment_policy.mjs
       - name: Test Square payment interfaces
         run: node tests/test_square_payment_ui.mjs
+      - name: Test Regal storefront structure
+        run: node tests/test_storefront_concept.mjs
       - name: Test website inquiry submissions
         run: node tests/test_website_inquiries.mjs
       - name: Check JavaScript syntax
@@ -68,3 +70,4 @@ jobs:
           node --check sign-review.js
           node --check pay.js
           node --check launch-home.js
+          node --check regal-home-20261009.js
