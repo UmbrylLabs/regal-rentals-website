@@ -34,6 +34,14 @@
     .hero__content{padding:66px 0}
     .hero h1{font-family:Georgia,serif;font-size:clamp(40px,8vw,66px);line-height:1.12;margin:12px 0 20px}
     .hero__lead{max-width:490px;line-height:1.8}
+    .trust__grid{display:flex;gap:12px;padding:18px 0}
+    .trust__item{flex:1;min-width:0}
+    .trust__item svg{width:28px;height:28px;stroke:#a77b3c;stroke-width:2;flex:none}
+    .trust__item strong{display:block;font-size:12px}.trust__item span{display:block;font-size:11px;line-height:1.5}
+    .products-grid,.packages-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+    .product-card,.package-card{min-width:0;border:1px solid #e7e1db;padding:10px}
+    .product-card__image img{width:100%;height:auto}
+    @media(min-width:800px){.products-grid,.packages-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
     .btn{display:inline-flex;align-items:center;justify-content:center;text-decoration:none;min-height:49px;padding:13px 21px;border-radius:5px;font-weight:700}
     .btn--primary{color:#fff;background:#2c1745}
     @media(max-width:760px){.main-nav{display:none}.hero__content{padding:52px 0}.hero h1{max-width:390px}}
