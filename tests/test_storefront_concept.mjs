@@ -37,15 +37,15 @@ assert.match(html,/id="catalog-quote-count"/);
 assert.match(html,/id="mobile-quote-bar"/);
 assert.match(js,/function applyCatalogFilter\(\)/);
 assert.match(js,/function productCategory\(product\)/);
-assert.match(js,/activeCategory===\x27packages\x27/);
+assert.match(js,/activeCategory==='packages'/);
 assert.match(js,/card\.hidden=!match/);
 assert.match(js,/catalogQuoteCount\.textContent/);
 assert.match(catalogCss,/\.catalog-chips \{/);
 assert.match(catalogCss,/overflow-x:auto/);
 assert.match(catalogCss,/\.mobile-quote-bar \{/);
 assert.match(catalogCss,/position:fixed/);
-for(const category of [\x27all\x27,\x27packages\x27,\x27chairs\x27,\x27tables\x27,\x27canopies\x27]) {
- assert.ok(html.includes(\x27data-catalog-filter="\x27+category+\x27"\x27),\x27Missing category filter: \x27+category);
+for(const category of ['all','packages','chairs','tables','canopies']) {
+ assert.ok(html.includes('data-catalog-filter="'+category+'"'),'Missing category filter: '+category);
 }
 
 assert.match(html,/id="quote-form"/);
