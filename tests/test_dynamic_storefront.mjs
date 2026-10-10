@@ -15,7 +15,7 @@ const rows={
  ],
  packages:[
  {id:'package-good',name:'Party Ready',description:'Bundle',image_url:'',items_json:'[{"productId":"chair-1","quantity":12},{"productId":"table-1","quantity":2}]',price_cents:null,sort_order:1,active:1},
- {id:'package-bad',name:'Unavailable',description:'Hidden',image_url:'',items_json:'[{"productId":"table-1","quantity":999}]',price_cents:null,sort_order:2,active:1},
+ {id:'package-bad',name:'Large Quantity Package',description:'By request',image_url:'',items_json:'[{"productId":"table-1","quantity":999}]',price_cents:null,sort_order:2,active:1},
  {id:'package-draft',name:'Draft',description:'Hidden',image_url:'',items_json:'[]',price_cents:null,sort_order:3,active:0}
  ]
 };
@@ -42,7 +42,8 @@ const response=await getStorefront({env:{DB:db}});
 assert.equal(response.status,200);
 const json=await response.json();
 assert.equal(json.products.length,2);
-assert.equal(json.packages.length,1);
+assert.equal(json.packages.length,2);
+assert.equal(json.packages[1].items[0].quantity,999);
 assert.equal(json.packages[0].id,'package-good');
 assert.equal(response.headers.get('cache-control'),'no-store, max-age=0');
 
@@ -67,9 +68,17 @@ assert.ok(write);
 assert.deepEqual(JSON.parse(write.args[8]),['17 × White Chair','2 × Round Table']);
 assert.equal(write.args[7],'Party Ready');
 
-const tooMany=await submit({...base,selectedItems:[{productId:'table-1',quantity:7}]});
-assert.equal(tooMany.res.status,400);
-assert.equal(tooMany.calls.some(x=>x.sql.includes('INSERT INTO website_inquiries (')),false);
+const aboveOwned=await submit({...base,selectedItems:[{productId:'table-1',quantity:7}]});
+assert.equal(aboveOwned.res.status,201);
+assert.deepEqual(JSON.parse(aboveOwned.calls.find(x=>x.sql.includes('INSERT INTO website_inquiries (')).args[8]),['7 × Round Table']);
+const customHundreds=await submit({...base,selectedItems:[{productId:'chair-1',quantity:325}]});
+assert.equal(customHundreds.res.status,201);
+const invalidZero=await submit({...base,selectedItems:[{productId:'table-1',quantity:0}]});
+assert.equal(invalidZero.res.status,400);
+const invalidFraction=await submit({...base,selectedItems:[{productId:'table-1',quantity:2.5}]});
+assert.equal(invalidFraction.res.status,400);
+const invalidHuge=await submit({...base,selectedItems:[{productId:'table-1',quantity:1000001}]});
+assert.equal(invalidHuge.res.status,400);
 const badId=await submit({...base,selectedItems:[{productId:'invalid',quantity:1}]});
 assert.equal(badId.res.status,400);
 const badPkg=await submit({...base,packageId:'package-draft',selectedItems:[]});
@@ -77,4 +86,7 @@ assert.equal(badPkg.res.status,400);
 const packageOnly=await submit({...base,packageId:'package-good',selectedItems:[]});
 assert.equal(packageOnly.res.status,201);
 assert.deepEqual(JSON.parse(packageOnly.calls.find(x=>x.sql.includes('INSERT INTO website_inquiries (')).args[8]),['12 × White Chair','2 × Round Table']);
+const overOwnedPackage=await submit({...base,packageId:'package-bad',selectedItems:[]});
+assert.equal(overOwnedPackage.res.status,201);
+assert.deepEqual(JSON.parse(overOwnedPackage.calls.find(x=>x.sql.includes('INSERT INTO website_inquiries (')).args[8]),['999 × Round Table']);
 console.log('Dynamic storefront and quote cart submission validation passed.');

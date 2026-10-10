@@ -14,6 +14,12 @@
   const date=form?.elements.namedItem('date');
   let products=[],packages=[],loaded=false,chosenPackage=null;
   const cart=new Map();
+  // Quantities are requests, not stock allocations. Owner confirms at booking.
+  const MAX_REQUEST_QTY=1000000;
+  const qtyChoices=[1,2,4,6,8,10,20,50,100];
+  const validQty=value=>Number.isSafeInteger(Number(value))&&Number(value)>=1&&Number(value)<=MAX_REQUEST_QTY;
+  const qtyOptions=value=>qtyChoices.map(q=>'<option value="'+q+'"'+(Number(value)===q?' selected':'')+'>'+q+'</option>').join('')+
+    '<option value="custom"'+(qtyChoices.includes(Number(value))?'':' selected')+'>Custom…</option>';
 
   const esc=v=>String(v??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;')
     .replaceAll('"','&quot;').replaceAll("'",'&#39;');
@@ -63,7 +69,7 @@
       '<div class="quote-line" data-cart-id="'+esc(id)+'"><div class="quote-line__title"><strong>'+
       esc(product.name)+'</strong><span>'+esc(product.priceCents===null?'Custom quote':money(product.priceCents)+' each')+
       '</span></div><div class="quote-line__actions"><label>Qty <input aria-label="Quantity for '+
-      esc(product.name)+'" type="number" min="1" max="'+Number(product.quantityOwned)+'" step="1" value="'+
+      esc(product.name)+'" type="number" min="1" step="1" inputmode="numeric" value="'+
       quantity+'" data-cart-qty="'+esc(id)+'"></label><button type="button" data-cart-remove="'+
       esc(id)+'" aria-label="Remove '+esc(product.name)+'">Remove</button></div></div>'
     ).join(''):'<p>Select items or a package above to get started.</p>';
@@ -71,8 +77,8 @@
   function addItem(id,quantity=1) {
     const product=products.find(p=>p.id===id);
     if(!product)return;
-    const next=Math.min(product.quantityOwned,(cart.get(id)||0)+quantity);
-    if(next<1)return;
+    const next=(cart.get(id)||0)+quantity;
+    if(!validQty(next))return;
     cart.set(id,next);renderCart();
   }
   function choosePackage(pkg) {
@@ -93,8 +99,11 @@
       '<div class="product-card__details"><h3>'+esc(p.name)+'</h3><p>'+
       esc(p.description||'Ask us about this rental for your event.')+'</p>'+
       '<span class="availability-note">'+(p.priceCents===null?'Price on request':esc(money(p.priceCents)))+
-      ' · '+Number(p.quantityOwned)+' owned</span><button class="add-to-quote" type="button" data-product-add="'+
-      esc(p.id)+'">Add to Quote <span aria-hidden="true">→</span></button></div></article>'
+      ' · Availability confirmed by quote</span>'+
+      '<div class="product-quantity"><label for="qty-'+esc(p.id)+'">Quantity</label>'+
+      '<select data-quantity-preset="'+esc(p.id)+'" aria-label="Quick quantity for '+esc(p.name)+'">'+qtyOptions(1)+'</select>'+
+      '<input id="qty-'+esc(p.id)+'" type="number" min="1" step="1" inputmode="numeric" value="1" data-product-quantity="'+esc(p.id)+'" aria-label="Type quantity for '+esc(p.name)+'"></div>'+
+      '<button class="add-to-quote" type="button" data-product-add="'+esc(p.id)+'">Add to Quote <span aria-hidden="true">→</span></button></div></article>'
     ).join('');
     if(!products.length)productGrid.innerHTML='<p>No rental items are currently published. Contact us about upcoming availability.</p>';
   }
@@ -138,11 +147,32 @@
       setStatus('Live inventory could not load. You can still request a custom quote below.',true);
     }
   };
+  productGrid?.addEventListener('change',event=>{
+    const preset=event.target.closest('[data-quantity-preset]');
+    if(!preset)return;
+    const input=[...productGrid.querySelectorAll('[data-product-quantity]')].find(x=>x.dataset.productQuantity===preset.dataset.quantityPreset);
+    if(!input)return;
+    if(preset.value!=='custom')input.value=preset.value;
+    else {input.focus();input.select();}
+  });
+  productGrid?.addEventListener('input',event=>{
+    const field=event.target.closest('[data-product-quantity]');
+    if(!field)return;
+    const preset=[...productGrid.querySelectorAll('[data-quantity-preset]')].find(x=>x.dataset.quantityPreset===field.dataset.productQuantity);
+    if(preset)preset.value=qtyChoices.includes(Number(field.value))?field.value:'custom';
+  });
   productGrid?.addEventListener('click',event=>{
     const btn=event.target.closest('[data-product-add]');
-    if(!btn)return;addItem(btn.dataset.productAdd);
-    btn.textContent='Added — Add one more →';
-    setStatus('Added to your quote list. Adjust quantities below if needed.');
+    if(!btn)return;
+    const input=[...productGrid.querySelectorAll('[data-product-quantity]')].find(x=>x.dataset.productQuantity===btn.dataset.productAdd);
+    const quantity=Number(input?.value||1);
+    if(!validQty(quantity)){
+      setStatus('Enter a valid whole-number quantity before adding this item.',true);
+      input?.focus();return;
+    }
+    addItem(btn.dataset.productAdd,quantity);
+    btn.textContent='Added — Add more →';
+    setStatus('Added '+quantity+' item(s) to your quote list. Final quantities are confirmed before booking.');
   });
   packageGrid?.addEventListener('click',event=>{
     const btn=event.target.closest('[data-package-add]');
@@ -155,18 +185,20 @@
     const p=products.find(x=>x.id===input.dataset.cartQty);
     if(!p)return;
     const n=Number(input.value);
-    if(!Number.isInteger(n)||n<1||n>p.quantityOwned)return;
+    if(!validQty(n))return;
     cart.set(p.id,n);cartCount.textContent=String([...cart.values()].reduce((a,b)=>a+b,0))+' units selected';
   });
   cartNode?.addEventListener('change',event=>{
     const input=event.target.closest('[data-cart-qty]');if(!input)return;
     const p=products.find(x=>x.id===input.dataset.cartQty);if(!p)return;
-    const n=Math.min(p.quantityOwned,Math.max(1,Number(input.value)||1));
+    const n=validQty(input.value)?Number(input.value):(cart.get(p.id)||1);
     cart.set(p.id,n);renderCart();
   });
   cartNode?.addEventListener('click',event=>{
     const btn=event.target.closest('[data-cart-remove]');if(!btn)return;
-    cart.delete(btn.dataset.cartRemove);renderCart();
+    cart.delete(btn.dataset.cartRemove);
+    if(!cart.size){chosenPackage=null;if(packageSelect)packageSelect.value='';}
+    renderCart();
   });
   packageSelect?.addEventListener('change',()=>{
     if(!loaded)return;

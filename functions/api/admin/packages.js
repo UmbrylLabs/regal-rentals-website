@@ -19,7 +19,7 @@ function normalizePackage(body) {
     productId:typeof entry.productId === 'string' ? entry.productId.slice(0,120):'',
     quantity:Number(entry.quantity)
   }));
-  if (normalized.some(i=>!i.productId || !Number.isInteger(i.quantity) || i.quantity<1 || i.quantity>100000)
+  if (normalized.some(i=>!i.productId || !Number.isInteger(i.quantity) || i.quantity<1 || i.quantity>1000000)
       || new Set(normalized.map(x=>x.productId)).size!==normalized.length) throw new Error('INVALID_PACKAGE_ITEMS');
   return {name,description,imageUrl,active,sortOrder,priceCents,items:normalized};
 }
@@ -31,7 +31,7 @@ async function validateItems(db,pkg) {
   for(const item of pkg.items) {
     const product=products.get(item.productId);
     if (!product) throw new Error('INVALID_PACKAGE_ITEMS');
-    if (pkg.active && (!Number(product.active) || item.quantity>Number(product.quantity_owned))) {
+    if (pkg.active && !Number(product.active)) {
       throw new Error('PACKAGE_INVENTORY_UNAVAILABLE');
     }
   }
@@ -46,7 +46,7 @@ function failure(err) {
       INVALID_SORT_ORDER:'Enter a valid display order.',
       INVALID_PRICE:'Enter a valid price or leave blank.',
       INVALID_PACKAGE_ITEMS:'Select valid rental items and quantities for the package.',
-      PACKAGE_INVENTORY_UNAVAILABLE:'A selected item is not active or you do not own enough units to publish this package.'
+      PACKAGE_INVENTORY_UNAVAILABLE:'All included items must be active inventory products before publishing.'
     })[code]}},400);
   }
   return safeErrorResponse(err);

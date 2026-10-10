@@ -163,8 +163,17 @@
               </div>
               <div>
                 <h3>Included equipment</h3>
-                <p class="message">Choose quantities from the inventory you own.</p>
-                <div id="storefront-package-products" class="package-product-list"></div>
+                <p class="message">Add equipment directly from your existing Inventory list. Set how many each package includes; requests are confirmed before booking.</p>
+                <div class="package-add-inventory">
+                  <label for="package-inventory-select">Select inventory item
+                    <select id="package-inventory-select"><option value="">Choose an item…</option></select>
+                  </label>
+                  <label for="package-inventory-add-qty">Qty
+                    <input id="package-inventory-add-qty" type="number" min="1" step="1" inputmode="numeric" value="1">
+                  </label>
+                  <button id="add-package-inventory-item" class="button button--secondary" type="button">Add Item</button>
+                </div>
+                <div id="storefront-package-products" class="package-product-list" aria-live="polite"></div>
               </div>
               <label class="package-publish"><input type="checkbox" name="active"> <span>Publish this package on the public homepage</span></label>
               <div class="detail-actions">

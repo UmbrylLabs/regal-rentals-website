@@ -14,6 +14,18 @@ assert.match(css,/@media\(max-width:760px\)/);
 assert.match(css,/\.menu-open \.main-nav\{display:flex\}/);
 assert.match(js,/fetch\('\/api\/public\/inquiry'/);
 assert.match(js,/\/api\/public\/storefront/);
+assert.match(js,/data-quantity-preset/);
+assert.match(js,/data-product-quantity/);
+assert.match(js,/qtyChoices=\[1,2,4,6,8,10,20,50,100\]/);
+assert.doesNotMatch(js,/max="\"\+Number\(product\.quantityOwned\)/);
+const adminPage=read('admin/index.html');
+const packageEditor=read('admin/storefront-packages.js');
+assert.match(adminPage,/id="package-inventory-select"/);
+assert.match(adminPage,/id="add-package-inventory-item"/);
+assert.match(adminPage,/id="package-inventory-add-qty"/);
+assert.match(packageEditor,/selectedItems\.set\(id,Number\(inventoryQty\.value\)\)/);
+assert.match(packageEditor,/data-package-item-remove/);
+
 assert.match(html,/id="quote-cart"/);
 assert.match(html,/id="storefront-products"/);
 assert.match(html,/id="storefront-packages"/);

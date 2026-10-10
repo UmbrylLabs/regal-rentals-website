@@ -6,11 +6,18 @@
 .package-state{padding:5px 9px;border-radius:30px;background:#e5e4e7;color:#504b56;font-size:11px;font-weight:800;white-space:nowrap}
 .package-state--live{background:#e0f3e9;color:#207445}
 .package-admin-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
-.package-product-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:12px}
-.package-product-option{display:flex;flex-direction:row;justify-content:space-between;align-items:center;gap:15px;padding:13px;border:1px solid var(--line);border-radius:12px}
-.package-product-option span{display:grid;gap:4px}
-.package-product-option small{color:var(--muted)}
-.package-product-option input{width:80px;text-align:center;flex:0 0 80px}
+.package-add-inventory{display:grid;grid-template-columns:minmax(0,1fr) 100px auto;gap:11px;align-items:end;margin:16px 0 18px}
+.package-add-inventory label{display:grid;gap:7px;font-size:12px;font-weight:800}
+.package-add-inventory select,.package-add-inventory input{width:100%;min-height:42px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:#fff;font-size:13px;font-weight:500;color:inherit}
+.package-add-inventory button{height:42px}
+.package-product-list{display:grid;grid-template-columns:1fr;gap:9px;margin-top:12px}
+.package-product-option{display:flex;justify-content:space-between;align-items:center;gap:14px;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:#fff}
+.package-product-option>span{display:grid;gap:5px;min-width:0;flex:1}
+.package-product-option small{font-size:11px;color:var(--muted);line-height:1.5}
+.package-product-option label{display:flex;align-items:center;gap:8px;flex:0 0 auto;font-size:12px}
+.package-product-option input{width:93px;min-width:0;text-align:center;height:42px}
+.package-product-option button{flex:0 0 auto}
+@media(max-width:700px){.package-add-inventory{grid-template-columns:minmax(0,1fr) 90px}.package-add-inventory button{grid-column:1/-1}.package-product-option{flex-wrap:wrap}.package-product-option>span{flex-basis:100%}}
 .package-publish{display:flex;align-items:center;flex-direction:row;gap:9px;font-size:14px}
 .package-publish input{width:18px;height:18px}
 @media(max-width:850px){.package-admin-grid,.package-product-list{grid-template-columns:1fr}}

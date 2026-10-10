@@ -15,25 +15,27 @@ The site uses the same inventory records as your booking backend.
 ## Packages
 Open **Packages** → **Add Package**.
 - Add name, description, optional image URL, optional package price.
-- Select product quantities from the *actual* inventory.
+- Use the **Add from Inventory** dropdown to select an existing product, type an included quantity and click **Add Item**. Each selected row can be edited or removed.
 - Check **Publish this package on the public homepage** and Save.
 - A draft stays private. An unpublished package disappears from the homepage.
 - Existing three sample package cards remain on the website until the first
   package is published, so the initial page is not left empty during setup.
   Once one or more real packages are published, they replace the samples.
 
-Published packages can only include active products with enough owned units.
-A bundle is hidden automatically if a later inventory edit makes its contents
-unavailable. This does **not** place a date-based inventory hold.
+Published packages contain active inventory items, and can include requested
+quantities above current stock. The owner confirms availability before booking.
+A bundle is hidden automatically if an included product becomes inactive. This does **not** place a date-based inventory hold.
 
 ## Customer quote list
-The homepage's **Add to Quote** buttons add one unit each time they're clicked.
+Each product card has a quick quantity dropdown (1, 2, 4, etc.) and a number
+field where customers can type their own positive whole-number quantity.
+**Add to Quote** adds that number of requested units.
 A package replaces the current selection with its included inventory, and
 customers can then add more equipment. The quote area shows all items, allows
-quantity adjustments up to owned stock, and provides Remove buttons.
+quantity adjustments without a stock-based cap, and provides Remove buttons.
 
 The request posts to existing \`POST /api/public/inquiry\`. The server verifies
-every selected product ID and quantity against D1, resolves package names from
+every selected product ID against active D1 inventory and validates quantities as positive whole numbers, resolves package names from
 the database, and saves human-readable quantities in the existing private
 **Website Inquiries** dashboard. A quote request is **not** a booking or
 an inventory hold. Dates and final charges are still confirmed manually.
