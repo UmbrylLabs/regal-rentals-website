@@ -171,7 +171,6 @@
       input?.focus();return;
     }
     addItem(btn.dataset.productAdd,quantity);
-    const text=btn.querySelector('span:first-child');
     btn.textContent='Added — Add more →';
     setStatus('Added '+quantity+' item(s) to your quote list. Final quantities are confirmed before booking.');
   });
@@ -197,7 +196,9 @@
   });
   cartNode?.addEventListener('click',event=>{
     const btn=event.target.closest('[data-cart-remove]');if(!btn)return;
-    cart.delete(btn.dataset.cartRemove);renderCart();
+    cart.delete(btn.dataset.cartRemove);
+    if(!cart.size){chosenPackage=null;if(packageSelect)packageSelect.value='';}
+    renderCart();
   });
   packageSelect?.addEventListener('change',()=>{
     if(!loaded)return;
