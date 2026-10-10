@@ -21,3 +21,62 @@
 .package-publish{display:flex;align-items:center;flex-direction:row;gap:9px;font-size:14px}
 .package-publish input{width:18px;height:18px}
 @media(max-width:850px){.package-admin-grid,.package-product-list{grid-template-columns:1fr}}
+
+/* The selectable inventory list is intentionally visible on mobile: some
+   Android in-app browsers fail to display options inserted into native selects. */
+.package-available {
+  margin-top:20px;
+  padding:17px;
+  border:1px solid var(--line,#e9e3dc);
+  border-radius:12px;
+  background:#faf8f5;
+}
+.package-available__header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:14px;
+}
+.package-available__header h4,.package-selected-heading h4{
+  margin:0;
+  color:var(--purple,#321945);
+  font-size:15px;
+}
+.package-available__header .button{font-size:12px;padding:9px 11px}
+.package-inventory-search{display:block;font-weight:700;font-size:12px}
+.package-inventory-search input{
+  display:block;
+  width:100%;
+  min-height:43px;
+  margin-top:8px;
+  padding:10px 12px;
+  border:1px solid #dcd2de;
+  border-radius:8px;
+  background:#fff;
+  font-size:14px;
+}
+.package-inventory-browser{display:grid;gap:8px;margin-top:13px}
+.package-inventory-choice{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:14px;
+  background:white;
+  padding:12px 14px;
+  border:1px solid #e5dfe8;
+  border-radius:9px;
+}
+.package-inventory-choice span{display:grid;gap:5px;min-width:0;overflow-wrap:anywhere}
+.package-inventory-choice strong{font-size:13px;color:var(--purple,#321945)}
+.package-inventory-choice small{font-size:11px;color:var(--muted,#736a78)}
+.package-inventory-choice button{flex:0 0 auto;font-size:12px}
+.package-selected-heading{margin:22px 0 12px}
+#package-inventory-status{margin:9px 0;font-size:12px;line-height:1.7}
+@media(max-width:450px){
+  .package-available{padding:12px}
+  .package-available__header{align-items:start;gap:7px}
+  .package-available__header .button{font-size:11px}
+  .package-inventory-choice{padding:10px}
+  .package-inventory-choice button{padding:9px 14px}
+}

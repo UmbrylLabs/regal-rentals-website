@@ -10,6 +10,10 @@
   const inventoryAdd = document.querySelector('#add-package-inventory-item');
   const addPackage = document.querySelector('#new-storefront-package');
   const saveButton = document.querySelector('#save-storefront-package');
+  const inventoryBrowser = document.querySelector('#package-inventory-browser');
+  const inventoryStatus = document.querySelector('#package-inventory-status');
+  const inventorySearch = document.querySelector('#package-inventory-search');
+  const inventoryRefresh = document.querySelector('#refresh-package-inventory');
 
   if (!tab || !form || !listing || !inventorySelect || !inventoryAdd) return;
 
@@ -86,17 +90,61 @@
     } finally { loading = null; }
   }
 
+  function activeInventory() {
+    return products.filter(p => Number(p.active) === 1);
+  }
+
   function availableInventory() {
-    return products.filter(p => Number(p.active) === 1 && !selected.has(p.id));
+    return activeInventory().filter(p => !selected.has(p.id));
   }
 
   function renderPicker() {
-    const options = availableInventory();
-    inventorySelect.innerHTML = '<option value="">Choose an item from Inventory…</option>' +
-      options.map(p => '<option value="' + esc(p.id) + '">' +
-        esc(p.name) + ' (owned: ' + Number(p.quantity_owned) + ')</option>').join('');
-    inventorySelect.disabled = !options.length;
-    inventoryAdd.disabled = !options.length;
+    const allActive = activeInventory();
+    const choices = availableInventory();
+    // Build real <option> DOM elements: this works more consistently than
+    // changing select.innerHTML inside Samsung/Android in-app browsers.
+    const oldValue = inventorySelect.value;
+    const placeholder = document.createElement('option');
+    placeholder.value = '';
+    placeholder.textContent = 'Choose an inventory item…';
+    const options = choices.map(product => {
+      const option = document.createElement('option');
+      option.value = product.id;
+      option.textContent = product.name + ' (owned: ' + Number(product.quantity_owned) + ')';
+      return option;
+    });
+    inventorySelect.replaceChildren(placeholder, ...options);
+    inventorySelect.value = choices.some(p => p.id === oldValue) ? oldValue : '';
+    inventorySelect.disabled = !choices.length;
+    inventoryAdd.disabled = !choices.length;
+
+    const search = (inventorySearch?.value || '').trim().toLowerCase();
+    const visible = choices.filter(p => (p.name + ' ' + p.sku + ' ' + p.category)
+      .toLowerCase().includes(search));
+    if (inventoryStatus) {
+      const total = products.length;
+      inventoryStatus.textContent = choices.length
+        ? choices.length + ' inventory ' + (choices.length === 1 ? 'item' : 'items') +
+          ' available to add' + (search ? ' · ' + visible.length + ' matching search' : '') + '.'
+        : allActive.length
+          ? 'All ' + allActive.length + ' active inventory items are already included in this package.'
+          : 'No active items found in Inventory. Add or restore equipment on the Inventory tab first.' +
+            (total ? ' (' + total + ' archived item(s) found.)' : '');
+    }
+    if (!inventoryBrowser) return;
+    inventoryBrowser.innerHTML = visible.length
+      ? visible.map(product =>
+        '<div class="package-inventory-choice">' +
+          '<span><strong>' + esc(product.name) + '</strong>' +
+          '<small>' + esc(product.sku || 'Rental item') + ' · Owned: ' +
+          Number(product.quantity_owned || 0) + '</small></span>' +
+          '<button type="button" class="button button--secondary" data-package-pick="' +
+          esc(product.id) + '">Add</button>' +
+        '</div>').join('')
+      : '<p class="message">' +
+        (search && choices.length ? 'No matches. Try a different search.' :
+         !allActive.length ? 'Your Inventory tab has no active products available to add.' :
+         'No additional inventory items to add.') + '</p>';
   }
 
   function renderRows() {
@@ -136,12 +184,27 @@
     document.querySelector('#storefront-package-form-title').textContent = pkg ? 'Edit Package' : 'Create Package';
     message.textContent = '';
     inventoryQty.value = '1';
+    if (inventorySearch) inventorySearch.value = '';
     renderRows();
     form.hidden = false;
     form.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
-  tab.addEventListener('click', () => { refresh().catch(() => {}); });
+  tab.addEventListener('click', () => {
+    refresh().then(() => {
+      if (!form.hidden) renderRows();
+    }).catch(() => {});
+  });
+  inventorySearch?.addEventListener('input', renderPicker);
+  inventoryRefresh?.addEventListener('click', async () => {
+    if (inventoryStatus) inventoryStatus.textContent = 'Refreshing inventory…';
+    try {
+      await refresh();
+      renderRows();
+    } catch (error) {
+      if (inventoryStatus) inventoryStatus.textContent = 'Inventory could not be refreshed: ' + error.message;
+    }
+  });
   addPackage.addEventListener('click', async () => {
     addPackage.disabled = true;
     try {
@@ -158,8 +221,7 @@
     selected.clear();
   });
 
-  inventoryAdd.addEventListener('click', () => {
-    const id = inventorySelect.value;
+  function addInventoryItem(id) {
     if (!id) { message.textContent = 'Choose an inventory item first.'; inventorySelect.focus(); return; }
     const product = products.find(p => p.id === id);
     if (!product || !Number(product.active)) {
@@ -175,6 +237,11 @@
     inventoryQty.value = '1';
     message.textContent = product.name + ' added to this package.';
     renderRows();
+  }
+  inventoryAdd.addEventListener('click', () => addInventoryItem(inventorySelect.value));
+  inventoryBrowser?.addEventListener('click', event => {
+    const button = event.target.closest('[data-package-pick]');
+    if (button) addInventoryItem(button.dataset.packagePick);
   });
 
   rows.addEventListener('input', event => {

@@ -60,6 +60,8 @@ jobs:
         run: node tests/test_square_payment_ui.mjs
       - name: Test admin dashboard startup
         run: node tests/test_admin_startup.mjs
+      - name: Test active inventory selection in package editor
+        run: node tests/test_package_inventory_picker_dom.mjs
       - name: Test inventory hard delete and package picker
         run: node tests/test_inventory_permanent_delete.mjs
       - name: Test dynamic storefront and inquiry validation
