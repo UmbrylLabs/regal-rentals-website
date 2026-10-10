@@ -101,7 +101,7 @@ export async function onRequestPost(context) {
       let verifiedPackage = null;
       if (packageId) {
         verifiedPackage = packages.find(pkg => pkg.active && pkg.id === packageId);
-        if (!verifiedPackage || !verifiedPackage.items.every(line => productMap.has(line.productId))) {
+        if (!verifiedPackage || !verifiedPackage.items.every(line => productMap.has(line.productId) && Number.isInteger(line.quantity) && line.quantity > 0 && line.quantity <= productMap.get(line.productId).quantityOwned)) {
           return invalid('That package is no longer available. Please refresh the page.');
         }
         verifiedPackageName = verifiedPackage.name;
