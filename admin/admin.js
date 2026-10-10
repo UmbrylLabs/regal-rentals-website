@@ -181,8 +181,8 @@
 
     $$('[data-edit-product]', list).forEach((button) => button.addEventListener('click', () => editProduct(button.dataset.editProduct)));
     $$('[data-archive-product]', list).forEach((button) => button.addEventListener('click', () => archiveProduct(button.dataset.archiveProduct)));
-    $('[data-restore-product]', list).forEach((button) => button.addEventListener('click', () => restoreProduct(button.dataset.restoreProduct)));
-    $('[data-permanent-delete-product]', list).forEach((button) => button.addEventListener('click', () => permanentlyDeleteProduct(button.dataset.permanentDeleteProduct)));
+    $$('[data-restore-product]', list).forEach((button) => button.addEventListener('click', () => restoreProduct(button.dataset.restoreProduct)));
+    $$('[data-permanent-delete-product]', list).forEach((button) => button.addEventListener('click', () => permanentlyDeleteProduct(button.dataset.permanentDeleteProduct)));
 
   };
 
