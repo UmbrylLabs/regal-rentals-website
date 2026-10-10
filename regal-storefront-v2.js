@@ -193,7 +193,7 @@
       phone:String(fields.get('phone')||'').trim(),
       date:String(fields.get('date')||''),
       city:String(fields.get('city')||'').trim(),
-      package:loaded?'':String(fields.get('package')||''),
+      package:loaded&&packages.length?'':String(fields.get('package')||''),
       packageId:loaded&&chosenPackage?chosenPackage.id:'',
       items:loaded?[]:fields.getAll('item').map(String),
       selectedItems:loaded?[...cart].map(([productId,quantity])=>({productId,quantity})):[],
@@ -232,7 +232,7 @@
   });
   document.querySelectorAll('#storefront-packages [data-package]').forEach(link=>{
     link.addEventListener('click',()=>{
-      if(!loaded&&packageSelect)packageSelect.value=link.dataset.package;
+      if((!loaded||!packages.length)&&packageSelect)packageSelect.value=link.dataset.package;
     });
   });
   load();
