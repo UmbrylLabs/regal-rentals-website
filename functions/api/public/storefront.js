@@ -10,7 +10,7 @@ export async function onRequestGet(context) {
     const ids = new Map(products.filter(p=>p.quantityOwned>0).map(p=>[p.id,p]));
     const packages = allPackages.filter(pkg=>pkg.active && pkg.items.length &&
       pkg.items.every(item=>ids.has(item.productId) && Number.isInteger(item.quantity) &&
-        item.quantity>0 && item.quantity<=ids.get(item.productId).quantityOwned)
+        item.quantity>0 && item.quantity<=1000000)
     ).map(pkg=>({
       id:pkg.id,name:pkg.name,description:pkg.description,imageUrl:pkg.imageUrl,
       priceCents:pkg.priceCents,items:pkg.items,sortOrder:pkg.sortOrder
