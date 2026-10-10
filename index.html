@@ -45,7 +45,8 @@
   </style>
   <!-- Unique asset names avoid stale cached styles/scripts from previous launches. -->
   <link rel="stylesheet" href="/regal-home-20261009.css">
-  <script src="/regal-home-20261009.js" defer></script>
+  <script src="/regal-storefront-v2.js" defer></script>
+  <link rel="stylesheet" href="/regal-storefront-v2.css">
 </head>
 <body>
 <a class="skip-link" href="#content">Skip to content</a>
@@ -103,7 +104,7 @@
         <div><span class="kicker">OUR RENTAL COLLECTION</span><h2 id="equipment-title">Everything you need<br>for a great event.</h2></div>
         <p>Choose the pieces you need. We’ll confirm availability and provide a personalized quote.</p>
       </header>
-      <div class="products-grid">
+      <div class="products-grid" id="storefront-products" aria-live="polite">
         <article class="product-card">
           <div class="product-card__image"><img loading="lazy" src="/assets/regal-chair.svg" alt="Illustration of a white folding chair" width="420" height="290"></div>
           <div class="product-card__details"><h3>White Folding Chairs</h3><p>Comfortable, classic seating for almost any occasion.</p><span class="availability-note">Up to 100 chairs</span><a data-item="White folding chairs" href="#quote">Add to Quote <span aria-hidden="true">→</span></a></div>
@@ -132,7 +133,7 @@
   <section class="section packages" id="packages" aria-labelledby="packages-title">
     <div class="site-wrap">
       <header class="section-heading section-heading--packages"><div><span class="kicker">POPULAR PACKAGES</span><h2 id="packages-title">Simple bundles for easy planning.</h2></div><p>Practical starting points—customize any package for your event.</p></header>
-      <div class="packages-grid">
+      <div class="packages-grid" id="storefront-packages" aria-live="polite">
         <article class="package-card">
           <div class="package-card__picture package-card__picture--backyard" aria-hidden="true"></div>
           <div class="package-card__body"><span class="package-card__label">SMALL GATHERINGS</span><h3>Backyard Essentials</h3>
@@ -177,6 +178,7 @@
       </div>
       <div class="quote-form-card">
         <form id="quote-form" novalidate>
+          <div class="quote-cart" id="quote-cart" aria-live="polite"><div class="quote-cart__header"><strong>Your Quote List</strong><span id="quote-cart-count">No items yet</span></div><div id="quote-cart-items" class="quote-cart__items"><p>Select items or a package above to get started.</p></div><p class="quote-cart__note">Quantities are requested, not reserved. Final totals will be confirmed.</p></div>
           <div class="form-grid">
             <label>Full name <span aria-hidden="true">*</span><input name="name" type="text" required maxlength="120" autocomplete="name" placeholder="Your name"></label>
             <label>Email address <span aria-hidden="true">*</span><input name="email" type="email" required maxlength="180" autocomplete="email" placeholder="you@example.com"></label>
@@ -185,7 +187,7 @@
             <label>Phone (optional)<input name="phone" type="tel" maxlength="35" autocomplete="tel" placeholder="Only if you'd like a call"></label>
             <label>Rental package (optional)<select name="package" id="package-select"><option value="">Select a package</option><option>Backyard Essentials</option><option>Party Ready</option><option>Shade &amp; Serve</option><option>Custom rental</option></select></label>
           </div>
-          <fieldset class="equipment-interest"><legend>I'm interested in</legend>
+          <fieldset class="equipment-interest" id="equipment-interest"><legend>I'm interested in</legend>
             <label><input type="checkbox" name="item" value="White folding chairs"><span>Chairs</span></label>
             <label><input type="checkbox" name="item" value="60-inch round tables"><span>Round tables</span></label>
             <label><input type="checkbox" name="item" value="6-foot rectangle tables"><span>6′ tables</span></label>

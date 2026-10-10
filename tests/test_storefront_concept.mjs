@@ -6,13 +6,17 @@ const root = path.resolve(import.meta.dirname, '..');
 const read = p => fs.readFileSync(path.join(root,p),'utf8');
 const html = read('index.html');
 const css = read('regal-home-20261009.css');
-const js = read('regal-home-20261009.js');
+const js = read('regal-storefront-v2.js');
 assert.match(html,/viewport" content="width=device-width,initial-scale=1"/);
 assert.match(html,/href="\/regal-home-20261009.css"/);
-assert.match(html,/src="\/regal-home-20261009.js"/);
+assert.match(html,/src="\/regal-storefront-v2.js"/);
 assert.match(css,/@media\(max-width:760px\)/);
 assert.match(css,/\.menu-open \.main-nav\{display:flex\}/);
 assert.match(js,/fetch\('\/api\/public\/inquiry'/);
+assert.match(js,/\/api\/public\/storefront/);
+assert.match(html,/id="quote-cart"/);
+assert.match(html,/id="storefront-products"/);
+assert.match(html,/id="storefront-packages"/);
 assert.match(html,/id="quote-form"/);
 assert.match(html,/id="form-success"/);
 assert.match(html,/id="form-status"/);
@@ -44,5 +48,5 @@ for (const src of ['assets/regal-chair.svg','assets/regal-round-table.svg','asse
  assert.doesNotMatch(svg,/<script/);
 }
 const headers=read('_headers');
-assert.match(headers,/img-src '[^']*self'[^;]*https:\/\/images\.pexels\.com/);
+assert.match(headers,/img-src '[^']*self'[^;]*https:/);
 console.log('Mobile storefront and quote form compatibility checks passed.');

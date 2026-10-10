@@ -58,6 +58,8 @@ jobs:
         run: node tests/test_square_payment_policy.mjs
       - name: Test Square payment interfaces
         run: node tests/test_square_payment_ui.mjs
+      - name: Test dynamic storefront and inquiry validation
+        run: node tests/test_dynamic_storefront.mjs
       - name: Test Regal storefront structure
         run: node tests/test_storefront_concept.mjs
       - name: Test website inquiry submissions
@@ -71,3 +73,4 @@ jobs:
           node --check pay.js
           node --check launch-home.js
           node --check regal-home-20261009.js
+          node --check regal-storefront-v2.js

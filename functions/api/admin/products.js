@@ -1,5 +1,6 @@
 import { protectMutation, requireAdmin } from '../../_lib/auth.js';
 import { cleanText, json, randomId, readJson, safeErrorResponse } from '../../_lib/http.js';
+import { ensureStorefrontTables, validImageUrl } from '../../_lib/storefront.js';
 
 const CATEGORIES = new Set([
   'Tables & Chairs',
@@ -39,6 +40,7 @@ function normalizeProduct(body, existing = {}) {
   const priceUnit = cleanText(body.priceUnit ?? existing.price_unit ?? 'each', 50).toLowerCase();
   const quantityOwned = Number(body.quantityOwned ?? existing.quantity_owned ?? 0);
   const sortOrder = Number(body.sortOrder ?? existing.sort_order ?? 100);
+  const imageUrl = validImageUrl(body.imageUrl ?? existing.image_url ?? '');
   const active = body.active == null ? Number(existing.active ?? 1) : (body.active ? 1 : 0);
   const rawPrice = body.priceCents === undefined ? existing.price_cents : body.priceCents;
   const priceCents = rawPrice === null || rawPrice === '' ? null : Number(rawPrice);
@@ -51,7 +53,7 @@ function normalizeProduct(body, existing = {}) {
   if (priceCents !== null && (!Number.isInteger(priceCents) || priceCents < 0 || priceCents > 100000000)) throw new Error('INVALID_PRICE');
   if (!Number.isInteger(sortOrder) || sortOrder < 0 || sortOrder > 100000) throw new Error('INVALID_SORT_ORDER');
 
-  return { name, category, style, description, priceUnit, quantityOwned, priceCents, sortOrder, active };
+  return { name, category, style, description, priceUnit, quantityOwned, priceCents, sortOrder, active, imageUrl };
 }
 
 function validationResponse(error) {
@@ -63,7 +65,8 @@ function validationResponse(error) {
     INVALID_PRICE_UNIT: 'Choose a valid pricing unit.',
     INVALID_QUANTITY: 'Enter a valid owned quantity.',
     INVALID_PRICE: 'Enter a valid rental price.',
-    INVALID_SORT_ORDER: 'Enter a valid display order.'
+    INVALID_SORT_ORDER: 'Enter a valid display order.',
+    INVALID_IMAGE: 'Use a valid HTTPS image URL or /assets/ image path.'
   };
   return messages[code]
     ? json({ ok: false, error: { code, message: messages[code] } }, 400)
@@ -73,11 +76,13 @@ function validationResponse(error) {
 export async function onRequestGet(context) {
   try {
     await requireAdmin(context.env, context.request);
+    await ensureStorefrontTables(context.env.DB);
     const result = await context.env.DB.prepare(
-      `SELECT id, sku, name, category, style, description, price_unit,
-              quantity_owned, price_cents, active, sort_order, updated_at
-       FROM products
-       ORDER BY active DESC, category, sort_order, name`
+      `SELECT p.id, p.sku, p.name, p.category, p.style, p.description, p.price_unit,
+              p.quantity_owned, p.price_cents, p.active, p.sort_order, p.updated_at,
+              COALESCE(m.image_url,'') AS image_url
+       FROM products p LEFT JOIN storefront_product_media m ON m.product_id=p.id
+       ORDER BY p.active DESC, p.category, p.sort_order, p.name`
     ).all();
     return json({ ok: true, products: result.results || [] });
   } catch (error) {
@@ -91,6 +96,7 @@ export async function onRequestPost(context) {
     const user = await requireAdmin(context.env, context.request);
     const body = await readJson(context.request);
     const product = normalizeProduct(body);
+    await ensureStorefrontTables(context.env.DB);
     const id = `${slugify(product.name)}-${randomId().slice(0, 8)}`;
     const requestedSku = cleanText(body.sku, 80).toUpperCase().replace(/[^A-Z0-9_-]+/g, '-').replace(/^-+|-+$/g, '');
     const sku = requestedSku || `${slugify(product.name).replaceAll('-', '_').toUpperCase()}_${id.slice(-6).toUpperCase()}`;
@@ -111,7 +117,9 @@ export async function onRequestPost(context) {
         `INSERT INTO audit_log (
           id, actor_user_id, action, entity_type, entity_id, metadata_json, created_at
         ) VALUES (?1, ?2, 'product.create', 'product', ?3, ?4, ?5)`
-      ).bind(randomId(), user.id, id, JSON.stringify({ sku, ...product }), now)
+      ).bind(randomId(), user.id, id, JSON.stringify({ sku, ...product }), now),
+      context.env.DB.prepare('INSERT INTO storefront_product_media(product_id,image_url,updated_at) VALUES (?1,?2,?3)')
+        .bind(id, product.imageUrl, now)
     ]);
 
     return json({ ok: true, product: { id, sku, ...product } }, 201);
@@ -131,7 +139,8 @@ export async function onRequestPatch(context) {
     const user = await requireAdmin(context.env, context.request);
     const body = await readJson(context.request);
     const id = cleanText(body.id, 80);
-    const existing = await context.env.DB.prepare('SELECT * FROM products WHERE id = ?1').bind(id).first();
+    await ensureStorefrontTables(context.env.DB);
+    const existing = await context.env.DB.prepare("SELECT p.*,COALESCE(m.image_url,'') AS image_url FROM products p LEFT JOIN storefront_product_media m ON m.product_id=p.id WHERE p.id=?1").bind(id).first();
     if (!existing) return json({ ok: false, error: { code: 'NOT_FOUND', message: 'Product not found.' } }, 404);
 
     const product = normalizeProduct(body, existing);
@@ -157,7 +166,9 @@ export async function onRequestPatch(context) {
         `INSERT INTO audit_log (
           id, actor_user_id, action, entity_type, entity_id, metadata_json, created_at
         ) VALUES (?1, ?2, 'product.update', 'product', ?3, ?4, ?5)`
-      ).bind(randomId(), user.id, id, JSON.stringify({ sku: skuInput, ...product }), now)
+      ).bind(randomId(), user.id, id, JSON.stringify({ sku: skuInput, ...product }), now),
+      context.env.DB.prepare('INSERT INTO storefront_product_media(product_id,image_url,updated_at) VALUES (?1,?2,?3) ON CONFLICT(product_id) DO UPDATE SET image_url=excluded.image_url,updated_at=excluded.updated_at')
+        .bind(id,product.imageUrl,now)
     ]);
 
     return json({ ok: true });

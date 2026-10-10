@@ -214,6 +214,7 @@
     productForm.elements.priceUnit.value = product.price_unit || 'each';
     productForm.elements.sortOrder.value = String(Number(product.sort_order || 100));
     productForm.elements.description.value = product.description || '';
+    productForm.elements.imageUrl.value = product.image_url || '';
     productForm.elements.active.checked = Number(product.active) === 1;
     $('#product-form-eyebrow').textContent = 'Editing catalog item';
     $('#product-form-title').textContent = product.name;
@@ -228,7 +229,7 @@
       name: data.get('name'), sku: data.get('sku'), category: data.get('category'), style: data.get('style'),
       quantityOwned: Number(data.get('quantityOwned')), priceCents: price === '' ? null : Math.round(Number(price) * 100),
       priceUnit: data.get('priceUnit'), sortOrder: Number(data.get('sortOrder') || 100),
-      description: data.get('description'), active: data.get('active') === 'on'
+      description: data.get('description'), imageUrl: data.get('imageUrl'), active: data.get('active') === 'on'
     };
   };
 

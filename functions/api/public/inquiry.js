@@ -1,5 +1,6 @@
 import { assertSameOrigin, clientIp, json, normalizeEmail, randomId, readJson, safeErrorResponse, sha256 } from '../../_lib/http.js';
 import { ensureInquiryTables } from '../../_lib/inquiries.js';
+import { ensureStorefrontTables, availableProducts, availablePackages } from '../../_lib/storefront.js';
 
 const VALID_ITEMS = new Set([
   'White folding chairs', '60-inch round tables', '6-foot rectangle tables',
@@ -74,7 +75,10 @@ export async function onRequestPost(context) {
     const city = text(body.city,120);
     const packageName = text(body.package,80);
     const details = text(body.details,2500);
-    const items = Array.isArray(body.items) ? [...new Set(body.items)] : [];
+    let items = Array.isArray(body.items) ? [...new Set(body.items)] : [];
+    const packageId = typeof body.packageId === 'string' ? body.packageId : '';
+    const selectedItems = Array.isArray(body.selectedItems) ? body.selectedItems : [];
+    let verifiedPackageName = packageName;
 
     if (name.length < 2) return invalid('Please enter your name.');
     if (email.length > 180 || !EMAIL_RE.test(email)) return invalid('Please enter a valid email address.');
@@ -84,9 +88,38 @@ export async function onRequestPost(context) {
       || new Date(eventDate+'T12:00:00Z').toISOString().slice(0,10) !== eventDate) {
       return invalid('Please enter a valid event date.');
     }
-    if (!VALID_PACKAGES.has(packageName)) return invalid('Choose a valid package.');
+    if (!packageId && !VALID_PACKAGES.has(packageName)) return invalid('Choose a valid package.');
     if (items.length > 5 || items.some(value => !VALID_ITEMS.has(value))) return invalid('Select valid rental equipment.');
 
+    if (selectedItems.length || packageId) {
+      if (selectedItems.length > 30 || !Array.isArray(selectedItems)) return invalid('Please check the selected equipment.');
+      await ensureStorefrontTables(context.env.DB);
+      const [products, packages] = await Promise.all([
+        availableProducts(context.env.DB), availablePackages(context.env.DB)
+      ]);
+      const productMap = new Map(products.filter(p => p.quantityOwned > 0).map(p => [p.id,p]));
+      let verifiedPackage = null;
+      if (packageId) {
+        verifiedPackage = packages.find(pkg => pkg.active && pkg.id === packageId);
+        if (!verifiedPackage || !verifiedPackage.items.every(line => productMap.has(line.productId) && Number.isInteger(line.quantity) && line.quantity > 0 && line.quantity <= productMap.get(line.productId).quantityOwned)) {
+          return invalid('That package is no longer available. Please refresh the page.');
+        }
+        verifiedPackageName = verifiedPackage.name;
+      }
+      const chosen = selectedItems.length ? selectedItems : (verifiedPackage?.items || []);
+      const ids = new Set();
+      const labels = [];
+      for (const item of chosen) {
+        const product = item && productMap.get(item.productId);
+        const quantity = Number(item?.quantity);
+        if (!product || !Number.isInteger(quantity) || quantity < 1 || quantity > product.quantityOwned || ids.has(item.productId)) {
+          return invalid('A selected item or quantity is no longer available. Refresh and try again.');
+        }
+        ids.add(item.productId);
+        labels.push(String(quantity) + ' × ' + product.name);
+      }
+      items = labels;
+    }
     await ensureInquiryTables(context.env.DB);
 
     // Limit repeat requests before writing PII. The full IP is never stored.
@@ -100,11 +133,11 @@ export async function onRequestPost(context) {
 
     const id = randomId();
     const reference = 'RR-' + id.split('-')[0].toUpperCase();
-    const lead = {id,reference,name,email,phone,event_date:eventDate,event_city:city,package_name:packageName,items,details};
+    const lead = {id,reference,name,email,phone,event_date:eventDate,event_city:city,package_name:verifiedPackageName,items,details};
     await context.env.DB.prepare(
       'INSERT INTO website_inquiries (id, reference, name, email, phone, event_date, event_city, package_name, items_json, details) ' +
       'VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,?10)'
-    ).bind(id,reference,name,email,phone,eventDate,city,packageName,JSON.stringify(items),details).run();
+    ).bind(id,reference,name,email,phone,eventDate,city,verifiedPackageName,JSON.stringify(items),details).run();
 
     // Notification is best-effort. The saved inquiry is the source of truth.
     if (context.env.RESEND_API_KEY) context.waitUntil(sendNotification(context,lead));

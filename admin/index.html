@@ -7,6 +7,7 @@
   <meta name="robots" content="noindex, nofollow" />
   <link rel="icon" href="/assets/favicon.png" type="image/png" />
   <link rel="stylesheet" href="/admin/admin.css" />
+  <link rel="stylesheet" href="/admin/storefront-packages.css" />
   <link rel="stylesheet" href="/admin/website-inquiries.css" />
   <link rel="stylesheet" href="/admin/catalog-manager.css" />
   <link rel="stylesheet" href="/admin/booking-tools.css?v=20260721-1" />
@@ -41,6 +42,7 @@
           <button class="nav-button" data-panel="bookings">Bookings</button>
           <button class="nav-button" data-panel="website-inquiries">Website Inquiries</button>
           <button class="nav-button" data-panel="inventory">Inventory</button>
+          <button class="nav-button" data-panel="packages">Packages</button>
           <button class="nav-button" data-panel="users" id="users-nav" hidden>Access Users</button>
         </aside>
 
@@ -131,6 +133,7 @@
                 <label>Price label<select name="priceUnit"><option>each</option><option>per chair</option><option>per table</option><option>per canopy</option><option>per tent</option><option>per game</option><option>per set</option><option>per package</option><option>per event</option></select></label>
                 <label>Display order<input name="sortOrder" type="number" min="0" value="100" /></label>
                 <label class="full">Short website description<textarea name="description" rows="3" maxlength="1000" placeholder="Describe the item, size, seating, or best use."></textarea></label>
+                <label class="full">Product image URL <span class="label-note">optional · https://… or /assets/…</span><input name="imageUrl" type="text" maxlength="900" placeholder="https://your-photo-host.com/image.jpg" /></label>
                 <label class="toggle-label full"><input name="active" type="checkbox" checked /><span>Show this item on the public rental website</span></label>
               </div>
               <div class="product-form-actions">
@@ -140,6 +143,37 @@
             </form>
             <div class="catalog-summary" id="catalog-summary"></div>
             <div class="inventory-catalog" id="inventory-list"></div>
+          </section>
+
+          <section class="panel" data-panel-view="packages" hidden>
+            <div class="panel-heading">
+              <div><p class="eyebrow">Homepage packages & bundles</p><h2>Packages</h2></div>
+              <button class="button" type="button" id="new-storefront-package">Add Package</button>
+            </div>
+            <p class="message">Create a bundle with inventory items and quantities. Publish it to show on the homepage automatically. Unpublished packages stay private.</p>
+            <form id="storefront-package-form" class="card form-stack" hidden>
+              <div class="panel-heading"><h3 id="storefront-package-form-title">Add Package</h3><button id="cancel-storefront-package" type="button" class="button button--quiet">Cancel</button></div>
+              <input type="hidden" name="id">
+              <div class="form-grid">
+                <label>Name<input name="name" required maxlength="110" placeholder="Party Ready"></label>
+                <label>Package rental price (optional)<input name="price" type="number" min="0" step=".01" placeholder="Leave blank for quote"></label>
+                <label>Display order<input name="sortOrder" type="number" min="0" value="100"></label>
+                <label class="full">Short website description<textarea name="description" maxlength="900" rows="2" placeholder="Ideal for a family celebration"></textarea></label>
+                <label class="full">Package image URL (optional)<input name="imageUrl" type="text" maxlength="900" placeholder="https://example.com/package-photo.jpg"></label>
+              </div>
+              <div>
+                <h3>Included equipment</h3>
+                <p class="message">Choose quantities from the inventory you own.</p>
+                <div id="storefront-package-products" class="package-product-list"></div>
+              </div>
+              <label class="package-publish"><input type="checkbox" name="active"> <span>Publish this package on the public homepage</span></label>
+              <div class="detail-actions">
+                <button class="button" type="submit" id="save-storefront-package">Save Package</button>
+                <p class="message" id="storefront-package-message" aria-live="polite"></p>
+              </div>
+            </form>
+            <p class="message" id="storefront-package-list-message" aria-live="polite"></p>
+            <div id="storefront-packages-list" class="package-admin-grid"></div>
           </section>
 
           <section class="panel" data-panel-view="users" hidden>
@@ -164,5 +198,6 @@
   <script src="/admin/admin.js?v=20260721-2" defer></script>
   <script src="/admin/admin-defaults.js?v=20260721-1" defer></script>
   <script src="/admin/website-inquiries.js" defer></script>
+  <script src="/admin/storefront-packages.js" defer></script>
 </body>
 </html>
