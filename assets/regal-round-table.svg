@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 290" role="img"><rect width="420" height="290" fill="#f5f5f2"/><defs>
+ <linearGradient id="white" x1="0" x2=".2" y1="0" y2="1"><stop stop-color="#ffffff"/><stop offset=".55" stop-color="#f8f8f6"/><stop offset="1" stop-color="#e4e6e7"/></linearGradient>
+ <linearGradient id="edge" x1="0" x2="0" y1="0" y2="1"><stop stop-color="#eef0f0"/><stop offset="1" stop-color="#b5babc"/></linearGradient>
+ <linearGradient id="metal" x1="0" x2="1" y1="0" y2="0"><stop stop-color="#535963"/><stop offset=".47" stop-color="#a3a7ab"/><stop offset="1" stop-color="#545961"/></linearGradient>
+ <linearGradient id="tent" x1="0" x2=".8" y1="0" y2="1"><stop stop-color="#ffffff"/><stop offset=".65" stop-color="#f4f1ea"/><stop offset="1" stop-color="#cfd4d5"/></linearGradient>
+ <linearGradient id="lawn" x1="0" x2="0" y1="0" y2="1"><stop stop-color="#e8eee1"/><stop offset="1" stop-color="#d0ddc4"/></linearGradient>
+ <filter id="shadow" x="-30%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="6"/></filter>
+</defs>
+ <ellipse cx="210" cy="254" rx="127" ry="12" fill="#222a30" opacity=".13" filter="url(#shadow)"/>
+ <g stroke-linejoin="round" stroke-linecap="round">
+ <path d="M157 145 143 252M266 145l15 107" fill="none" stroke="url(#metal)" stroke-width="9"/>
+ <path d="M167 146 248 244M254 146l-84 99" fill="none" stroke="#6b7177" stroke-width="7"/>
+ <path d="M136 251h16M272 251h17" stroke="#4a5158" stroke-width="6"/>
+ <ellipse cx="210" cy="121" rx="157" ry="54" fill="#e7e8e6" stroke="#a6adb0" stroke-width="3"/>
+ <path d="M53 121q0-12 10-18c60-40 229-41 295 0q10 6 9 18v13q-2 28-157 45Q55 162 53 135Z" fill="url(#edge)" stroke="#b8bdc0" stroke-width="3"/>
+ <ellipse cx="210" cy="119" rx="156" ry="53" fill="url(#white)" stroke="#d6dbdc" stroke-width="2"/>
+ <path d="M80 107q117-51 254-9" fill="none" stroke="#fff" stroke-width="5" opacity=".65"/>
+ </g></svg>
