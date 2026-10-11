@@ -111,6 +111,7 @@
   const safePhoto=(value, fallback)=>{
     if(typeof value !=='string')return fallback;
     if(/^\/assets\/[a-zA-Z0-9/_-]+\.(png|jpeg|jpg|webp|svg)$/i.test(value))return value;
+    if(/^\/api\/public\/product-photo\?id=[a-z0-9_-]{4,101}&v=[0-9]{10,16}$/i.test(value))return value;
     try {const u=new URL(value);if(u.protocol==='https:'&&!u.username&&!u.password)return u.href;}catch{}
     return fallback;
   };

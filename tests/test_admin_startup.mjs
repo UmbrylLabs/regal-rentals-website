@@ -12,6 +12,6 @@ assert.match(source,/const \$\$ = \(selector, root = document\) => Array\.from\(
 assert.match(source,/(\$\$)\('\[data-restore-product\]', list\)\.forEach/);
 assert.match(source,/(\$\$)\('\[data-permanent-delete-product\]', list\)\.forEach/);
 assert.doesNotMatch(source,/(?<!\$)\$\(['"][^'"]+['"],\s*list\)\.forEach/);
-assert.match(html,/\/admin\/admin\.js\?v=20261010-2/);
+assert.match(html,/\/admin\/admin\.js\?v=20261011-1/);
 
 console.log('Dashboard inventory button listeners and cache-busted admin script passed.');

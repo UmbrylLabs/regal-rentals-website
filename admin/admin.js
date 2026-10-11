@@ -154,7 +154,9 @@
       return `<article class="inventory-card-admin${isActive ? '' : ' is-archived'}" data-product-card="${escapeHtml(product.id)}">
         <div class="inventory-card-admin__top">
           <div class="inventory-card-admin__identity">
-            <span class="inventory-style-icon" aria-hidden="true">${escapeHtml(styleIcons[product.style] || styleIcons.other)}</span>
+            ${product.image_url
+              ? `<img class="inventory-style-photo" src="${escapeHtml(product.image_url)}" alt="" loading="lazy">`
+              : `<span class="inventory-style-icon" aria-hidden="true">${escapeHtml(styleIcons[product.style] || styleIcons.other)}</span>`}
             <div><h3>${escapeHtml(product.name)}</h3><p>${escapeHtml(product.sku)} · ${escapeHtml(product.category)}</p></div>
           </div>
           <div class="inventory-card-admin__badges">
@@ -195,6 +197,7 @@
     $('#product-form-eyebrow').textContent = 'New catalog item';
     $('#product-form-title').textContent = 'Add Rental Item';
     showMessage(productMessage, '');
+    window.RegalProductPhotos?.clear();
   };
 
   const showProductForm = (editing = false) => {
@@ -218,6 +221,7 @@
     productForm.elements.sortOrder.value = String(Number(product.sort_order || 100));
     productForm.elements.description.value = product.description || '';
     productForm.elements.imageUrl.value = product.image_url || '';
+    window.RegalProductPhotos?.clear(product.image_url || '');
     productForm.elements.active.checked = Number(product.active) === 1;
     $('#product-form-eyebrow').textContent = 'Editing catalog item';
     $('#product-form-title').textContent = product.name;
@@ -239,16 +243,36 @@
   const saveCatalogProduct = async (event) => {
     event.preventDefault();
     showMessage(productMessage, 'Saving rental item…');
+    const saveButton = productForm.querySelector('[type="submit"]');
+    if (window.RegalProductPhotos?.isProcessing()) {
+      showMessage(productMessage, 'Your photo is still processing or could not be formatted. Check the photo preview before saving.', 'error');
+      return;
+    }
+    saveButton.disabled = true;
+    let savedProduct = false;
     try {
       const payload = productPayload();
       const editing = Boolean(payload.id);
-      await api('/api/admin/products', { method: editing ? 'PATCH' : 'POST', body: JSON.stringify(payload) });
+      const result = await api('/api/admin/products', {
+        method: editing ? 'PATCH' : 'POST', body: JSON.stringify(payload)
+      });
+      const id = editing ? payload.id : result.product?.id;
+      if (!id) throw Error('The item was saved, but its identifier was not returned. Reload Inventory before uploading a photo.');
+      savedProduct = true;
+      // Retain new product ID in the form so retrying a failed photo upload
+      // updates the same product instead of creating a duplicate inventory row.
+      productForm.elements.id.value = id;
+      if (window.RegalProductPhotos?.pending()) {
+        showMessage(productMessage, 'Rental item saved. Uploading standardized photo…');
+        await window.RegalProductPhotos.upload(id);
+      }
       await loadProducts();
-      showMessage(productMessage, 'Rental item saved. The public catalog will update automatically.', 'success');
-      setTimeout(() => { productForm.hidden = true; resetProductForm(); }, 650);
+      showMessage(productMessage, 'Item and photo saved. Product images now use the same size and format.', 'success');
+      setTimeout(() => { productForm.hidden = true; resetProductForm(); }, 850);
     } catch (error) {
-      showMessage(productMessage, error.message, 'error');
-    }
+      showMessage(productMessage, (savedProduct ? 'Inventory item saved, but photo upload was not completed. ' : '') +
+        error.message + (savedProduct ? ' Keep this form open and select Save again to retry.' : ''), 'error');
+    } finally { saveButton.disabled = false; }
   };
 
   const archiveProduct = async (id) => {
