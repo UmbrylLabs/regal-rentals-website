@@ -67,7 +67,7 @@ function validationResponse(error) {
     INVALID_QUANTITY: 'Enter a valid owned quantity.',
     INVALID_PRICE: 'Enter a valid rental price.',
     INVALID_SORT_ORDER: 'Enter a valid display order.',
-    INVALID_IMAGE: 'Use a valid HTTPS image URL or /assets/ image path.'
+    INVALID_IMAGE: 'Choose a photo using Upload Photo, or provide a valid HTTPS image URL.'
   };
   return messages[code]
     ? json({ ok: false, error: { code, message: messages[code] } }, 400)
