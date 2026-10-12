@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title">
+<title id="title">Regal Rentals crown RR shield icon</title>
+<defs>
+<linearGradient id="gold" x1="0" y1="0" x2=".8" y2="1"><stop stop-color="#ffe167"/><stop offset=".45" stop-color="#ffcb23"/><stop offset="1" stop-color="#c88b08"/></linearGradient>
+<linearGradient id="royal" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#4a086b"/><stop offset="1" stop-color="#230037"/></linearGradient>
+</defs>
+<path d="M256 13 C327 74 407 77 466 94 C482 271 409 419 256 499 C103 419 30 271 46 94 C105 77 185 74 256 13Z" fill="url(#royal)" stroke="#14061b" stroke-width="17" stroke-linejoin="round"/>
+<path d="M256 13 C327 74 407 77 466 94 C482 271 409 419 256 499 C103 419 30 271 46 94 C105 77 185 74 256 13Z" fill="none" stroke="url(#gold)" stroke-width="17" stroke-linejoin="round"/>
+<path d="M256 37 C327 94 395 102 442 115 C449 268 397 388 256 474 C115 388 63 268 70 115 C117 102 185 94 256 37Z" fill="none" stroke="#f4ba28" stroke-width="3"/>
+<g fill="url(#gold)" stroke="#18091c" stroke-width="3" stroke-linejoin="round">
+<path d="M174 174 164 107 202 135 223 91 254 136 284 91 308 135 348 107 338 174Z"/>
+<path d="M166 164 Q256 188 346 164 L341 185 Q256 200 171 185Z"/>
+<path d="M256 99 235 75 256 42 277 75Z"/>
+<circle cx="166" cy="105" r="9"/><circle cx="202" cy="128" r="9"/><circle cx="308" cy="128" r="9"/><circle cx="347" cy="105" r="9"/>
+</g>
+<g fill="none" stroke="#230537" stroke-width="2.2"><path d="M190 169 Q255 177 326 169"/><path d="M188 183 Q256 192 327 183"/></g>
+<g fill="url(#gold)" stroke="#190520" stroke-width="3.5" paint-order="stroke fill" font-family="Georgia,Times New Roman,serif" font-weight="bold" font-size="196">
+<text x="256" y="356" text-anchor="start" transform="translate(512 0) scale(-1 1)">R</text>
+<text x="256" y="356" text-anchor="start">R</text>
+</g>
+</svg>

@@ -1,0 +1,9 @@
+/* Brand-only admin change: use larger clear crest with the readable text already beside it. */
+.admin-header .admin-brand{gap:10px}
+.admin-header .admin-brand img{width:46px;height:46px;object-fit:contain;flex:0 0 46px}
+.admin-header .admin-brand span{font-family:Georgia,serif;font-weight:800;font-size:clamp(18px,2.6vw,23px);line-height:1.15;white-space:nowrap;color:#26063f}
+@media(max-width:620px){
+  .admin-header .admin-brand img{width:43px;height:43px;flex-basis:43px}
+  .admin-header .admin-brand span{font-size:18px}
+  .admin-header{gap:10px}
+}
