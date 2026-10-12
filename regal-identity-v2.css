@@ -1,22 +1,45 @@
-/* Responsive Regal Rentals wordmark and compact symbol.
-   Crown-topped shield stays legible in both compact and large display sizes. */
-.site-header .site-brand{gap:12px}
-.site-header .site-brand img{width:60px;height:70px;flex:0 0 60px;object-fit:contain}
-.site-brand__name{display:flex;flex-direction:column;align-items:flex-start;justify-content:center;white-space:nowrap;line-height:1}
-.site-brand__name .brand-regal{font:700 25px/1.05 "Libre Baskerville",Georgia,serif;letter-spacing:-.055em;color:#2b173f}
-.site-brand__name .brand-rentals{font:800 11px/1.3 "DM Sans",Arial,sans-serif;letter-spacing:.28em;text-transform:uppercase;color:#a1763a;margin-top:5px}
-.site-brand--footer img{width:54px;height:64px}
-.site-brand--footer .site-brand__name .brand-regal{color:#fff;font-size:22px}
+/* Royal shield + horizontal Regal Rentals wordmark.
+   Existing scalable SVG crest keeps the icon crisp at every screen density.
+   Only branding presentation changes; store and checkout functionality are untouched. */
+.site-header .site-brand{gap:14px;min-width:0}
+.site-header .site-brand img{width:62px;height:72px;flex:0 0 62px;object-fit:contain}
+.site-brand__name{
+  display:flex;flex-direction:column;align-items:flex-start;justify-content:center;
+  width:max-content;white-space:nowrap;line-height:1;
+  border-left:3px solid #32114a;padding-left:17px
+}
+.site-brand__name .brand-regal{
+  font:700 29px/1.08 "Libre Baskerville",Georgia,serif;
+  text-transform:uppercase;letter-spacing:-.055em;color:#2c1042
+}
+.site-brand__name .brand-rentals{
+  display:flex;align-items:center;align-self:stretch;justify-content:space-between;
+  gap:9px;margin-top:7px;
+  font:700 11px/1.2 Georgia,"Times New Roman",serif;
+  text-transform:uppercase;letter-spacing:.24em;color:#a47627
+}
+.site-brand__name .brand-rentals::before,
+.site-brand__name .brand-rentals::after{
+  content:"";display:block;height:2px;min-width:12px;flex:1 1 12px;background:currentColor
+}
+.site-brand--footer img{width:57px;height:68px}
+.site-brand--footer .site-brand__name{border-left-color:#e4b758;padding-left:14px}
+.site-brand--footer .site-brand__name .brand-regal{color:#fff;font-size:24px}
 .site-brand--footer .site-brand__name .brand-rentals{color:#e7bd72;font-size:10px}
 @media(max-width:760px){
- .site-header .site-brand{gap:10px;min-width:0}
- .site-header .site-brand img{width:50px;height:59px;flex-basis:50px}
- .site-brand__name .brand-regal{font-size:22px}
- .site-brand__name .brand-rentals{font-size:10px;letter-spacing:.24em;margin-top:4px}
+  .site-header .site-brand{gap:10px;min-width:0}
+  .site-header .site-brand img{width:53px;height:63px;flex-basis:53px}
+  .site-header .site-brand__name{border-left-width:2px;padding-left:11px}
+  .site-header .site-brand__name .brand-regal{font-size:23px}
+  .site-header .site-brand__name .brand-rentals{font-size:9px;letter-spacing:.22em;gap:6px;margin-top:6px}
+  .site-header .site-brand__name .brand-rentals::before,
+  .site-header .site-brand__name .brand-rentals::after{min-width:7px;height:1.5px}
 }
-@media(max-width:350px){
- .site-header .site-brand img{width:43px;height:52px;flex-basis:43px}
- .site-brand__name .brand-regal{font-size:19px}
- .site-brand__name .brand-rentals{font-size:9px}
- .site-header__inner{gap:8px}
+@media(max-width:370px){
+  .site-header__inner{gap:8px}
+  .site-header .site-brand{gap:8px}
+  .site-header .site-brand img{width:46px;height:56px;flex-basis:46px}
+  .site-header .site-brand__name{padding-left:9px}
+  .site-header .site-brand__name .brand-regal{font-size:20px}
+  .site-header .site-brand__name .brand-rentals{font-size:8px;letter-spacing:.2em;gap:5px}
 }
