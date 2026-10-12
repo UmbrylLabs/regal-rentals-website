@@ -43,3 +43,17 @@
   .site-header .site-brand__name .brand-regal{font-size:20px}
   .site-header .site-brand__name .brand-rentals{font-size:8px;letter-spacing:.2em;gap:5px}
 }
+
+/* The full horizontal lockup is a single actual SVG asset, not separately styled text. */
+.site-header .site-brand--lockup{display:inline-flex;min-width:0;flex-shrink:1;align-items:center}
+.site-header .site-brand--lockup img{
+  display:block;width:295px;height:auto;max-width:100%;
+  flex:0 1 auto;object-fit:contain;
+}
+@media(max-width:760px){
+  .site-header .site-brand--lockup img{width:min(260px,calc(100vw - 110px));height:auto;max-width:100%}
+  .site-header__inner{min-height:82px}
+}
+@media(max-width:370px){
+  .site-header .site-brand--lockup img{width:min(240px,calc(100vw - 108px));height:auto}
+}
