@@ -34,7 +34,7 @@
     if(s==='round-table')return '/assets/regal-round-table.svg';
     if(s==='rectangle-table')return '/assets/regal-rectangle-table.svg';
     if(s==='canopy'||s==='tent')return /10\s*[x×]\s*20/i.test(p.name)?'/assets/regal-canopy-20.svg':'/assets/regal-canopy-10.svg';
-    return '/assets/regal-shield.png';
+    return '/assets/regal-official-shield.webp';
   };
   const safePhoto=(value, fallback)=>{
     if(typeof value !=='string')return fallback;
