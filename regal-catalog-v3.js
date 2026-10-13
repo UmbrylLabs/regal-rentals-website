@@ -6,6 +6,9 @@
   const packageGrid=document.querySelector('#storefront-packages');
   const cartNode=document.querySelector('#quote-cart-items');
   const cartCount=document.querySelector('#quote-cart-count');
+  const cartSubtotal=document.querySelector('#quote-cart-subtotal');
+  const cartSubtotalLabel=document.querySelector('#quote-cart-subtotal-label');
+  const cartTotal=document.querySelector('#quote-cart-total');
   const packageSelect=document.querySelector('#package-select');
   const status=document.querySelector('#form-status');
   const success=document.querySelector('#form-success');
@@ -20,8 +23,10 @@
   const catalogTitle=document.querySelector('#catalog-view-title');
   const catalogStatus=document.querySelector('#catalog-status');
   const catalogQuoteCount=document.querySelector('#catalog-quote-count');
+  const catalogQuoteTotal=document.querySelector('#catalog-quote-total');
   const mobileQuoteBar=document.querySelector('#mobile-quote-bar');
   const mobileQuoteCount=document.querySelector('#mobile-quote-count');
+  const mobileQuoteTotal=document.querySelector('#mobile-quote-total');
   let activeCategory='all';
 
   function productCategory(product) {
@@ -77,11 +82,50 @@
     if(catalogTitle)catalogTitle.textContent=categoryTitles[activeCategory]||'Rentals';
     if(catalogStatus)catalogStatus.textContent=shown+' '+(shown===1?'option':'options')+' to explore';
   }
-  function updateQuoteShortcuts(){
-    const distinct=cart.size;
+  // Prices come from the published storefront. Quote-priced items remain unpriced here.
+  function getCartSummary(){
+    const selected=[...cart].map(([id,quantity])=>({product:products.find(p=>p.id===id),id,quantity}))
+      .filter(x=>x.product);
+    let subtotalCents=0,pricedItems=0,customItems=0;
+    for(const {product,quantity} of selected){
+      const cents=product.priceCents;
+      if(cents===null||cents===undefined||!Number.isSafeInteger(Number(cents))||Number(cents)<0){
+        customItems++;
+      }else{
+        subtotalCents+=Number(cents)*quantity;
+        pricedItems++;
+      }
+    }
+    return {selected,units:selected.reduce((sum,item)=>sum+item.quantity,0),
+      subtotalCents,pricedItems,customItems};
+  }
+  function updateQuoteShortcuts(summary=getCartSummary()){
+    const distinct=summary.selected.length;
+    const hasItems=distinct>0;
+    const amount=summary.pricedItems?money(summary.subtotalCents):'';
+    const compact=summary.customItems
+      ? (summary.pricedItems?'Est. '+amount+' + custom':'Custom quote')
+      : 'Est. '+amount;
     if(catalogQuoteCount)catalogQuoteCount.textContent=String(distinct);
-    if(mobileQuoteBar)mobileQuoteBar.hidden=distinct===0;
+    if(catalogQuoteTotal){
+      catalogQuoteTotal.hidden=!hasItems;
+      catalogQuoteTotal.textContent=hasItems?compact:'';
+    }
+    if(mobileQuoteBar)mobileQuoteBar.hidden=!hasItems;
     if(mobileQuoteCount)mobileQuoteCount.textContent=distinct+' '+(distinct===1?'item':'items');
+    if(mobileQuoteTotal){
+      mobileQuoteTotal.hidden=!hasItems;
+      mobileQuoteTotal.textContent=hasItems?compact:'';
+    }
+    if(cartCount)cartCount.textContent=hasItems
+      ? String(summary.units)+' unit'+(summary.units===1?'':'s')+' selected'
+      : 'No items yet';
+    if(cartSubtotal)cartSubtotal.hidden=!hasItems;
+    if(cartSubtotalLabel)cartSubtotalLabel.textContent=chosenPackage
+      ? 'Estimated item subtotal (before package pricing)'
+      : 'Estimated equipment subtotal';
+    if(cartTotal)cartTotal.textContent=!hasItems?''
+      : (summary.pricedItems?amount+(summary.customItems?' + custom quote':''):'Price by quote');
   }
 
   let products=[],packages=[],loaded=false,chosenPackage=null;
@@ -134,12 +178,9 @@
   if(!form)return;
 
   function renderCart() {
-    updateQuoteShortcuts();
-    const selected=[...cart].map(([id,quantity])=>({product:products.find(p=>p.id===id),id,quantity}))
-      .filter(x=>x.product);
-    const units=selected.reduce((sum,item)=>sum+item.quantity,0);
-    cartCount.textContent=selected.length?String(units)+' unit'+(units===1?'':'s')+' selected':'No items yet';
-    cartNode.innerHTML=selected.length?selected.map(({id,product,quantity})=>
+    const summary=getCartSummary();
+    updateQuoteShortcuts(summary);
+    cartNode.innerHTML=summary.selected.length?summary.selected.map(({id,product,quantity})=>
       '<div class="quote-line" data-cart-id="'+esc(id)+'"><div class="quote-line__title"><strong>'+
       esc(product.name)+'</strong><span>'+esc(product.priceCents===null?'Custom quote':money(product.priceCents)+' each')+
       '</span></div><div class="quote-line__actions"><label>Qty <input aria-label="Quantity for '+
@@ -261,7 +302,7 @@
     if(!p)return;
     const n=Number(input.value);
     if(!validQty(n))return;
-    cart.set(p.id,n);cartCount.textContent=String([...cart.values()].reduce((a,b)=>a+b,0))+' units selected';
+    cart.set(p.id,n);updateQuoteShortcuts();
   });
   cartNode?.addEventListener('change',event=>{
     const input=event.target.closest('[data-cart-qty]');if(!input)return;
