@@ -26,7 +26,7 @@ async function sendNotification(context, lead) {
     'Name: ' + lead.name,
     'Email: ' + lead.email,
     'Phone: ' + (lead.phone || 'Not provided'),
-    'Event date: ' + lead.event_date,
+    (lead.has_rental_window ? 'Rental start: ' : 'Event date: ') + lead.event_date,
     'City: ' + lead.event_city,
     'Package: ' + (lead.package_name || 'Not selected'),
     'Equipment: ' + (lead.items.join(', ') || 'Not specified'),
@@ -72,6 +72,13 @@ export async function onRequestPost(context) {
     const email = normalizeEmail(body.email);
     const phone = text(body.phone,35);
     const eventDate = text(body.date,10);
+    const hasRentalWindow=['endDate','delivery','setup','teardown','deliveryAddress']
+      .some(key=>Object.prototype.hasOwnProperty.call(body,key));
+    const endDate = text(body.endDate,10);
+    const deliveryAddress = text(body.deliveryAddress,240);
+    const delivery = body.delivery === true;
+    const setup = body.setup === true;
+    const teardown = body.teardown === true;
     const city = text(body.city,120);
     const packageName = text(body.package,80);
     const details = text(body.details,2500);
@@ -87,6 +94,24 @@ export async function onRequestPost(context) {
       || !Number.isFinite(Date.parse(eventDate + 'T12:00:00Z'))
       || new Date(eventDate+'T12:00:00Z').toISOString().slice(0,10) !== eventDate) {
       return invalid('Please enter a valid event date.');
+    }
+    if (hasRentalWindow) {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(endDate)
+        || !Number.isFinite(Date.parse(endDate+'T12:00:00Z'))
+        || new Date(endDate+'T12:00:00Z').toISOString().slice(0,10) !== endDate) {
+        return invalid('Please select a valid rental end date.');
+      }
+      if (endDate < eventDate) return invalid('Rental end date must be on or after the start date.');
+      if (typeof body.delivery !== 'boolean' || typeof body.setup !== 'boolean'
+        || typeof body.teardown !== 'boolean') {
+        return invalid('Please select valid delivery and setup options.');
+      }
+      if ((setup || teardown) && !delivery) {
+        return invalid('Delivery & pickup is required for setup or teardown.');
+      }
+      if (body.deliveryAddress !== undefined && typeof body.deliveryAddress !== 'string') {
+        return invalid('Please enter a valid delivery location.');
+      }
     }
     if (!packageId && !VALID_PACKAGES.has(packageName)) return invalid('Choose a valid package.');
     if (items.length > 5 || items.some(value => !VALID_ITEMS.has(value))) return invalid('Select valid rental equipment.');
@@ -133,11 +158,25 @@ export async function onRequestPost(context) {
 
     const id = randomId();
     const reference = 'RR-' + id.split('-')[0].toUpperCase();
-    const lead = {id,reference,name,email,phone,event_date:eventDate,event_city:city,package_name:verifiedPackageName,items,details};
+    // Store rental logistics alongside notes so existing D1 databases and admin views
+    // display every requested service without waiting on a schema migration.
+    const storedDetails = hasRentalWindow ? [
+      'RENTAL DATES & SERVICES',
+      'Rental start ('+(delivery?'Regal delivery':'customer pickup')+'): '+eventDate,
+      'Rental end ('+(delivery?'Regal collection':'customer return')+'): '+endDate,
+      'Delivery & pickup by Regal Rentals: '+(delivery?'Requested':'No — customer pickup and return requested'),
+      'Equipment setup: '+(setup?'Requested':'Not requested'),
+      'Equipment teardown: '+(teardown?'Requested':'Not requested'),
+      ...(delivery && deliveryAddress?['Delivery address / venue: '+deliveryAddress]:[]),
+      '',
+      'EVENT DETAILS',
+      details || 'Not provided'
+    ].join('\n') : details;
+    const lead = {id,reference,name,email,phone,event_date:eventDate,event_city:city,package_name:verifiedPackageName,items,details:storedDetails,has_rental_window:hasRentalWindow};
     await context.env.DB.prepare(
       'INSERT INTO website_inquiries (id, reference, name, email, phone, event_date, event_city, package_name, items_json, details) ' +
       'VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,?10)'
-    ).bind(id,reference,name,email,phone,eventDate,city,verifiedPackageName,JSON.stringify(items),details).run();
+    ).bind(id,reference,name,email,phone,eventDate,city,verifiedPackageName,JSON.stringify(items),storedDetails).run();
 
     // Notification is best-effort. The saved inquiry is the source of truth.
     if (context.env.RESEND_API_KEY) context.waitUntil(sendNotification(context,lead));
