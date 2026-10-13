@@ -13,6 +13,15 @@
 .quote-cart__header span{font-size:11px;color:#886b4b;font-weight:800}
 .quote-cart__items>p,.quote-cart__note{color:#716976;font-size:12px;line-height:1.65}
 .quote-cart__note{margin-top:12px}
+.quote-cart__subtotal{display:flex;align-items:baseline;justify-content:space-between;gap:12px;padding:15px 0 3px;margin-top:5px;border-top:1px solid #d7c8d9}
+.quote-cart__subtotal[hidden]{display:none!important}
+.quote-cart__subtotal span{font-size:12px;line-height:1.5;color:#514459;font-weight:700}
+.quote-cart__subtotal strong{font-size:19px;line-height:1.4;color:#29163f;font-weight:800;text-align:right;white-space:nowrap}
+@media(max-width:420px){
+  .quote-cart__subtotal{align-items:flex-start}
+  .quote-cart__subtotal span{max-width:52%}
+  .quote-cart__subtotal strong{font-size:17px;white-space:normal}
+}
 .quote-line{border-top:1px solid #e5dce9;padding:11px 0;display:flex;align-items:center;justify-content:space-between;gap:14px}
 .quote-line__title{min-width:0}
 .quote-line__title strong{display:block;font-size:12px;line-height:1.5}
