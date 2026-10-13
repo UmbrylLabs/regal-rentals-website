@@ -50,12 +50,14 @@ for(const category of ['all','packages','chairs','tables','canopies']) {
 
 assert.match(html,/name="endDate"/);
 assert.match(html,/id="service-delivery" checked/);
-assert.match(html,/id="service-setup"/);
-assert.match(html,/id="service-teardown"/);
+assert.match(html,/id="service-setup-teardown"/);
+assert.doesNotMatch(html,/id="service-teardown"/);
 assert.match(html,/name="deliveryAddress"/);
 assert.match(js,/function syncRentalDates\(\)/);
 assert.match(js,/function syncServices\(\)/);
 assert.match(js,/serviceDelivery\.checked=true/);
+assert.match(js,/setup:!!serviceSetupTeardown\?\.checked/);
+assert.match(js,/teardown:!!serviceSetupTeardown\?\.checked/);
 assert.match(js,/endDate:String\(fields\.get\('endDate'\)/);
 assert.match(html,/id="quote-form"/);
 assert.match(html,/id="form-success"/);
