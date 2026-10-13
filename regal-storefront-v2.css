@@ -120,3 +120,9 @@
   .quote-services{padding:14px 12px}
   .quote-services .quote-service-option{padding:10px}
 }
+
+@media(max-width:760px){
+  /* Native date controls need room for their full value and calendar trigger. */
+  .form-grid > label:has(input[type="date"]){grid-column:1 / -1}
+  .form-grid input[type="date"]{min-width:0;width:100%}
+}
