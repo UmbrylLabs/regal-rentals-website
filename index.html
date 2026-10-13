@@ -46,10 +46,10 @@
   </style>
   <!-- Unique asset names avoid stale cached styles/scripts from previous launches. -->
   <link rel="stylesheet" href="/regal-home-20261009.css?v=20261013-light-only">
-  <link rel="stylesheet" href="/regal-storefront-v2.css?v=20261013-rental-dates-services">
+  <link rel="stylesheet" href="/regal-storefront-v2.css?v=20261013-preferred-times">
   <link rel="stylesheet" href="/regal-catalog-v3.css?v=20261013-quote-subtotal">
   <link rel="stylesheet" href="/regal-identity-v2.css?v=20261013-split">
-  <script src="/regal-catalog-v3.js?v=20261013-combined-service" defer></script>
+  <script src="/regal-catalog-v3.js?v=20261013-preferred-times" defer></script>
 </head>
 <body>
 <a class="skip-link" href="#content">Skip to content</a>
@@ -219,8 +219,10 @@
             <label>Full name <span aria-hidden="true">*</span><input name="name" type="text" required maxlength="120" autocomplete="name" placeholder="Your name"></label>
             <label>Email address <span aria-hidden="true">*</span><input name="email" type="email" required maxlength="180" autocomplete="email" placeholder="you@example.com"></label>
             <label id="rental-start-label">Rental start date <span aria-hidden="true">*</span><input name="date" id="rental-start-date" type="date" required aria-describedby="rental-date-help"></label>
+            <label class="rental-time-label"><span id="rental-start-time-label">Preferred Delivery Time (optional)</span><select name="startTime" id="rental-start-time" aria-describedby="rental-date-help"><option value="">Flexible / Any time</option><option value="08:00">8:00 AM</option><option value="09:00">9:00 AM</option><option value="10:00">10:00 AM</option><option value="11:00">11:00 AM</option><option value="12:00">12:00 PM</option><option value="13:00">1:00 PM</option><option value="14:00">2:00 PM</option><option value="15:00">3:00 PM</option><option value="16:00">4:00 PM</option><option value="17:00">5:00 PM</option><option value="18:00">6:00 PM</option></select></label>
             <label>Rental end date <span aria-hidden="true">*</span><input name="endDate" id="rental-end-date" type="date" required aria-describedby="rental-date-help"></label>
-            <p class="rental-date-help" id="rental-date-help">Start: delivery or customer pickup. End: Regal collection or customer return. Same-day rentals are welcome.</p>
+            <label class="rental-time-label"><span id="rental-end-time-label">Preferred Collection Time (optional)</span><select name="endTime" id="rental-end-time" aria-describedby="rental-date-help"><option value="">Flexible / Any time</option><option value="08:00">8:00 AM</option><option value="09:00">9:00 AM</option><option value="10:00">10:00 AM</option><option value="11:00">11:00 AM</option><option value="12:00">12:00 PM</option><option value="13:00">1:00 PM</option><option value="14:00">2:00 PM</option><option value="15:00">3:00 PM</option><option value="16:00">4:00 PM</option><option value="17:00">5:00 PM</option><option value="18:00">6:00 PM</option></select></label>
+            <p class="rental-date-help" id="rental-date-help">Start: delivery or customer pickup. End: Regal collection or customer return. Times are preferences and will be confirmed with your quote.</p>
             <label>Event city <span aria-hidden="true">*</span><input name="city" type="text" maxlength="120" required autocomplete="address-level2" placeholder="Where is your event?"></label>
             <label>Phone (optional)<input name="phone" type="tel" maxlength="35" autocomplete="tel" placeholder="Only if you'd like a call"></label>
             <label>Rental package (optional)<select name="package" id="package-select"><option value="">Select a package</option><option>Backyard Essentials</option><option>Party Ready</option><option>Shade &amp; Serve</option><option>Custom rental</option></select></label>
