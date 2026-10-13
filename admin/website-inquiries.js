@@ -25,13 +25,14 @@
     count.textContent = String(newCount) + ' new / ' + String(inquiries.length) + ' total';
     container.innerHTML = inquiries.map(lead => {
       const items = Array.isArray(lead.items) ? lead.items : [];
-      const mailSubject = encodeURIComponent('Regal Rentals — Your event on ' + lead.event_date);
+      const rentalWindow = String(lead.details||'').startsWith('RENTAL DATES & SERVICES');
+      const mailSubject = encodeURIComponent('Regal Rentals — '+(rentalWindow?'Your rental starting ':'Your event on ')+lead.event_date);
       const mailBody = encodeURIComponent('Hi ' + lead.name + ',\n\nThanks for contacting Regal Rentals about your event.\n\n');
       const mailHref = 'mailto:' + encodeURIComponent(lead.email) + '?subject=' + mailSubject + '&body=' + mailBody;
       return '<article class="inquiry-card">' +
         '<div class="inquiry-card__heading"><div><strong>' + escapeHtml(lead.name) + '</strong><span class="inquiry-badge inquiry-badge--' + escapeHtml(lead.status) + '">' + escapeHtml(lead.status) + '</span>' +
         '<p>' + escapeHtml(lead.reference) + ' · ' + escapeHtml(safeDate(lead.created_at)) + '</p></div><span>' + (lead.email_sent ? 'Email alert sent' : 'Saved in dashboard') + '</span></div>' +
-        '<dl class="inquiry-facts"><div><dt>Event</dt><dd>' + escapeHtml(lead.event_date) + ' · ' + escapeHtml(lead.event_city) + '</dd></div>' +
+        '<dl class="inquiry-facts"><div><dt>' + (rentalWindow?'Rental start':'Event') + '</dt><dd>' + escapeHtml(lead.event_date) + ' · ' + escapeHtml(lead.event_city) + '</dd></div>' +
         '<div><dt>Package</dt><dd>' + escapeHtml(lead.package_name || 'Custom / not chosen') + '</dd></div>' +
         '<div><dt>Equipment</dt><dd>' + escapeHtml(items.join(', ') || 'Not specified') + '</dd></div>' +
         '<div><dt>Contact</dt><dd><a href="' + escapeHtml(mailHref) + '">' + escapeHtml(lead.email) + '</a>' +
