@@ -138,6 +138,14 @@
   font-weight:800;
   white-space:nowrap;
 }
+.catalog-quote-shortcut__total{
+  border-left:1px solid #d4c1a9;
+  padding-left:9px;
+  font-size:11px;
+  font-weight:800;
+  color:#785623;
+}
+.catalog-quote-shortcut__total[hidden]{display:none!important}
 .catalog-quote-shortcut:hover {background:#ecdfcf}
 .catalog-quote-shortcut__count {
   display:inline-flex;
@@ -383,6 +391,15 @@
     font-weight:800;
     text-decoration:none;
   }
+  .mobile-quote-bar__total {
+    margin-left:auto;
+    color:#f6dfa7;
+    font-size:12px;
+    font-weight:800;
+    white-space:nowrap;
+  }
+  .mobile-quote-bar__total[hidden]{display:none!important}
+  .catalog-quote-shortcut__total {font-size:10px;max-width:100px;white-space:normal;line-height:1.2}
   .mobile-quote-bar strong {
     display:inline-block;
     margin-left:9px;
@@ -394,6 +411,11 @@
   }
 }
 @media(max-width:420px){
+  .catalog-quote-shortcut {gap:5px}
+  .catalog-quote-shortcut__total {max-width:76px;padding-left:6px;font-size:9px}
+  .mobile-quote-bar {gap:8px;padding:13px 12px}
+  .mobile-quote-bar__total {font-size:11px}
+
   .catalog-group__header>span,.catalog-group__header>div+span {display:none}
   .catalog-results-header>span {font-size:10px}
   .rental-catalog .products-grid {gap:10px}
