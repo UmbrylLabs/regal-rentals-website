@@ -1,7 +1,8 @@
 /* Regal Rentals storefront design v4 | 2026-10-09.
    Standalone stylesheet with a new filename to break stale mobile/edge caching. */
 :root{
-  color-scheme:light;
+  /* Keep the custom purple/gold palette from browser auto-darkening. */
+  color-scheme:only light;
   --purple:#29163f;
   --purple-light:#493260;
   --purple-text:#2e2140;
