@@ -16,6 +16,10 @@
   const submitButton=form?.querySelector('[type="submit"]');
   const date=form?.elements.namedItem('date');
   const endDate=form?.elements.namedItem('endDate');
+  const startTime=form?.elements.namedItem('startTime');
+  const endTime=form?.elements.namedItem('endTime');
+  const startTimeLabel=document.querySelector('#rental-start-time-label');
+  const endTimeLabel=document.querySelector('#rental-end-time-label');
   const serviceDelivery=document.querySelector('#service-delivery');
   const serviceSetupTeardown=document.querySelector('#service-setup-teardown');
   const serviceHelp=document.querySelector('#quote-services-help');
@@ -188,6 +192,14 @@
     endDate.min=date?.value && date.value>today()?date.value:today();
     endDate.setCustomValidity(endDate.value && date?.value && endDate.value<date.value
       ? 'Rental end date must be on or after the start date.' : '');
+    syncRentalTimes();
+  }
+  function syncRentalTimes(){
+    if(!endTime)return;
+    const sameDay=date?.value && endDate?.value && date.value===endDate.value;
+    const start=startTime?.value, end=endTime.value;
+    endTime.setCustomValidity(sameDay && start && end && end<=start
+      ? 'For a same-day rental, the end time must be later than the start time.' : '');
   }
   function syncServices() {
     if(!serviceDelivery || !serviceSetupTeardown)return;
@@ -204,12 +216,18 @@
     }
     if(addressWrap)addressWrap.hidden=!serviceDelivery.checked;
     if(deliveryAddress)deliveryAddress.disabled=!serviceDelivery.checked;
+    if(startTimeLabel)startTimeLabel.textContent=serviceDelivery.checked
+      ? 'Preferred Delivery Time (optional)' : 'Preferred Customer Pickup Time (optional)';
+    if(endTimeLabel)endTimeLabel.textContent=serviceDelivery.checked
+      ? 'Preferred Collection Time (optional)' : 'Preferred Return Time (optional)';
     if(rentalDateHelp)rentalDateHelp.textContent=serviceDelivery.checked
-      ? 'Start: requested delivery date. End: requested collection date. Same-day rentals are welcome.'
-      : 'Start: when you would pick up equipment. End: when you would return it. Same-day rentals are welcome.';
+      ? 'Start: requested delivery date. End: requested collection date. Times are preferences and confirmed with your quote.'
+      : 'Start: when you would pick up equipment. End: when you would return it. Times are preferences and confirmed with your quote.';
   }
   date?.addEventListener('change',syncRentalDates);
   endDate?.addEventListener('change',syncRentalDates);
+  startTime?.addEventListener('change',syncRentalTimes);
+  endTime?.addEventListener('change',syncRentalTimes);
   serviceDelivery?.addEventListener('change',syncServices);
   serviceSetupTeardown?.addEventListener('change',syncServices);
   syncRentalDates();
@@ -380,7 +398,9 @@
       email:String(fields.get('email')||'').trim(),
       phone:String(fields.get('phone')||'').trim(),
       date:String(fields.get('date')||''),
+      startTime:String(fields.get('startTime')||''),
       endDate:String(fields.get('endDate')||''),
+      endTime:String(fields.get('endTime')||''),
       city:String(fields.get('city')||'').trim(),
       delivery:!!serviceDelivery?.checked,
       setup:!!serviceSetupTeardown?.checked,
