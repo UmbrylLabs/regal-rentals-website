@@ -46,10 +46,10 @@
   </style>
   <!-- Unique asset names avoid stale cached styles/scripts from previous launches. -->
   <link rel="stylesheet" href="/regal-home-20261009.css?v=20261013-light-only">
-  <link rel="stylesheet" href="/regal-storefront-v2.css?v=20261013-quote-subtotal">
+  <link rel="stylesheet" href="/regal-storefront-v2.css?v=20261013-rental-dates-services">
   <link rel="stylesheet" href="/regal-catalog-v3.css?v=20261013-quote-subtotal">
   <link rel="stylesheet" href="/regal-identity-v2.css?v=20261013-split">
-  <script src="/regal-catalog-v3.js?v=20261013-quote-subtotal" defer></script>
+  <script src="/regal-catalog-v3.js?v=20261013-rental-dates-services" defer></script>
 </head>
 <body>
 <a class="skip-link" href="#content">Skip to content</a>
@@ -218,7 +218,9 @@
           <div class="form-grid">
             <label>Full name <span aria-hidden="true">*</span><input name="name" type="text" required maxlength="120" autocomplete="name" placeholder="Your name"></label>
             <label>Email address <span aria-hidden="true">*</span><input name="email" type="email" required maxlength="180" autocomplete="email" placeholder="you@example.com"></label>
-            <label>Event date <span aria-hidden="true">*</span><input name="date" type="date" required></label>
+            <label id="rental-start-label">Rental start date <span aria-hidden="true">*</span><input name="date" id="rental-start-date" type="date" required aria-describedby="rental-date-help"></label>
+            <label>Rental end date <span aria-hidden="true">*</span><input name="endDate" id="rental-end-date" type="date" required aria-describedby="rental-date-help"></label>
+            <p class="rental-date-help" id="rental-date-help">Start: delivery or customer pickup. End: Regal collection or customer return. Same-day rentals are welcome.</p>
             <label>Event city <span aria-hidden="true">*</span><input name="city" type="text" maxlength="120" required autocomplete="address-level2" placeholder="Where is your event?"></label>
             <label>Phone (optional)<input name="phone" type="tel" maxlength="35" autocomplete="tel" placeholder="Only if you'd like a call"></label>
             <label>Rental package (optional)<select name="package" id="package-select"><option value="">Select a package</option><option>Backyard Essentials</option><option>Party Ready</option><option>Shade &amp; Serve</option><option>Custom rental</option></select></label>
@@ -230,7 +232,16 @@
             <label><input type="checkbox" name="item" value="10x10 canopy"><span>10×10 canopy</span></label>
             <label><input type="checkbox" name="item" value="10x20 canopy"><span>10×20 canopy</span></label>
           </fieldset>
-          <label class="form-details">Event details<textarea name="details" rows="4" maxlength="2500" placeholder="Guest count, equipment quantities, delivery needs, or anything else we should know…"></textarea></label>
+          <fieldset class="quote-services" id="quote-services">
+            <legend>Delivery &amp; Setup Services</legend>
+            <p class="quote-services__intro">Choose how you'll receive the equipment. Service fees are confirmed in your personalized quote.</p>
+            <label class="quote-service-option"><input type="checkbox" name="delivery" id="service-delivery" checked><span><strong>Delivery &amp; pickup by Regal Rentals</strong><small>We bring the equipment to your event and collect it afterward.</small></span></label>
+            <label class="quote-service-option"><input type="checkbox" name="setup" id="service-setup"><span><strong>Equipment setup</strong><small>We'll arrange your selected equipment.</small></span></label>
+            <label class="quote-service-option"><input type="checkbox" name="teardown" id="service-teardown"><span><strong>Equipment teardown</strong><small>We'll break it down before collection.</small></span></label>
+            <p id="quote-services-help" class="quote-services__help" role="status" aria-live="polite">If you don't need delivery, uncheck it to request customer pickup and return. Setup and teardown require delivery.</p>
+            <label class="quote-services__address" id="delivery-address-wrap">Delivery location or venue (optional)<input name="deliveryAddress" id="delivery-address" type="text" maxlength="240" autocomplete="street-address" placeholder="Street address or venue name"></label>
+          </fieldset>
+          <label class="form-details">Event details<textarea name="details" rows="4" maxlength="2500" placeholder="Guest count, event date (if different), timing, special requests, or anything else we should know…"></textarea></label>
           <div class="sr-only" aria-hidden="true"><label>Leave blank<input name="website" type="text" autocomplete="off" tabindex="-1"></label></div>
           <button class="btn btn--primary form-submit" type="submit"><span>Send Quote Request</span><span aria-hidden="true">→</span></button>
           <p class="form-status" id="form-status" role="status" aria-live="polite">Your request is submitted directly to Regal Rentals.</p>
