@@ -43,3 +43,80 @@
 .product-quantity input{width:76px}
 .product-quantity select:focus-visible,.product-quantity input:focus-visible{outline:2px solid #a77b3c;outline-offset:1px}
 @media(max-width:420px){.product-quantity{grid-template-columns:minmax(0,1fr) 65px}.product-quantity input{width:65px;padding:6px}}
+
+
+/* Rental window and selectable fulfillment services */
+.rental-date-help{
+  grid-column:1 / -1;
+  margin:-7px 0 2px;
+  color:#716976;
+  font-size:12px;
+  line-height:1.6;
+}
+.quote-services{
+  border:1px solid #e6dce7;
+  border-radius:9px;
+  margin:22px 0 20px;
+  padding:17px;
+  background:#fdfbfe;
+  min-width:0;
+}
+.quote-services legend{
+  padding:0 5px;
+  color:#29163f;
+  font-weight:800;
+  font-size:15px;
+}
+.quote-services__intro,.quote-services__help{
+  font-size:12px;
+  line-height:1.6;
+  color:#6b6070;
+  margin:0 0 12px;
+}
+.quote-services .quote-service-option{
+  display:flex;
+  align-items:flex-start;
+  gap:10px;
+  padding:11px 12px;
+  margin:8px 0;
+  border:1px solid #e2d9e2;
+  border-radius:7px;
+  background:white;
+  cursor:pointer;
+}
+.quote-service-option:has(input:checked){border-color:#a58baa;background:#f8f3fb}
+.quote-services .quote-service-option input{
+  flex:0 0 auto;
+  width:18px;
+  height:18px;
+  margin:2px 0 0;
+  accent-color:#29163f;
+}
+.quote-service-option strong{display:block;color:#2d203b;font-size:13px;line-height:1.4}
+.quote-service-option small{display:block;color:#706878;font-size:11px;font-weight:500;line-height:1.5;margin-top:3px}
+.quote-services__help{margin:13px 0}
+.quote-services .quote-services__address{
+  display:block;
+  font-size:12px;
+  font-weight:800;
+  color:#342a40;
+  margin-top:14px;
+}
+.quote-services .quote-services__address input{
+  display:block;
+  width:100%;
+  min-height:46px;
+  padding:10px 12px;
+  margin-top:7px;
+  border:1px solid #dcd5df;
+  border-radius:5px;
+  background:white;
+  color:#2b2233;
+  font-size:13px;
+  font-weight:500;
+}
+.quote-services .quote-services__address[hidden]{display:none!important}
+@media(max-width:420px){
+  .quote-services{padding:14px 12px}
+  .quote-services .quote-service-option{padding:10px}
+}
