@@ -80,3 +80,18 @@
     width:min(185px,calc(100vw - 145px));
   }
 }
+
+/* Matching transparent crest and wordmark in the dark footer. */
+.site-footer .site-brand--footer-split{display:inline-flex;align-items:center;gap:12px;min-width:0;max-width:100%;text-decoration:none}
+.site-footer .site-brand--footer-split img.site-brand__shield{display:block;width:68px;height:auto;flex:0 0 68px;object-fit:contain}
+.site-footer .site-brand--footer-split img.site-brand__wordmark{display:block;width:250px;height:auto;min-width:0;flex:0 1 250px;object-fit:contain}
+@media(max-width:760px){
+  .site-footer .site-brand--footer-split{gap:10px}
+  .site-footer .site-brand--footer-split img.site-brand__shield{width:62px;flex-basis:62px}
+  .site-footer .site-brand--footer-split img.site-brand__wordmark{width:230px;flex-basis:230px}
+}
+@media(max-width:370px){
+  .site-footer .site-brand--footer-split{gap:9px}
+  .site-footer .site-brand--footer-split img.site-brand__shield{width:54px;flex-basis:54px}
+  .site-footer .site-brand--footer-split img.site-brand__wordmark{width:200px;flex-basis:200px}
+}
