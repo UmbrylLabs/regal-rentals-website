@@ -222,6 +222,7 @@
   border-radius:12px;
   box-shadow:0 5px 16px #2816380c;
   overflow:hidden;
+  padding:0; /* Remove legacy card padding so photos aren't double-inset. */
 }
 .rental-catalog .product-card:hover {
   box-shadow:0 15px 35px #28163814;
@@ -229,7 +230,14 @@
 }
 .rental-catalog .product-card__image {
   height:210px;
-  background:linear-gradient(155deg,#f7f7f6,#eeece9);
+  background:#fff;
+  border-bottom:1px solid #f0ece9;
+}
+.rental-catalog .product-card__image img {
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  padding:0; /* Image itself has adequate visual breathing room. */
 }
 .rental-catalog .product-card__details {padding:20px;gap:3px}
 .rental-catalog .product-card h3 {font-size:17px}
@@ -347,7 +355,7 @@
   .catalog-group__header h3 {font-size:21px}
   .catalog-group__header>span,.catalog-group__header>div+span {font-size:11px}
   .catalog-group + .catalog-group {margin-top:43px}
-  .rental-catalog .product-card__details {padding:15px}
+  .rental-catalog .product-card__details {padding:16px}
   .rental-catalog .product-card__image {height:165px}
   .rental-catalog .product-card h3 {font-size:15px}
   .rental-catalog .product-card__details .add-to-quote {font-size:11px;padding:11px 8px}
@@ -390,7 +398,7 @@
   .catalog-results-header>span {font-size:10px}
   .rental-catalog .products-grid {gap:10px}
   .rental-catalog .product-card__image {height:135px}
-  .rental-catalog .product-card__details {padding:12px}
+  .rental-catalog .product-card__details {padding:16px}
   .rental-catalog .product-card p {min-height:0}
   .rental-catalog .product-quantity {grid-template-columns:minmax(0,1fr) 62px;gap:5px}
   .rental-catalog .product-quantity input {font-size:12px}
