@@ -73,14 +73,15 @@ assert.ok(serviceWrite);
 assert.equal(serviceWrite.args[5],'2026-11-21');
 assert.match(serviceWrite.args[9],/Rental start \(Regal delivery\): 2026-11-21/);
 assert.match(serviceWrite.args[9],/Rental end \(Regal collection\): 2026-11-23/);
-assert.match(serviceWrite.args[9],/Equipment setup: Requested/);
-assert.match(serviceWrite.args[9],/Equipment teardown: Requested/);
+assert.match(serviceWrite.args[9],/Equipment setup & teardown: Requested/);
 assert.match(serviceWrite.args[9],/123 Celebration Way, Folsom/);
 const selfPickup=await submit({...withServices,delivery:false,setup:false,teardown:false,
   deliveryAddress:''});
 assert.equal(selfPickup.status,201);
 assert.match(selfPickup.calls.find(c=>c.sql.includes('INSERT INTO website_inquiries (')).args[9],
   /customer pickup and return requested/);
+assert.match(selfPickup.calls.find(c=>c.sql.includes('INSERT INTO website_inquiries (')).args[9],
+  /Equipment setup & teardown: Not requested/);
 const badEnd=await submit({...withServices,endDate:'2026-11-20'});
 assert.equal(badEnd.status,400);
 const impossibleEnd=await submit({...withServices,endDate:'2026-02-30'});
