@@ -63,4 +63,32 @@ const invalidItems=await submit({...valid,items:['unapproved expensive product']
 assert.equal(invalidItems.status,400);
 const invalidDate=await submit({...valid,date:'2026-02-30'});
 assert.equal(invalidDate.status,400);
+// New requests capture both dates and enforce delivery for setup/teardown.
+const withServices={...valid,endDate:'2026-11-23',delivery:true,setup:true,teardown:true,
+  deliveryAddress:'123 Celebration Way, Folsom'};
+const serviceResult=await submit(withServices);
+assert.equal(serviceResult.status,201);
+const serviceWrite=serviceResult.calls.find(c=>c.sql.includes('INSERT INTO website_inquiries ('));
+assert.ok(serviceWrite);
+assert.equal(serviceWrite.args[5],'2026-11-21');
+assert.match(serviceWrite.args[9],/Rental start \(Regal delivery\): 2026-11-21/);
+assert.match(serviceWrite.args[9],/Rental end \(Regal collection\): 2026-11-23/);
+assert.match(serviceWrite.args[9],/Equipment setup: Requested/);
+assert.match(serviceWrite.args[9],/Equipment teardown: Requested/);
+assert.match(serviceWrite.args[9],/123 Celebration Way, Folsom/);
+const selfPickup=await submit({...withServices,delivery:false,setup:false,teardown:false,
+  deliveryAddress:''});
+assert.equal(selfPickup.status,201);
+assert.match(selfPickup.calls.find(c=>c.sql.includes('INSERT INTO website_inquiries (')).args[9],
+  /customer pickup and return requested/);
+const badEnd=await submit({...withServices,endDate:'2026-11-20'});
+assert.equal(badEnd.status,400);
+const impossibleEnd=await submit({...withServices,endDate:'2026-02-30'});
+assert.equal(impossibleEnd.status,400);
+const noEnd=await submit({...withServices,endDate:''});
+assert.equal(noEnd.status,400);
+const conflictingServices=await submit({...withServices,delivery:false});
+assert.equal(conflictingServices.status,400);
+const invalidServiceType=await submit({...withServices,delivery:'true'});
+assert.equal(invalidServiceType.status,400);
 console.log('Website inquiry API: validation, rate limit, origin and persistence checks passed.');
