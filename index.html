@@ -49,7 +49,7 @@
   <link rel="stylesheet" href="/regal-storefront-v2.css?v=20261013-rental-dates-services">
   <link rel="stylesheet" href="/regal-catalog-v3.css?v=20261013-quote-subtotal">
   <link rel="stylesheet" href="/regal-identity-v2.css?v=20261013-split">
-  <script src="/regal-catalog-v3.js?v=20261013-rental-dates-services" defer></script>
+  <script src="/regal-catalog-v3.js?v=20261013-combined-service" defer></script>
 </head>
 <body>
 <a class="skip-link" href="#content">Skip to content</a>
@@ -236,9 +236,8 @@
             <legend>Delivery &amp; Setup Services</legend>
             <p class="quote-services__intro">Choose how you'll receive the equipment. Service fees are confirmed in your personalized quote.</p>
             <label class="quote-service-option"><input type="checkbox" name="delivery" id="service-delivery" checked><span><strong>Delivery &amp; pickup by Regal Rentals</strong><small>We bring the equipment to your event and collect it afterward.</small></span></label>
-            <label class="quote-service-option"><input type="checkbox" name="setup" id="service-setup"><span><strong>Equipment setup</strong><small>We'll arrange your selected equipment.</small></span></label>
-            <label class="quote-service-option"><input type="checkbox" name="teardown" id="service-teardown"><span><strong>Equipment teardown</strong><small>We'll break it down before collection.</small></span></label>
-            <p id="quote-services-help" class="quote-services__help" role="status" aria-live="polite">If you don't need delivery, uncheck it to request customer pickup and return. Setup and teardown require delivery.</p>
+            <label class="quote-service-option"><input type="checkbox" name="setupTeardown" id="service-setup-teardown"><span><strong>Equipment Setup &amp; Teardown</strong><small>We'll set up the equipment when delivered and take it down before collection.</small></span></label>
+            <p id="quote-services-help" class="quote-services__help" role="status" aria-live="polite">If you don't need delivery, uncheck it to request customer pickup and return. Setup &amp; teardown requires delivery.</p>
             <label class="quote-services__address" id="delivery-address-wrap">Delivery location or venue (optional)<input name="deliveryAddress" id="delivery-address" type="text" maxlength="240" autocomplete="street-address" placeholder="Street address or venue name"></label>
           </fieldset>
           <label class="form-details">Event details<textarea name="details" rows="4" maxlength="2500" placeholder="Guest count, event date (if different), timing, special requests, or anything else we should know…"></textarea></label>
