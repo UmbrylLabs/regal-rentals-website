@@ -165,8 +165,10 @@ export async function onRequestPost(context) {
       'Rental start ('+(delivery?'Regal delivery':'customer pickup')+'): '+eventDate,
       'Rental end ('+(delivery?'Regal collection':'customer return')+'): '+endDate,
       'Delivery & pickup by Regal Rentals: '+(delivery?'Requested':'No — customer pickup and return requested'),
-      'Equipment setup: '+(setup?'Requested':'Not requested'),
-      'Equipment teardown: '+(teardown?'Requested':'Not requested'),
+      ...(setup===teardown
+        ? ['Equipment setup & teardown: '+(setup?'Requested':'Not requested')]
+        : ['Equipment setup: '+(setup?'Requested':'Not requested'),
+           'Equipment teardown: '+(teardown?'Requested':'Not requested')]),
       ...(delivery && deliveryAddress?['Delivery address / venue: '+deliveryAddress]:[]),
       '',
       'EVENT DETAILS',
