@@ -44,18 +44,39 @@
   .site-header .site-brand__name .brand-rentals{font-size:8px;letter-spacing:.2em;gap:5px}
 }
 
-/* Approved photographic master lockup: preserve artwork, refine only its display size.
-   Slightly smaller logo plus symmetric padding keeps the crown off the header edges. */
-.site-header .site-brand--lockup{display:inline-flex;min-width:0;flex-shrink:1;align-items:center}
+/* Two independent transparent brand assets: no divider and no white image box. */
+.site-header .site-brand--split{
+  display:inline-flex;align-items:center;gap:11px;min-width:0;
+  flex-shrink:1;white-space:nowrap;
+}
 .site-header .site-header__inner{align-items:center;padding-block:8px}
-.site-header .site-brand--lockup img{
-  display:block;width:268px;height:auto;max-width:100%;
-  flex:0 1 auto;object-fit:contain;
+.site-header .site-brand--split img{
+  display:block;height:auto;object-fit:contain;max-width:100%;
+}
+.site-header .site-brand--split img.site-brand__shield{
+  width:62px;flex:0 0 62px;
+}
+.site-header .site-brand--split img.site-brand__wordmark{
+  width:210px;min-width:0;flex:0 1 210px;
 }
 @media(max-width:760px){
-  .site-header .site-brand--lockup img{width:min(230px,calc(100vw - 117px));height:auto;max-width:100%}
   .site-header .site-header__inner{min-height:82px;padding-block:6px}
+  .site-header .site-brand--split{gap:8px}
+  .site-header .site-brand--split img.site-brand__shield{
+    width:51px;flex-basis:51px;
+  }
+  .site-header .site-brand--split img.site-brand__wordmark{
+    width:min(207px,calc(100vw - 167px));
+    flex:0 1 auto;
+  }
 }
 @media(max-width:370px){
-  .site-header .site-brand--lockup img{width:min(220px,calc(100vw - 115px));height:auto}
+  .site-header .site-brand--split{gap:7px}
+  .site-header .site-header__inner{gap:8px}
+  .site-header .site-brand--split img.site-brand__shield{
+    width:44px;flex-basis:44px;
+  }
+  .site-header .site-brand--split img.site-brand__wordmark{
+    width:min(185px,calc(100vw - 145px));
+  }
 }
