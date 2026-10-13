@@ -8,6 +8,13 @@ const VALID_ITEMS = new Set([
 ]);
 const VALID_PACKAGES = new Set(['','Backyard Essentials','Party Ready','Shade & Serve','Custom rental']);
 const EMAIL_RE = /^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/;
+const PREFERRED_TIME_RE = /^(?:0[8-9]|1[0-8]):00$/;
+
+function preferredTimeLabel(value) {
+  if (!value) return 'Flexible / Any time';
+  const hour = Number(value.slice(0,2));
+  return String(hour % 12 || 12) + ':00 ' + (hour < 12 ? 'AM' : 'PM');
+}
 
 function text(value, max) {
   return typeof value === 'string' ? value.trim().slice(0, max) : '';
@@ -75,6 +82,8 @@ export async function onRequestPost(context) {
     const hasRentalWindow=['endDate','delivery','setup','teardown','deliveryAddress']
       .some(key=>Object.prototype.hasOwnProperty.call(body,key));
     const endDate = text(body.endDate,10);
+    const startTime = typeof body.startTime === 'string' ? body.startTime.trim() : '';
+    const endTime = typeof body.endTime === 'string' ? body.endTime.trim() : '';
     const deliveryAddress = text(body.deliveryAddress,240);
     const delivery = body.delivery === true;
     const setup = body.setup === true;
@@ -102,6 +111,15 @@ export async function onRequestPost(context) {
         return invalid('Please select a valid rental end date.');
       }
       if (endDate < eventDate) return invalid('Rental end date must be on or after the start date.');
+      if ((body.startTime !== undefined && typeof body.startTime !== 'string')
+        || (body.endTime !== undefined && typeof body.endTime !== 'string')
+        || (startTime && !PREFERRED_TIME_RE.test(startTime))
+        || (endTime && !PREFERRED_TIME_RE.test(endTime))) {
+        return invalid('Please choose valid preferred rental times.');
+      }
+      if (eventDate === endDate && startTime && endTime && endTime <= startTime) {
+        return invalid('For a same-day rental, the preferred end time must be later than the start time.');
+      }
       if (typeof body.delivery !== 'boolean' || typeof body.setup !== 'boolean'
         || typeof body.teardown !== 'boolean') {
         return invalid('Please select valid delivery and setup options.');
@@ -163,7 +181,9 @@ export async function onRequestPost(context) {
     const storedDetails = hasRentalWindow ? [
       'RENTAL DATES & SERVICES',
       'Rental start ('+(delivery?'Regal delivery':'customer pickup')+'): '+eventDate,
+      'Preferred '+(delivery?'delivery':'customer pickup')+' time: '+preferredTimeLabel(startTime),
       'Rental end ('+(delivery?'Regal collection':'customer return')+'): '+endDate,
+      'Preferred '+(delivery?'collection':'return')+' time: '+preferredTimeLabel(endTime),
       'Delivery & pickup by Regal Rentals: '+(delivery?'Requested':'No — customer pickup and return requested'),
       ...(setup===teardown
         ? ['Equipment setup & teardown: '+(setup?'Requested':'Not requested')]
