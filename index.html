@@ -46,10 +46,10 @@
   </style>
   <!-- Unique asset names avoid stale cached styles/scripts from previous launches. -->
   <link rel="stylesheet" href="/regal-home-20261009.css?v=20261013-light-only">
-  <link rel="stylesheet" href="/regal-storefront-v2.css">
-  <link rel="stylesheet" href="/regal-catalog-v3.css?v=20261013-image-padding">
+  <link rel="stylesheet" href="/regal-storefront-v2.css?v=20261013-quote-subtotal">
+  <link rel="stylesheet" href="/regal-catalog-v3.css?v=20261013-quote-subtotal">
   <link rel="stylesheet" href="/regal-identity-v2.css?v=20261013-split">
-  <script src="/regal-catalog-v3.js" defer></script>
+  <script src="/regal-catalog-v3.js?v=20261013-quote-subtotal" defer></script>
 </head>
 <body>
 <a class="skip-link" href="#content">Skip to content</a>
@@ -121,7 +121,7 @@
           <button class="catalog-chip" type="button" data-catalog-filter="canopies" aria-pressed="false">Canopies <span class="catalog-chip__count" data-filter-count="canopies"></span></button>
           <button class="catalog-chip" type="button" data-catalog-filter="more" aria-pressed="false" hidden>More Rentals <span class="catalog-chip__count" data-filter-count="more"></span></button>
         </div>
-        <a class="catalog-quote-shortcut" href="#quote" aria-label="Review your quote list">Your Quote <span id="catalog-quote-count" class="catalog-quote-shortcut__count">0</span><span aria-hidden="true">→</span></a>
+        <a class="catalog-quote-shortcut" href="#quote" aria-label="Review your quote list">Your Quote <span id="catalog-quote-count" class="catalog-quote-shortcut__count">0</span><span id="catalog-quote-total" class="catalog-quote-shortcut__total" hidden></span><span aria-hidden="true">→</span></a>
       </div>
 
       <div class="catalog-results-header">
@@ -214,7 +214,7 @@
       </div>
       <div class="quote-form-card">
         <form id="quote-form" novalidate>
-          <div class="quote-cart" id="quote-cart" aria-live="polite"><div class="quote-cart__header"><strong>Your Quote List</strong><span id="quote-cart-count">No items yet</span></div><div id="quote-cart-items" class="quote-cart__items"><p>Select items or a package above to get started.</p></div><p class="quote-cart__note">Quantities are requested, not reserved. Final totals will be confirmed.</p></div>
+          <div class="quote-cart" id="quote-cart" aria-live="polite"><div class="quote-cart__header"><strong>Your Quote List</strong><span id="quote-cart-count">No items yet</span></div><div id="quote-cart-items" class="quote-cart__items"><p>Select items or a package above to get started.</p></div><div class="quote-cart__subtotal" id="quote-cart-subtotal" hidden><span id="quote-cart-subtotal-label">Estimated equipment subtotal</span><strong id="quote-cart-total"></strong></div><p class="quote-cart__note">Equipment estimates exclude taxes, delivery, setup, and any package adjustments. Custom-priced items are quoted separately. Quantities are not reserved; final totals will be confirmed.</p></div>
           <div class="form-grid">
             <label>Full name <span aria-hidden="true">*</span><input name="name" type="text" required maxlength="120" autocomplete="name" placeholder="Your name"></label>
             <label>Email address <span aria-hidden="true">*</span><input name="email" type="email" required maxlength="180" autocomplete="email" placeholder="you@example.com"></label>
@@ -245,7 +245,7 @@
     </div>
   </section>
 </main>
-<a class="mobile-quote-bar" id="mobile-quote-bar" href="#quote" hidden aria-label="Review items in your quote"><span>Review your quote <strong id="mobile-quote-count">0 items</strong></span><span aria-hidden="true">→</span></a>
+<a class="mobile-quote-bar" id="mobile-quote-bar" href="#quote" hidden aria-label="Review items in your quote"><span>Review your quote <strong id="mobile-quote-count">0 items</strong></span><span id="mobile-quote-total" class="mobile-quote-bar__total" hidden></span><span aria-hidden="true">→</span></a>
 <footer class="site-footer">
   <div class="site-wrap site-footer__top">
     <a class="site-brand site-brand--footer" href="#top"><img src="/assets/regal-compact-rr.svg?v=20261012" alt="" width="46" height="46"><span class="site-brand__name"><span class="brand-regal">Regal</span><span class="brand-rentals">Rentals</span></span></a>
