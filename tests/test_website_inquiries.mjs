@@ -64,7 +64,8 @@ assert.equal(invalidItems.status,400);
 const invalidDate=await submit({...valid,date:'2026-02-30'});
 assert.equal(invalidDate.status,400);
 // New requests capture both dates and enforce delivery for setup/teardown.
-const withServices={...valid,endDate:'2026-11-23',delivery:true,setup:true,teardown:true,
+const withServices={...valid,endDate:'2026-11-23',startTime:'10:00',endTime:'17:00',
+  delivery:true,setup:true,teardown:true,
   deliveryAddress:'123 Celebration Way, Folsom'};
 const serviceResult=await submit(withServices);
 assert.equal(serviceResult.status,201);
@@ -73,6 +74,8 @@ assert.ok(serviceWrite);
 assert.equal(serviceWrite.args[5],'2026-11-21');
 assert.match(serviceWrite.args[9],/Rental start \(Regal delivery\): 2026-11-21/);
 assert.match(serviceWrite.args[9],/Rental end \(Regal collection\): 2026-11-23/);
+assert.match(serviceWrite.args[9],/Preferred delivery time: 10:00 AM/);
+assert.match(serviceWrite.args[9],/Preferred collection time: 5:00 PM/);
 assert.match(serviceWrite.args[9],/Equipment setup & teardown: Requested/);
 assert.match(serviceWrite.args[9],/123 Celebration Way, Folsom/);
 const selfPickup=await submit({...withServices,delivery:false,setup:false,teardown:false,
@@ -82,6 +85,28 @@ assert.match(selfPickup.calls.find(c=>c.sql.includes('INSERT INTO website_inquir
   /customer pickup and return requested/);
 assert.match(selfPickup.calls.find(c=>c.sql.includes('INSERT INTO website_inquiries (')).args[9],
   /Equipment setup & teardown: Not requested/);
+assert.match(selfPickup.calls.find(c=>c.sql.includes('INSERT INTO website_inquiries (')).args[9],
+  /Preferred customer pickup time: 10:00 AM/);
+assert.match(selfPickup.calls.find(c=>c.sql.includes('INSERT INTO website_inquiries (')).args[9],
+  /Preferred return time: 5:00 PM/);
+const flexible=await submit({...withServices,startTime:'',endTime:''});
+assert.equal(flexible.status,201);
+assert.match(flexible.calls.find(c=>c.sql.includes('INSERT INTO website_inquiries (')).args[9],
+  /Preferred delivery time: Flexible \/ Any time/);
+const sameDay=await submit({...withServices,endDate:withServices.date});
+assert.equal(sameDay.status,201);
+const sameDayWrongOrder=await submit({...withServices,endDate:withServices.date,startTime:'17:00',endTime:'10:00'});
+assert.equal(sameDayWrongOrder.status,400);
+const sameDaySameTime=await submit({...withServices,endDate:withServices.date,startTime:'10:00',endTime:'10:00'});
+assert.equal(sameDaySameTime.status,400);
+const sameDayFlexible=await submit({...withServices,endDate:withServices.date,startTime:'',endTime:'08:00'});
+assert.equal(sameDayFlexible.status,201);
+const invalidTime=await submit({...withServices,startTime:'20:00'});
+assert.equal(invalidTime.status,400);
+const invalidMinute=await submit({...withServices,endTime:'10:30'});
+assert.equal(invalidMinute.status,400);
+const invalidTimeType=await submit({...withServices,startTime:1000});
+assert.equal(invalidTimeType.status,400);
 const badEnd=await submit({...withServices,endDate:'2026-11-20'});
 assert.equal(badEnd.status,400);
 const impossibleEnd=await submit({...withServices,endDate:'2026-02-30'});
