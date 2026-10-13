@@ -17,8 +17,7 @@
   const date=form?.elements.namedItem('date');
   const endDate=form?.elements.namedItem('endDate');
   const serviceDelivery=document.querySelector('#service-delivery');
-  const serviceSetup=document.querySelector('#service-setup');
-  const serviceTeardown=document.querySelector('#service-teardown');
+  const serviceSetupTeardown=document.querySelector('#service-setup-teardown');
   const serviceHelp=document.querySelector('#quote-services-help');
   const addressWrap=document.querySelector('#delivery-address-wrap');
   const deliveryAddress=document.querySelector('#delivery-address');
@@ -191,14 +190,14 @@
       ? 'Rental end date must be on or after the start date.' : '');
   }
   function syncServices() {
-    if(!serviceDelivery || !serviceSetup || !serviceTeardown)return;
-    const needsDelivery=serviceSetup.checked||serviceTeardown.checked;
+    if(!serviceDelivery || !serviceSetupTeardown)return;
+    const needsDelivery=serviceSetupTeardown.checked;
     if(needsDelivery && !serviceDelivery.checked){
       serviceDelivery.checked=true;
-      if(serviceHelp)serviceHelp.textContent='Delivery & pickup is required with setup or teardown, so it was automatically selected.';
+      if(serviceHelp)serviceHelp.textContent='Delivery & pickup is required with setup & teardown, so it was automatically selected.';
     }else if(serviceHelp){
       serviceHelp.textContent=needsDelivery
-        ? 'Setup and teardown require delivery & pickup by Regal Rentals.'
+        ? 'Setup & teardown requires delivery & pickup by Regal Rentals.'
         : serviceDelivery.checked
           ? 'Uncheck delivery if you prefer customer pickup and return (subject to confirmation).'
           : 'Customer pickup & return requested. Select delivery if you would like us to bring and collect the equipment.';
@@ -212,8 +211,7 @@
   date?.addEventListener('change',syncRentalDates);
   endDate?.addEventListener('change',syncRentalDates);
   serviceDelivery?.addEventListener('change',syncServices);
-  serviceSetup?.addEventListener('change',syncServices);
-  serviceTeardown?.addEventListener('change',syncServices);
+  serviceSetupTeardown?.addEventListener('change',syncServices);
   syncRentalDates();
   syncServices();
 
@@ -385,8 +383,8 @@
       endDate:String(fields.get('endDate')||''),
       city:String(fields.get('city')||'').trim(),
       delivery:!!serviceDelivery?.checked,
-      setup:!!serviceSetup?.checked,
-      teardown:!!serviceTeardown?.checked,
+      setup:!!serviceSetupTeardown?.checked,
+      teardown:!!serviceSetupTeardown?.checked,
       deliveryAddress:serviceDelivery?.checked?String(fields.get('deliveryAddress')||'').trim():'',
       package:loaded&&packages.length?'':String(fields.get('package')||''),
       packageId:loaded&&chosenPackage?chosenPackage.id:'',
