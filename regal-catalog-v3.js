@@ -15,6 +15,14 @@
   const reference=document.querySelector('#form-reference');
   const submitButton=form?.querySelector('[type="submit"]');
   const date=form?.elements.namedItem('date');
+  const endDate=form?.elements.namedItem('endDate');
+  const serviceDelivery=document.querySelector('#service-delivery');
+  const serviceSetup=document.querySelector('#service-setup');
+  const serviceTeardown=document.querySelector('#service-teardown');
+  const serviceHelp=document.querySelector('#quote-services-help');
+  const addressWrap=document.querySelector('#delivery-address-wrap');
+  const deliveryAddress=document.querySelector('#delivery-address');
+  const rentalDateHelp=document.querySelector('#rental-date-help');
 
   const catalogFilters=document.querySelector('.catalog-chips');
   const catalogEquipment=document.querySelector('#catalog-equipment-group');
@@ -174,8 +182,40 @@
   nav?.querySelectorAll('a').forEach(a=>a.addEventListener('click',closeMenu));
   document.addEventListener('keydown',e=>{if(e.key==='Escape')closeMenu();});
   const year=document.querySelector('#year');if(year)year.textContent=String(new Date().getFullYear());
-  if(date)date.min=today();
   if(!form)return;
+  function syncRentalDates() {
+    if(date)date.min=today();
+    if(!endDate)return;
+    endDate.min=date?.value && date.value>today()?date.value:today();
+    endDate.setCustomValidity(endDate.value && date?.value && endDate.value<date.value
+      ? 'Rental end date must be on or after the start date.' : '');
+  }
+  function syncServices() {
+    if(!serviceDelivery || !serviceSetup || !serviceTeardown)return;
+    const needsDelivery=serviceSetup.checked||serviceTeardown.checked;
+    if(needsDelivery && !serviceDelivery.checked){
+      serviceDelivery.checked=true;
+      if(serviceHelp)serviceHelp.textContent='Delivery & pickup is required with setup or teardown, so it was automatically selected.';
+    }else if(serviceHelp){
+      serviceHelp.textContent=needsDelivery
+        ? 'Setup and teardown require delivery & pickup by Regal Rentals.'
+        : serviceDelivery.checked
+          ? 'Uncheck delivery if you prefer customer pickup and return (subject to confirmation).'
+          : 'Customer pickup & return requested. Select delivery if you would like us to bring and collect the equipment.';
+    }
+    if(addressWrap)addressWrap.hidden=!serviceDelivery.checked;
+    if(deliveryAddress)deliveryAddress.disabled=!serviceDelivery.checked;
+    if(rentalDateHelp)rentalDateHelp.textContent=serviceDelivery.checked
+      ? 'Start: requested delivery date. End: requested collection date. Same-day rentals are welcome.'
+      : 'Start: when you would pick up equipment. End: when you would return it. Same-day rentals are welcome.';
+  }
+  date?.addEventListener('change',syncRentalDates);
+  endDate?.addEventListener('change',syncRentalDates);
+  serviceDelivery?.addEventListener('change',syncServices);
+  serviceSetup?.addEventListener('change',syncServices);
+  serviceTeardown?.addEventListener('change',syncServices);
+  syncRentalDates();
+  syncServices();
 
   function renderCart() {
     const summary=getCartSummary();
@@ -325,14 +365,16 @@
   document.querySelector('#new-inquiry')?.addEventListener('click',()=>{
     form.reset();cart.clear();chosenPackage=null;renderCart();
     form.querySelectorAll('input,select,textarea').forEach(e=>e.disabled=false);
-    if(date)date.min=today();
+    syncRentalDates();
+    syncServices();
     success.hidden=true;submitButton.hidden=false;
     setStatus('Select equipment or a package and send your request.');
     form.elements.name.focus();
   });
   form.addEventListener('submit',async event=>{
     event.preventDefault();
-    if(date)date.min=today();
+    syncRentalDates();
+    syncServices();
     if(!form.reportValidity()||submitButton.disabled)return;
     const fields=new FormData(form);
     const payload={
@@ -340,7 +382,12 @@
       email:String(fields.get('email')||'').trim(),
       phone:String(fields.get('phone')||'').trim(),
       date:String(fields.get('date')||''),
+      endDate:String(fields.get('endDate')||''),
       city:String(fields.get('city')||'').trim(),
+      delivery:!!serviceDelivery?.checked,
+      setup:!!serviceSetup?.checked,
+      teardown:!!serviceTeardown?.checked,
+      deliveryAddress:serviceDelivery?.checked?String(fields.get('deliveryAddress')||'').trim():'',
       package:loaded&&packages.length?'':String(fields.get('package')||''),
       packageId:loaded&&chosenPackage?chosenPackage.id:'',
       items:loaded?[]:fields.getAll('item').map(String),
