@@ -121,8 +121,20 @@
   .quote-services .quote-service-option{padding:10px}
 }
 
+/* Preferred times are paired with the rental dates on desktop. */
+.form-grid .rental-time-label > span{
+  color:#342a40;
+  display:block;
+}
+.form-grid .rental-time-label select{
+  width:100%;
+  min-width:0;
+  background:#fff;
+}
 @media(max-width:760px){
-  /* Native date controls need room for their full value and calendar trigger. */
-  .form-grid > label:has(input[type="date"]){grid-column:1 / -1}
-  .form-grid input[type="date"]{min-width:0;width:100%}
+  /* Stack each date with its time on phones to keep the selectors readable. */
+  .form-grid > label:has(input[type="date"]),
+  .form-grid > .rental-time-label{grid-column:1 / -1}
+  .form-grid input[type="date"],
+  .form-grid .rental-time-label select{min-width:0;width:100%}
 }
