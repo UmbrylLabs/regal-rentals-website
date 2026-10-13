@@ -355,7 +355,26 @@
   }
   .catalog-chips {gap:7px}
   .catalog-chip {min-height:39px;padding:9px 12px;font-size:11px}
-  .catalog-quote-shortcut {padding:9px 10px;min-height:39px;gap:7px;font-size:11px}
+  .catalog-quote-shortcut {padding:9px 10px;min-height:39px;gap:7px;font-size:11px;position:relative}
+  /* Stack the estimate under the quote label on phones instead of crowding category chips. */
+  .catalog-quote-shortcut:has(.catalog-quote-shortcut__total:not([hidden])){
+    min-height:56px;
+    padding-bottom:23px;
+  }
+  .catalog-quote-shortcut__total{
+    position:absolute;
+    bottom:5px;
+    left:8px;
+    right:8px;
+    padding:0;
+    border:0;
+    max-width:none;
+    text-align:center;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    font-size:10px;
+  }
   .catalog-results-header {margin-bottom:17px}
   .catalog-results-header strong {font-size:17px}
   .catalog-results-header>span {font-size:10px}
