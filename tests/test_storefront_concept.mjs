@@ -48,6 +48,15 @@ for(const category of ['all','packages','chairs','tables','canopies']) {
  assert.ok(html.includes('data-catalog-filter="'+category+'"'),'Missing category filter: '+category);
 }
 
+assert.match(html,/name="endDate"/);
+assert.match(html,/id="service-delivery" checked/);
+assert.match(html,/id="service-setup"/);
+assert.match(html,/id="service-teardown"/);
+assert.match(html,/name="deliveryAddress"/);
+assert.match(js,/function syncRentalDates\(\)/);
+assert.match(js,/function syncServices\(\)/);
+assert.match(js,/serviceDelivery\.checked=true/);
+assert.match(js,/endDate:String\(fields\.get\('endDate'\)/);
 assert.match(html,/id="quote-form"/);
 assert.match(html,/id="form-success"/);
 assert.match(html,/id="form-status"/);
