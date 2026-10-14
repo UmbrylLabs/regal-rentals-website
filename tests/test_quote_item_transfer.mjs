@@ -28,7 +28,7 @@ const state={availability:new Map(),products:[{
  quantity_owned:100,category:'Tables & Chairs',price_cents:250
 }]};
 const escapeHtml=s=>String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;');
-const $=selector=>selector==='#booking-product-picker'?picker:null;
+const $=(selector,root)=>selector==='#booking-product-picker'?picker:(selector==='input[type="number"]' && root===card?input:null);
 const render=new Function('state','$','escapeHtml','money',
  js.slice(start,end)+'\nreturn renderProductPicker;'
 )(state,$,escapeHtml,()=>'$2.50');
