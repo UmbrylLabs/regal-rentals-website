@@ -67,7 +67,7 @@ assert.match(html,/id="service-setup-teardown"/);
 assert.doesNotMatch(html,/id="service-teardown"/);
 assert.match(html,/name="deliveryAddress"/);
 assert.match(js,/function syncRentalDates\(\)/);
-assert.match(js,/function syncServices\(\)/);
+assert.match(js,/function syncServices\(source=''/);
 assert.match(js,/serviceCustomerPickup\.checked=false/);
 assert.match(js,/serviceDelivery\.checked=false/);
 assert.match(js,/serviceSetupTeardown\.checked=false/);
