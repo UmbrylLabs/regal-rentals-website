@@ -60,6 +60,7 @@ assert.match(js,/Preferred Customer Pickup Time/);
 assert.match(html,/name="endDate"/);
 assert.match(html,/id="service-delivery"/);
 assert.match(html,/id="service-customer-pickup"/);
+assert.ok(html.indexOf('id="service-customer-pickup"') < html.indexOf('id="service-delivery"'), 'Customer pickup should appear before delivery');
 assert.match(html,/id="service-setup-wrap" hidden/);
 assert.match(html,/id="delivery-address-wrap" hidden/);
 assert.doesNotMatch(html,/id="service-delivery" checked/);
