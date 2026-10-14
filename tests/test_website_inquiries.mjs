@@ -51,6 +51,10 @@ assert.equal(savedRef,accepted.json.reference,'Customer and admin must see the s
 const another=await submit(valid);
 assert.notEqual(accepted.json.reference,another.json.reference,'Consecutive quote inquiries get unique references');
 assert.equal(accepted.calls.filter(c=>c.sql.includes('INSERT INTO website_inquiries (')).length,1);
+const emptyEquipment=await submit({...valid,items:[],package:'',selectedItems:[],packageId:''});
+assert.equal(emptyEquipment.status,400,'Requests cannot omit equipment entirely');
+assert.match(emptyEquipment.json.error.message,/select at least one rental item or package/i);
+assert.equal(emptyEquipment.calls.some(c=>c.sql.includes('INSERT INTO website_inquiries (')),false);
 const badEmail=await submit({...valid,email:'not-an-email'});
 assert.equal(badEmail.status,400);
 assert.equal(badEmail.calls.length,0);
