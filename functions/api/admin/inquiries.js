@@ -7,8 +7,10 @@ export async function onRequestGet(context) {
     await requireAdmin(context.env, context.request);
     await ensureInquiryTables(context.env.DB);
     const rows = await context.env.DB.prepare(
-      'SELECT id,reference,name,email,phone,event_date,event_city,package_name,items_json,details,status,email_sent,created_at,updated_at ' +
-      'FROM website_inquiries ORDER BY created_at DESC LIMIT 250'
+      'SELECT wi.id,wi.reference,wi.name,wi.email,wi.phone,wi.event_date,wi.event_city,wi.package_name,wi.items_json,wi.details,wi.status,wi.email_sent,wi.created_at,wi.updated_at, ' +
+      'b.id AS booking_id, b.status AS booking_status ' +
+      'FROM website_inquiries wi LEFT JOIN bookings b ON b.booking_number = wi.reference ' +
+      'ORDER BY wi.created_at DESC LIMIT 250'
     ).all();
     return json({ok:true,inquiries:(rows.results || []).map(row => ({
       ...row,

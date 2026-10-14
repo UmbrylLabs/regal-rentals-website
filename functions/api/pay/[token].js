@@ -132,7 +132,10 @@ export async function onRequestPost(context) {
         amountCents: request.amount_cents,
         idempotencyKey: `${request.id}-${now}`.slice(0, 45),
         squareCustomerId,
-        referenceId: request.id,
+        // Square's Payments API reference_id accepts up to 40 characters.
+        // The RR booking reference is customer-facing and stays the same for
+        // every reservation, balance or deposit payment on this rental.
+        referenceId: request.booking_number,
         note: `${paymentPurposeLabel(request.purpose)} · ${request.booking_number}`
       });
       if (payment.status !== 'COMPLETED') {

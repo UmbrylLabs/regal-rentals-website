@@ -68,7 +68,7 @@
   const bookingWindow = () => {
     const data = new FormData(bookingForm);
     const eventStartAt = localEpoch(data.get('eventDate'), data.get('eventStart'));
-    const eventEndAt = localEpoch(data.get('eventDate'), data.get('eventEnd'));
+    const eventEndAt = localEpoch(data.get('eventEndDate') || data.get('eventDate'), data.get('eventEnd'));
     if (!eventStartAt || !eventEndAt || eventEndAt <= eventStartAt) {
       throw new Error('Choose a valid date, start time, and end time.');
     }
@@ -346,6 +346,7 @@
         method: 'POST', headers: { 'Idempotency-Key': crypto.randomUUID() },
         body: JSON.stringify({
           customer: { name: data.get('customerName'), email: data.get('customerEmail'), phone: data.get('customerPhone') },
+          websiteInquiryId: data.get('websiteInquiryId') || '',
           items, status, eventStartAt: windowData.eventStartAt, eventEndAt: windowData.eventEndAt,
           bufferBeforeMinutes: Number(data.get('bufferBefore')), bufferAfterMinutes: Number(data.get('bufferAfter')),
           holdExpiresAt: status === 'hold' ? Math.floor(Date.now() / 1000) + 1800 : null,
@@ -354,6 +355,8 @@
       });
       showMessage(bookingMessage, `Created ${result.booking.bookingNumber}.`, 'success');
       bookingForm.reset();
+      $('#booking-source').hidden = true;
+      bookingForm.elements.eventEndDate.value = '';
       bookingForm.elements.eventStart.value = '14:00';
       bookingForm.elements.eventEnd.value = '20:00';
       bookingForm.elements.bufferBefore.value = '120';
@@ -377,7 +380,16 @@
   const renderBookingDetail = () => {
     const booking = state.currentBooking;
     const latestSigning = (booking.signingRequests || [])[0];
-    $('#booking-detail').innerHTML = `<div class="panel-heading"><div><p class="eyebrow">${escapeHtml(booking.booking_number)}</p><h2>${escapeHtml(booking.customer_name)}</h2></div><span class="status status--${escapeHtml(booking.status)}">${escapeHtml(booking.status)}</span></div><div class="booking-summary"><div class="card"><h3>Event</h3><p><strong>Starts:</strong> ${escapeHtml(formatDate(booking.event_start_at))}</p><p><strong>Ends:</strong> ${escapeHtml(formatDate(booking.event_end_at))}</p><p><strong>Inventory blocked:</strong> ${escapeHtml(formatDate(booking.block_start_at))} through ${escapeHtml(formatDate(booking.block_end_at))}</p><p><strong>Service:</strong> ${escapeHtml(booking.service_type)} · ${escapeHtml(booking.event_city)}</p></div><div class="card"><h3>Customer</h3><p>${escapeHtml(booking.customer_name)}</p><p>${escapeHtml(booking.customer_email)}</p><p>${escapeHtml(booking.customer_phone)}</p><p><strong>Known subtotal:</strong> ${escapeHtml(money(booking.subtotal_cents))}</p></div></div><div class="card" style="margin-top:20px"><h3>Rental items</h3><ul class="item-list">${booking.items.map((item) => `<li>${Number(item.quantity)} × ${escapeHtml(item.name)} — ${escapeHtml(money(item.unit_price_cents))}</li>`).join('')}</ul><div class="detail-actions"><label>Status<select id="detail-status">${['inquiry','quote','hold','confirmed','paid','ready','out','returned','completed','cancelled','expired'].map((status) => `<option value="${status}" ${booking.status === status ? 'selected' : ''}>${status}</option>`).join('')}</select></label><button class="button" id="save-booking-status" type="button">Save Status</button><button class="button button--secondary" id="create-signing-link" type="button">Create Signing Link</button></div><p class="message" id="detail-message"></p><div class="signing-link-box" id="signing-link-box" ${latestSigning ? '' : 'hidden'}>${latestSigning ? `Latest agreement: version ${Number(latestSigning.agreement_version)} · ${latestSigning.signed_at ? `signed ${escapeHtml(formatDate(latestSigning.signed_at))}` : `expires ${escapeHtml(formatDate(latestSigning.expires_at))}`}` : ''}</div></div>`;
+    $('#booking-detail').innerHTML = `<div class="panel-heading"><div><p class="eyebrow">${escapeHtml(booking.booking_number)}</p><h2>${escapeHtml(booking.customer_name)}</h2></div><span class="status status--${escapeHtml(booking.status)}">${escapeHtml(booking.status)}</span></div><div class="booking-reference-tools"><p>Use <strong>${escapeHtml(booking.booking_number)}</strong> as the custom Invoice ID when creating a Square invoice manually. Square payment receipts keep their own payment IDs.</p><button class="button button--secondary" type="button" id="copy-booking-invoice-number">Copy Square Invoice ID</button></div><div class="booking-summary"><div class="card"><h3>Event</h3><p><strong>Starts:</strong> ${escapeHtml(formatDate(booking.event_start_at))}</p><p><strong>Ends:</strong> ${escapeHtml(formatDate(booking.event_end_at))}</p><p><strong>Inventory blocked:</strong> ${escapeHtml(formatDate(booking.block_start_at))} through ${escapeHtml(formatDate(booking.block_end_at))}</p><p><strong>Service:</strong> ${escapeHtml(booking.service_type)} · ${escapeHtml(booking.event_city)}</p></div><div class="card"><h3>Customer</h3><p>${escapeHtml(booking.customer_name)}</p><p>${escapeHtml(booking.customer_email)}</p><p>${escapeHtml(booking.customer_phone)}</p><p><strong>Known subtotal:</strong> ${escapeHtml(money(booking.subtotal_cents))}</p></div></div><div class="card" style="margin-top:20px"><h3>Rental items</h3><ul class="item-list">${booking.items.map((item) => `<li>${Number(item.quantity)} × ${escapeHtml(item.name)} — ${escapeHtml(money(item.unit_price_cents))}</li>`).join('')}</ul><div class="detail-actions"><label>Status<select id="detail-status">${['inquiry','quote','hold','confirmed','paid','ready','out','returned','completed','cancelled','expired'].map((status) => `<option value="${status}" ${booking.status === status ? 'selected' : ''}>${status}</option>`).join('')}</select></label><button class="button" id="save-booking-status" type="button">Save Status</button><button class="button button--secondary" id="create-signing-link" type="button">Create Signing Link</button></div><p class="message" id="detail-message"></p><div class="signing-link-box" id="signing-link-box" ${latestSigning ? '' : 'hidden'}>${latestSigning ? `Latest agreement: version ${Number(latestSigning.agreement_version)} · ${latestSigning.signed_at ? `signed ${escapeHtml(formatDate(latestSigning.signed_at))}` : `expires ${escapeHtml(formatDate(latestSigning.expires_at))}`}` : ''}</div></div>`;
+    $('#copy-booking-invoice-number')?.addEventListener('click', async () => {
+      const number = String(booking.booking_number || '');
+      try {
+        await navigator.clipboard.writeText(number);
+        showMessage($('#detail-message'), 'Copied '+number+' for the Square custom invoice ID.', 'success');
+      } catch {
+        window.prompt('Copy this RR number into Square Invoice ID:',number);
+      }
+    });
     $('#save-booking-status').addEventListener('click', saveBookingStatus);
     $('#create-signing-link').addEventListener('click', createSigningLink);
   };
@@ -418,6 +430,67 @@
     $('#users-list').innerHTML = state.users.map((user) => `<div class="upcoming-row"><div><strong>${escapeHtml(user.display_name)}</strong><p>${escapeHtml(user.email)} · ${escapeHtml(user.role)} · ${user.is_active ? 'active' : 'disabled'}</p></div></div>`).join('') || '<p>No Access users have opened the dashboard yet.</p>';
   };
 
+  window.addEventListener('regal:open-booking', (event) => {
+    if (event.detail?.id) openBooking(event.detail.id);
+  });
+
+  // Converting from Website Inquiries preserves the customer's RR reference.
+  // Prefill only recognized items; the owner checks quantities, dates,
+  // inventory, pricing and missing phone details before saving.
+  const parsePreferredTime = (details, term) => {
+    const text = String(details || '');
+    const lines = text.split('\n');
+    const match = lines.find(line => line.startsWith('Preferred '+term+' time: '));
+    if (!match) return '';
+    const parsed = match.match(/:\s*(\d{1,2}):(\d{2})\s+(AM|PM)$/i);
+    if (!parsed) return '';
+    const hour = Number(parsed[1]) % 12 + (/PM/i.test(parsed[3]) ? 12 : 0);
+    return String(hour).padStart(2,'0')+':'+parsed[2];
+  };
+  window.addEventListener('regal:convert-inquiry', (event) => {
+    const lead = event.detail;
+    if (!lead || typeof lead.id !== 'string' || lead.booking_id) return;
+    bookingForm.reset();
+    state.availability.clear();
+    renderProductPicker();
+    const fields = bookingForm.elements;
+    fields.websiteInquiryId.value = lead.id;
+    fields.customerName.value = lead.name || '';
+    fields.customerEmail.value = lead.email || '';
+    fields.customerPhone.value = lead.phone || '';
+    fields.eventCity.value = lead.event_city || '';
+    fields.eventDate.value = lead.event_date || '';
+    const notes = String(lead.details || '');
+    const endDate = notes.match(/Rental end \([^)]*\): (\d{4}-\d{2}-\d{2})/);
+    fields.eventEndDate.value = endDate?.[1] || lead.event_date || '';
+    fields.serviceType.value = notes.includes('Rental start (customer pickup)')
+      ? 'pickup' : 'delivery';
+    fields.eventStart.value = parsePreferredTime(notes, fields.serviceType.value === 'delivery' ? 'delivery':'customer pickup') || '14:00';
+    fields.eventEnd.value = parsePreferredTime(notes, fields.serviceType.value === 'delivery' ? 'collection':'return') || '20:00';
+    const address = notes.match(/Delivery address \/ venue: (.*)/);
+    fields.eventAddress.value = address?.[1] || '';
+    fields.notes.value = ('Original website inquiry: '+lead.reference+'\n'+notes).slice(0,4000);
+    const wanted = Array.isArray(lead.items) ? lead.items : [];
+    const unmatched = [];
+    for (const item of wanted) {
+      const match = String(item).match(/^(\d+)\s*[×x]\s*(.+)$/i);
+      const name = (match ? match[2] : String(item)).trim().toLowerCase();
+      const quantity = match ? Number(match[1]) : 1;
+      const product = state.products.find(p => Number(p.active) === 1 && String(p.name).trim().toLowerCase() === name);
+      const input = product && [...document.querySelectorAll('#booking-product-picker .product-option')].find(el=>el.dataset.productId===product.id)?.querySelector('input[type="number"]');
+      if (input && quantity >= 1 && quantity <= Number(input.max)) input.value=String(quantity);
+      else unmatched.push(String(item));
+    }
+    const message = $('#booking-source');
+    message.hidden = false;
+    message.textContent = 'Creating booking from '+lead.reference+'. This exact reference will be retained on agreements and payment records. '
+      + 'Review the rental dates, equipment, quantities and prices before creating the booking.'
+      + (unmatched.length ? ' Manually select these items: '+unmatched.join(', ')+'.' : '')
+      + (!fields.customerPhone.value ? ' A customer phone number is required before saving.' : '');
+    showMessage(bookingMessage, '');
+    openPanel('new-booking');
+  });
+
   const showDashboard = async (user) => {
     state.user = user;
     loginView.hidden = true;
@@ -447,6 +520,11 @@
   $('#cancel-product-button').addEventListener('click', () => { productForm.hidden = true; resetProductForm(); });
   productForm.addEventListener('submit', saveCatalogProduct);
   bookingForm.addEventListener('submit', createBooking);
+  bookingForm.elements.eventDate.addEventListener('change', () => {
+    if (!bookingForm.elements.eventEndDate.value) {
+      bookingForm.elements.eventEndDate.value = bookingForm.elements.eventDate.value;
+    }
+  });
   const today = new Date();
   today.setMinutes(today.getMinutes() - today.getTimezoneOffset());
   bookingForm.elements.eventDate.min = today.toISOString().slice(0, 10);
