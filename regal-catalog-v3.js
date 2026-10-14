@@ -413,7 +413,7 @@
     const selectedPackageInFallback=!!packageSelect?.value;
     if(loaded ? (!cart.size && !chosenPackage) : (!selectedInFallback && !selectedPackageInFallback)){
       setStatus('Please add at least one rental item or package before requesting a quote.',true);
-      document.querySelector('#quote-cart')?.scrollIntoView({behavior:'smooth',block:'center'});
+      document.querySelector('#form-status')?.scrollIntoView({behavior:'smooth',block:'center'});
       return;
     }
     const fields=new FormData(form);
