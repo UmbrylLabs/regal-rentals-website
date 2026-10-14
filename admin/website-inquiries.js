@@ -39,6 +39,9 @@
         (lead.phone ? ' · ' + escapeHtml(lead.phone) : '') + '</dd></div></dl>' +
         (lead.details ? '<p class="inquiry-details">' + escapeHtml(lead.details) + '</p>' : '') +
         '<div class="inquiry-actions"><a class="button button--secondary" href="' + escapeHtml(mailHref) + '">Reply by email</a>' +
+        (lead.booking_id
+          ? '<button class="button" type="button" data-inquiry-open-booking="' + escapeHtml(lead.booking_id) + '">Open booking</button>'
+          : '<button class="button" type="button" data-inquiry-convert="' + escapeHtml(lead.id) + '">Create booking</button>') +
         (lead.status !== 'contacted' ? '<button class="button" type="button" data-inquiry-action="contacted" data-inquiry-id="' + escapeHtml(lead.id) + '">Mark contacted</button>' : '') +
         (lead.status !== 'archived' ? '<button class="button button--quiet" type="button" data-inquiry-action="archived" data-inquiry-id="' + escapeHtml(lead.id) + '">Archive</button>' : '<button class="button button--quiet" type="button" data-inquiry-action="new" data-inquiry-id="' + escapeHtml(lead.id) + '">Reopen</button>') +
         '</div></article>';
@@ -60,6 +63,19 @@
   button.addEventListener('click',load);
   refresh?.addEventListener('click',load);
   container.addEventListener('click',async event => {
+    const convert = event.target.closest('[data-inquiry-convert]');
+    if (convert) {
+      const lead = inquiries.find(item => item.id === convert.dataset.inquiryConvert);
+      if (lead && !lead.booking_id) {
+        window.dispatchEvent(new CustomEvent('regal:convert-inquiry', {detail:lead}));
+      }
+      return;
+    }
+    const open = event.target.closest('[data-inquiry-open-booking]');
+    if (open) {
+      window.dispatchEvent(new CustomEvent('regal:open-booking', {detail:{id:open.dataset.inquiryOpenBooking}}));
+      return;
+    }
     const btn = event.target.closest('[data-inquiry-action]');
     if (!btn) return;
     const id = btn.dataset.inquiryId;
