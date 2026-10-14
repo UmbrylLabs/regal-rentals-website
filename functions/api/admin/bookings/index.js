@@ -61,6 +61,15 @@ export async function onRequestPost(context) {
     return json({ ok: true, duplicate: result.duplicate, booking: result.booking }, 201);
   } catch (error) {
     const code = String(error?.message || '');
+    if (code === 'INQUIRY_ALREADY_BOOKED') {
+      return json({ok:false,error:{code,message:'This website inquiry already has a booking. Open that booking instead of creating another.'}},409);
+    }
+    if (code === 'WEBSITE_INQUIRY_NOT_FOUND' || code === 'INVALID_WEBSITE_INQUIRY') {
+      return json({ok:false,error:{code,message:'That website inquiry could not be found. Refresh inquiries and try again.'}},404);
+    }
+    if (code === 'INQUIRY_CONVERSION_REQUIRES_ADMIN') {
+      return json({ok:false,error:{code,message:'Only an authenticated admin can convert website inquiries.'}},403);
+    }
     if (code.includes('INVENTORY_CONFLICT')) {
       return json({
         ok: false,
