@@ -74,6 +74,8 @@ jobs:
         run: node tests/test_dynamic_storefront.mjs
       - name: Test Regal storefront structure
         run: node tests/test_storefront_concept.mjs
+      - name: Test shared RR reference from inquiry to Square
+        run: node tests/test_linked_rental_reference.mjs
       - name: Test timestamped RR references
         run: node tests/test_rr_references.mjs
       - name: Test website inquiry submissions
