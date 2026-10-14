@@ -81,11 +81,11 @@
     .map((card) => ({ productId: card.dataset.productId, quantity: Number($('input[type="number"]', card).value || 0) }))
     .filter((item) => Number.isInteger(item.quantity) && item.quantity > 0);
 
-  const renderProductPicker = () => {
+  const renderProductPicker = (resetSelections = false) => {
     const picker = $('#booking-product-picker');
     // An availability check must not erase quantities prefilled from an inquiry
     // or quantities the owner has already entered.
-    const selected = new Map($('.product-option', picker).map(card => [
+    const selected = resetSelections ? new Map() : new Map(Array.from(picker.querySelectorAll('.product-option')).map(card => [
       card.dataset.productId, Number($('input[type="number"]', card)?.value || 0)
     ]));
     const activeProducts = state.products.filter((product) => Number(product.active) === 1);
@@ -372,7 +372,7 @@
       bookingForm.elements.bufferBefore.value = '120';
       bookingForm.elements.bufferAfter.value = '120';
       state.availability.clear();
-      renderProductPicker();
+      renderProductPicker(true);
       await loadBookings();
       setTimeout(() => openBooking(result.booking.id), 400);
     } catch (error) { showMessage(bookingMessage, error.message, 'error'); }
@@ -462,7 +462,7 @@
     if (!lead || typeof lead.id !== 'string' || lead.booking_id) return;
     bookingForm.reset();
     state.availability.clear();
-    renderProductPicker();
+    renderProductPicker(true);
     const fields = bookingForm.elements;
     fields.websiteInquiryId.value = lead.id;
     fields.customerName.value = lead.name || '';
@@ -490,7 +490,7 @@
       // Only exact normalized inventory names are auto-filled. Don't silently
       // substitute a different item just because it is in the same category.
       const product = state.products.find(p => Number(p.active) === 1 && normalized(p.name) === normalized(name));
-      const input = product && $('.product-option', $('#booking-product-picker')).find(el => el.dataset.productId === product.id)?.querySelector('input[type="number"]');
+      const input = product && Array.from(document.querySelectorAll('#booking-product-picker .product-option')).find(el => el.dataset.productId === product.id)?.querySelector('input[type="number"]');
       const ready = Boolean(input && Number.isInteger(quantity) && quantity >= 1 && quantity <= Number(input.max));
       if (ready) input.value = String(quantity);
       else unmatched.push(String(item));
@@ -543,8 +543,24 @@
   };
 
   $('#logout-button').addEventListener('click', () => { location.href = '/cdn-cgi/access/logout'; });
-  $$('.nav-button').forEach((button) => button.addEventListener('click', () => openPanel(button.dataset.panel)));
-  $$('[data-open-panel]').forEach((button) => button.addEventListener('click', () => openPanel(button.dataset.openPanel)));
+  const startFreshBooking = () => {
+    bookingForm.reset();
+    state.availability.clear();
+    renderProductPicker(true);
+    $('#booking-source').hidden = true;
+    $('#booking-inquiry-equipment').hidden = true;
+    $('#booking-inquiry-equipment-list').textContent = '';
+    $('#booking-availability-message').textContent = 'Choose the rental dates and times to check availability.';
+    showMessage(bookingMessage, '');
+  };
+  $('.nav-button').forEach((button) => button.addEventListener('click', () => {
+    if (button.dataset.panel === 'new-booking') startFreshBooking();
+    openPanel(button.dataset.panel);
+  }));
+  $('[data-open-panel]').forEach((button) => button.addEventListener('click', () => {
+    if (button.dataset.openPanel === 'new-booking') startFreshBooking();
+    openPanel(button.dataset.openPanel);
+  }));
   $('#refresh-bookings').addEventListener('click', loadBookings);
   $('#check-booking-availability').addEventListener('click', checkAvailability);
   $('#new-product-button').addEventListener('click', () => showProductForm(false));
