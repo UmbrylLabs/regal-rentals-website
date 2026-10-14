@@ -83,6 +83,11 @@
 
   const renderProductPicker = () => {
     const picker = $('#booking-product-picker');
+    // An availability check must not erase quantities prefilled from an inquiry
+    // or quantities the owner has already entered.
+    const selected = new Map($('.product-option', picker).map(card => [
+      card.dataset.productId, Number($('input[type="number"]', card)?.value || 0)
+    ]));
     const activeProducts = state.products.filter((product) => Number(product.active) === 1);
     if (!activeProducts.length) {
       picker.innerHTML = '<p>No active rental items are available. Add an item in Inventory first.</p>';
@@ -92,10 +97,13 @@
       const available = state.availability.has(product.id)
         ? state.availability.get(product.id)
         : Number(product.quantity_owned);
+      const wanted = Math.max(0,selected.get(product.id) || 0);
+      const excess = wanted > available;
       return `<div class="product-option${available < 1 ? ' is-unavailable' : ''}" data-product-id="${escapeHtml(product.id)}">
         <h4>${escapeHtml(product.name)}</h4>
         <p>${escapeHtml(product.category)} · ${escapeHtml(money(product.price_cents))} · ${available} available</p>
-        <label>Quantity<input type="number" min="0" max="${available}" value="0" inputmode="numeric" ${available < 1 ? 'disabled' : ''} /></label>
+        <label>Quantity<input type="number" min="0" max="${available}" value="${wanted}" inputmode="numeric" ${available < 1 && !wanted ? 'disabled' : ''} /></label>
+        ${excess ? '<p class="booking-quantity-warning" role="alert">Requested '+wanted+' but only '+available+' available. Adjust quantity or rental dates.</p>' : ''}
       </div>`;
     }).join('');
   };
@@ -356,6 +364,8 @@
       showMessage(bookingMessage, `Created ${result.booking.bookingNumber}.`, 'success');
       bookingForm.reset();
       $('#booking-source').hidden = true;
+      $('#booking-inquiry-equipment').hidden = true;
+      $('#booking-inquiry-equipment-list').textContent = '';
       bookingForm.elements.eventEndDate.value = '';
       bookingForm.elements.eventStart.value = '14:00';
       bookingForm.elements.eventEnd.value = '20:00';
@@ -469,23 +479,44 @@
     fields.eventEnd.value = parsePreferredTime(notes, fields.serviceType.value === 'delivery' ? 'collection':'return') || '20:00';
     const address = notes.match(/Delivery address \/ venue: (.*)/);
     fields.eventAddress.value = address?.[1] || '';
-    fields.notes.value = ('Original website inquiry: '+lead.reference+'\n'+notes).slice(0,4000);
-    const wanted = Array.isArray(lead.items) ? lead.items : [];
+    const wanted = Array.isArray(lead.items) ? lead.items.filter(item => typeof item === 'string' && item.trim()) : [];
     const unmatched = [];
+    const itemsDisplay = [];
+    const normalized = str => String(str).trim().toLowerCase().replace(/[^a-z0-9]+/g,' ');
     for (const item of wanted) {
       const match = String(item).match(/^(\d+)\s*[×x]\s*(.+)$/i);
-      const name = (match ? match[2] : String(item)).trim().toLowerCase();
+      const name = (match ? match[2] : String(item)).trim();
       const quantity = match ? Number(match[1]) : 1;
-      const product = state.products.find(p => Number(p.active) === 1 && String(p.name).trim().toLowerCase() === name);
-      const input = product && [...document.querySelectorAll('#booking-product-picker .product-option')].find(el=>el.dataset.productId===product.id)?.querySelector('input[type="number"]');
-      if (input && quantity >= 1 && quantity <= Number(input.max)) input.value=String(quantity);
+      // Only exact normalized inventory names are auto-filled. Don't silently
+      // substitute a different item just because it is in the same category.
+      const product = state.products.find(p => Number(p.active) === 1 && normalized(p.name) === normalized(name));
+      const input = product && $('.product-option', $('#booking-product-picker')).find(el => el.dataset.productId === product.id)?.querySelector('input[type="number"]');
+      const ready = Boolean(input && Number.isInteger(quantity) && quantity >= 1 && quantity <= Number(input.max));
+      if (ready) input.value = String(quantity);
       else unmatched.push(String(item));
+      itemsDisplay.push('<li><strong>'+escapeHtml(item)+'</strong><small>'
+        +(ready ? 'Quantity filled below — verify availability' : 'Needs manual selection or quantity adjustment')
+        +'</small></li>');
     }
+    const equipment = $('#booking-inquiry-equipment');
+    const equipmentList = $('#booking-inquiry-equipment-list');
+    equipment.hidden = false;
+    if (wanted.length) {
+      equipmentList.innerHTML = '<ul>'+itemsDisplay.join('')+'</ul>';
+    } else {
+      equipmentList.innerHTML = '<p class="booking-inquiry-equipment__empty">No equipment was selected on this website quote request. Select the items and quantities in Rental Items below before creating the booking.</p>'
+        +(lead.package_name ? '<p>Package mentioned: <strong>'+escapeHtml(lead.package_name)+'</strong>. Confirm the included items.</p>' : '');
+    }
+    fields.notes.value = ('Original website inquiry: '+lead.reference+'\n'
+      +'CUSTOMER REQUESTED EQUIPMENT\n'
+      +(wanted.length ? wanted.join('\n') : 'No equipment selected in website inquiry')
+      +'\n\n'+notes).slice(0,4000);
     const message = $('#booking-source');
     message.hidden = false;
     message.textContent = 'Creating booking from '+lead.reference+'. This exact reference will be retained on agreements and payment records. '
       + 'Review the rental dates, equipment, quantities and prices before creating the booking.'
-      + (unmatched.length ? ' Manually select these items: '+unmatched.join(', ')+'.' : '')
+      + (!wanted.length ? ' This customer did not select any equipment in their request.' : '')
+      + (unmatched.length ? ' Manually select or adjust: '+unmatched.join(', ')+'.' : '')
       + (!fields.customerPhone.value ? ' A customer phone number is required before saving.' : '');
     showMessage(bookingMessage, '');
     openPanel('new-booking');
