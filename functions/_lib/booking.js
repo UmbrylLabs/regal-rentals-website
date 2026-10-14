@@ -4,6 +4,7 @@ import {
   randomId,
   sha256
 } from './http.js';
+import { regalReference } from './reference.js';
 
 const VALID_STATUSES = new Set([
   'inquiry', 'quote', 'hold', 'confirmed', 'paid', 'ready',
@@ -126,12 +127,6 @@ export async function getAvailability(db, blockStartAt, blockEndAt) {
   return result.results || [];
 }
 
-function bookingNumber() {
-  const date = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-  const random = crypto.randomUUID().replace(/-/g, '').slice(0, 6).toUpperCase();
-  return `RR-${date}-${random}`;
-}
-
 export async function createBooking(env, request, input, actorUserId = null) {
   const customer = normalizeCustomer(input.customer);
   const items = normalizeItems(input.items);
@@ -165,8 +160,8 @@ export async function createBooking(env, request, input, actorUserId = null) {
 
   const customerId = randomId();
   const bookingId = randomId();
-  const number = bookingNumber();
   const now = Math.floor(Date.now() / 1000);
+  const number = regalReference(bookingId, new Date(now * 1000));
   const holdExpiresAt = status === 'hold'
     ? Number(input.holdExpiresAt || now + 30 * 60)
     : null;
