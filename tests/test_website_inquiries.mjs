@@ -45,7 +45,11 @@ async function submit(body, {origin='https://regal.rentals',denyRate=false}={}) 
 const accepted=await submit(valid);
 assert.equal(accepted.status,201);
 assert.equal(accepted.json.ok,true);
-assert.match(accepted.json.reference,/^RR-[A-F0-9]{8}$/);
+assert.match(accepted.json.reference,/^RR-\\d{8}-\\d{4}-[A-F0-9]{4}$/);
+const savedRef=accepted.calls.find(c=>c.sql.includes('INSERT INTO website_inquiries (')).args[1];
+assert.equal(savedRef,accepted.json.reference,'Customer and admin must see the same saved reference');
+const another=await submit(valid);
+assert.notEqual(accepted.json.reference,another.json.reference,'Consecutive quote inquiries get unique references');
 assert.equal(accepted.calls.filter(c=>c.sql.includes('INSERT INTO website_inquiries (')).length,1);
 const badEmail=await submit({...valid,email:'not-an-email'});
 assert.equal(badEmail.status,400);
