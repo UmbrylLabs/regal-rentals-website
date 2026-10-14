@@ -173,6 +173,8 @@ export async function onRequestPost(context) {
       }
       items = labels;
     }
+    // Do not save an empty quote that the owner cannot turn into a rental.
+    if (!items.length) return invalid('Please select at least one rental item or package.');
     await ensureInquiryTables(context.env.DB);
 
     // Limit repeat requests before writing PII. The full IP is never stored.

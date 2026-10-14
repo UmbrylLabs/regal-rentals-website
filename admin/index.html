@@ -6,7 +6,7 @@
   <title>Regal Rentals Admin</title>
   <meta name="robots" content="noindex, nofollow" />
   <link rel="icon" href="/assets/regal-compact-rr.svg?v=20261012" type="image/svg+xml" />
-  <link rel="stylesheet" href="/admin/admin.css" />
+  <link rel="stylesheet" href="/admin/admin.css?v=20261014-quote-items" />
   <link rel="stylesheet" href="/admin/brand-compact.css?v=2" />
   <link rel="stylesheet" href="/admin/storefront-packages.css?v=20261010-2" />
   <link rel="stylesheet" href="/admin/website-inquiries.css" />
@@ -63,6 +63,11 @@
             <form class="card form-stack" id="booking-form">
               <input name="websiteInquiryId" type="hidden" />
               <div class="message" id="booking-source" hidden role="status"></div>
+              <section id="booking-inquiry-equipment" class="booking-inquiry-equipment" hidden aria-label="Items requested in website inquiry">
+                <h3>Equipment requested by customer</h3>
+                <p class="booking-inquiry-equipment__context">These are the quantities from the original quote request. Confirm availability and pricing before booking.</p>
+                <div id="booking-inquiry-equipment-list"></div>
+              </section>
               <div class="form-grid">
                 <label>Customer name<input name="customerName" autocomplete="name" required /></label>
                 <label>Email<input name="customerEmail" type="email" autocomplete="email" required /></label>
@@ -240,7 +245,7 @@
   <script src="/admin/booking-documents.js?v=20260722-1" defer></script>
   <script src="/admin/payment-manager.js?v=20260728-1" defer></script>
   <script src="/admin/product-photo-upload.js?v=20261011-1" defer></script>
-  <script src="/admin/admin.js?v=20261014-linked-inquiries" defer></script>
+  <script src="/admin/admin.js?v=20261014-quote-equipment" defer></script>
   <script src="/admin/admin-defaults.js?v=20260721-1" defer></script>
   <script src="/admin/website-inquiries.js?v=20261014-linked-inquiries" defer></script>
   <script src="/admin/storefront-packages.js?v=20261010-2" defer></script>
