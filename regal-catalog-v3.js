@@ -407,6 +407,15 @@
     syncRentalDates();
     syncServices();
     if(!form.reportValidity()||submitButton.disabled)return;
+    // A quote with no equipment cannot populate a booking. Stop it before
+    // submission instead of showing a misleading successful request.
+    const selectedInFallback=[...form.querySelectorAll('[name="item"]:checked')].length > 0;
+    const selectedPackageInFallback=!!packageSelect?.value;
+    if(loaded ? (!cart.size && !chosenPackage) : (!selectedInFallback && !selectedPackageInFallback)){
+      setStatus('Please add at least one rental item or package before requesting a quote.',true);
+      document.querySelector('#quote-cart')?.scrollIntoView({behavior:'smooth',block:'center'});
+      return;
+    }
     const fields=new FormData(form);
     const payload={
       name:String(fields.get('name')||'').trim(),
