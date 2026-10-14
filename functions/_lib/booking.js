@@ -5,6 +5,7 @@ import {
   sha256
 } from './http.js';
 import { regalReference } from './reference.js';
+import { ensureInquiryTables } from './inquiries.js';
 
 const VALID_STATUSES = new Set([
   'inquiry', 'quote', 'hold', 'confirmed', 'paid', 'ready',
@@ -161,7 +162,7 @@ export async function createBooking(env, request, input, actorUserId = null) {
   const customerId = randomId();
   const bookingId = randomId();
   const now = Math.floor(Date.now() / 1000);
-  const number = regalReference(bookingId, new Date(now * 1000));
+  let number = regalReference(bookingId, new Date(now * 1000));
   const holdExpiresAt = status === 'hold'
     ? Number(input.holdExpiresAt || now + 30 * 60)
     : null;
@@ -175,6 +176,26 @@ export async function createBooking(env, request, input, actorUserId = null) {
       'SELECT id, booking_number, status FROM bookings WHERE idempotency_key = ?1'
     ).bind(idempotencyKey).first();
     if (existing) return { booking: existing, duplicate: true };
+  }
+
+  // When an authenticated owner turns an actual website inquiry into a booking,
+  // preserve the customer's original RR number. Never trust a caller-supplied
+  // number: resolve it from the saved inquiry instead. Public booking calls
+  // cannot claim website inquiries without an authenticated admin actor.
+  const inquiryId = cleanText(input.websiteInquiryId, 64);
+  if (inquiryId) {
+    if (!actorUserId) throw new Error('INQUIRY_CONVERSION_REQUIRES_ADMIN');
+    if (!/^[a-f0-9-]{36}$/i.test(inquiryId)) throw new Error('INVALID_WEBSITE_INQUIRY');
+    await ensureInquiryTables(env.DB);
+    const inquiry = await env.DB.prepare(
+      'SELECT id, reference FROM website_inquiries WHERE id = ?1'
+    ).bind(inquiryId).first();
+    if (!inquiry) throw new Error('WEBSITE_INQUIRY_NOT_FOUND');
+    const existingBooking = await env.DB.prepare(
+      'SELECT id FROM bookings WHERE booking_number = ?1'
+    ).bind(inquiry.reference).first();
+    if (existingBooking) throw new Error('INQUIRY_ALREADY_BOOKED');
+    number = inquiry.reference;
   }
 
   let subtotalCents = 0;
@@ -263,7 +284,7 @@ export async function createBooking(env, request, input, actorUserId = null) {
       randomId(),
       actorUserId,
       bookingId,
-      JSON.stringify({ bookingNumber: number, status, items }),
+      JSON.stringify({ bookingNumber: number, websiteInquiryId: inquiryId || null, status, items }),
       now
     )
   );
