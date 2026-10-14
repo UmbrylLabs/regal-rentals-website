@@ -68,6 +68,8 @@ jobs:
         run: node tests/test_inventory_permanent_delete.mjs
       - name: Test standardized inventory photo uploads
         run: node tests/test_product_photo_upload.mjs
+      - name: Test quote delivery and customer pickup choices
+        run: node tests/test_quote_fulfillment.mjs
       - name: Test dynamic storefront and inquiry validation
         run: node tests/test_dynamic_storefront.mjs
       - name: Test Regal storefront structure

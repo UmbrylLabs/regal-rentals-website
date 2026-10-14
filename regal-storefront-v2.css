@@ -85,6 +85,15 @@
   cursor:pointer;
 }
 .quote-service-option:has(input:checked){border-color:#a58baa;background:#f8f3fb}
+.quote-services .quote-service-option[hidden]{display:none!important}
+.quote-services .quote-service-option--extra{
+  margin-left:18px;
+  border-left:3px solid #bd9765;
+  background:#faf7fc;
+}
+.quote-services .quote-service-option input:focus-visible{outline:3px solid #a77b3c;outline-offset:3px}
+.quote-services legend span{color:#9b6736}
+@media(max-width:420px){.quote-services .quote-service-option--extra{margin-left:8px}}
 .quote-services .quote-service-option input{
   flex:0 0 auto;
   width:18px;

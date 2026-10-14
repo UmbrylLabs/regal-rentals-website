@@ -46,10 +46,10 @@
   </style>
   <!-- Unique asset names avoid stale cached styles/scripts from previous launches. -->
   <link rel="stylesheet" href="/regal-home-20261009.css?v=20261013-light-only">
-  <link rel="stylesheet" href="/regal-storefront-v2.css?v=20261013-preferred-times">
+  <link rel="stylesheet" href="/regal-storefront-v2.css?v=20261014-pickup-options">
   <link rel="stylesheet" href="/regal-catalog-v3.css?v=20261013-quote-subtotal">
   <link rel="stylesheet" href="/regal-identity-v2.css?v=20261013-matched-gold">
-  <script src="/regal-catalog-v3.js?v=20261013-preferred-times" defer></script>
+  <script src="/regal-catalog-v3.js?v=20261014-pickup-options" defer></script>
 </head>
 <body>
 <a class="skip-link" href="#content">Skip to content</a>
@@ -219,10 +219,10 @@
             <label>Full name <span aria-hidden="true">*</span><input name="name" type="text" required maxlength="120" autocomplete="name" placeholder="Your name"></label>
             <label>Email address <span aria-hidden="true">*</span><input name="email" type="email" required maxlength="180" autocomplete="email" placeholder="you@example.com"></label>
             <label id="rental-start-label">Rental start date <span aria-hidden="true">*</span><input name="date" id="rental-start-date" type="date" required aria-describedby="rental-date-help"></label>
-            <label class="rental-time-label"><span id="rental-start-time-label">Preferred Delivery Time (optional)</span><select name="startTime" id="rental-start-time" aria-describedby="rental-date-help"><option value="">Flexible / Any time</option><option value="08:00">8:00 AM</option><option value="09:00">9:00 AM</option><option value="10:00">10:00 AM</option><option value="11:00">11:00 AM</option><option value="12:00">12:00 PM</option><option value="13:00">1:00 PM</option><option value="14:00">2:00 PM</option><option value="15:00">3:00 PM</option><option value="16:00">4:00 PM</option><option value="17:00">5:00 PM</option><option value="18:00">6:00 PM</option></select></label>
+            <label class="rental-time-label"><span id="rental-start-time-label">Preferred Start Time (optional)</span><select name="startTime" id="rental-start-time" aria-describedby="rental-date-help"><option value="">Flexible / Any time</option><option value="08:00">8:00 AM</option><option value="09:00">9:00 AM</option><option value="10:00">10:00 AM</option><option value="11:00">11:00 AM</option><option value="12:00">12:00 PM</option><option value="13:00">1:00 PM</option><option value="14:00">2:00 PM</option><option value="15:00">3:00 PM</option><option value="16:00">4:00 PM</option><option value="17:00">5:00 PM</option><option value="18:00">6:00 PM</option></select></label>
             <label>Rental end date <span aria-hidden="true">*</span><input name="endDate" id="rental-end-date" type="date" required aria-describedby="rental-date-help"></label>
-            <label class="rental-time-label"><span id="rental-end-time-label">Preferred Collection Time (optional)</span><select name="endTime" id="rental-end-time" aria-describedby="rental-date-help"><option value="">Flexible / Any time</option><option value="08:00">8:00 AM</option><option value="09:00">9:00 AM</option><option value="10:00">10:00 AM</option><option value="11:00">11:00 AM</option><option value="12:00">12:00 PM</option><option value="13:00">1:00 PM</option><option value="14:00">2:00 PM</option><option value="15:00">3:00 PM</option><option value="16:00">4:00 PM</option><option value="17:00">5:00 PM</option><option value="18:00">6:00 PM</option></select></label>
-            <p class="rental-date-help" id="rental-date-help">Start: delivery or customer pickup. End: Regal collection or customer return. Times are preferences and will be confirmed with your quote.</p>
+            <label class="rental-time-label"><span id="rental-end-time-label">Preferred End Time (optional)</span><select name="endTime" id="rental-end-time" aria-describedby="rental-date-help"><option value="">Flexible / Any time</option><option value="08:00">8:00 AM</option><option value="09:00">9:00 AM</option><option value="10:00">10:00 AM</option><option value="11:00">11:00 AM</option><option value="12:00">12:00 PM</option><option value="13:00">1:00 PM</option><option value="14:00">2:00 PM</option><option value="15:00">3:00 PM</option><option value="16:00">4:00 PM</option><option value="17:00">5:00 PM</option><option value="18:00">6:00 PM</option></select></label>
+            <p class="rental-date-help" id="rental-date-help">Select delivery or customer pickup below. Dates and times are preferences confirmed with your quote.</p>
             <label>Event city <span aria-hidden="true">*</span><input name="city" type="text" maxlength="120" required autocomplete="address-level2" placeholder="Where is your event?"></label>
             <label>Phone (optional)<input name="phone" type="tel" maxlength="35" autocomplete="tel" placeholder="Only if you'd like a call"></label>
             <label>Rental package (optional)<select name="package" id="package-select"><option value="">Select a package</option><option>Backyard Essentials</option><option>Party Ready</option><option>Shade &amp; Serve</option><option>Custom rental</option></select></label>
@@ -234,13 +234,14 @@
             <label><input type="checkbox" name="item" value="10x10 canopy"><span>10×10 canopy</span></label>
             <label><input type="checkbox" name="item" value="10x20 canopy"><span>10×20 canopy</span></label>
           </fieldset>
-          <fieldset class="quote-services" id="quote-services">
-            <legend>Delivery &amp; Setup Services</legend>
-            <p class="quote-services__intro">Choose how you'll receive the equipment. Service fees are confirmed in your personalized quote.</p>
-            <label class="quote-service-option"><input type="checkbox" name="delivery" id="service-delivery" checked><span><strong>Delivery &amp; pickup by Regal Rentals</strong><small>We bring the equipment to your event and collect it afterward.</small></span></label>
-            <label class="quote-service-option"><input type="checkbox" name="setupTeardown" id="service-setup-teardown"><span><strong>Equipment Setup &amp; Teardown</strong><small>We'll set up the equipment when delivered and take it down before collection.</small></span></label>
-            <p id="quote-services-help" class="quote-services__help" role="status" aria-live="polite">If you don't need delivery, uncheck it to request customer pickup and return. Setup &amp; teardown requires delivery.</p>
-            <label class="quote-services__address" id="delivery-address-wrap">Delivery location or venue (optional)<input name="deliveryAddress" id="delivery-address" type="text" maxlength="240" autocomplete="street-address" placeholder="Street address or venue name"></label>
+          <fieldset class="quote-services" id="quote-services" aria-describedby="quote-services-help">
+            <legend>How would you like to receive your rentals? <span aria-hidden="true">*</span></legend>
+            <p class="quote-services__intro">Choose one option to request your quote. Service availability and any fees will be confirmed before booking.</p>
+            <label class="quote-service-option"><input type="checkbox" name="delivery" id="service-delivery" aria-describedby="quote-services-help"><span><strong>Delivery &amp; collection by Regal Rentals</strong><small>We deliver to your event and collect the equipment when your rental ends.</small></span></label>
+            <label class="quote-service-option"><input type="checkbox" name="customerPickup" id="service-customer-pickup" aria-describedby="quote-services-help"><span><strong>Customer pickup &amp; return</strong><small>I'll pick up the equipment and return it myself.</small></span></label>
+            <label class="quote-service-option quote-service-option--extra" id="service-setup-wrap" hidden><input type="checkbox" name="setupTeardown" id="service-setup-teardown"><span><strong>Equipment setup &amp; teardown</strong><small>Add setup on delivery and teardown before collection.</small></span></label>
+            <label class="quote-services__address" id="delivery-address-wrap" hidden>Delivery location or venue (optional)<input name="deliveryAddress" id="delivery-address" type="text" maxlength="240" autocomplete="street-address" placeholder="Street address or venue name" disabled></label>
+            <p id="quote-services-help" class="quote-services__help" role="status" aria-live="polite">Please select delivery or customer pickup to continue.</p>
           </fieldset>
           <label class="form-details">Event details<textarea name="details" rows="4" maxlength="2500" placeholder="Guest count, event date (if different), timing, special requests, or anything else we should know…"></textarea></label>
           <div class="sr-only" aria-hidden="true"><label>Leave blank<input name="website" type="text" autocomplete="off" tabindex="-1"></label></div>

@@ -79,13 +79,14 @@ export async function onRequestPost(context) {
     const email = normalizeEmail(body.email);
     const phone = text(body.phone,35);
     const eventDate = text(body.date,10);
-    const hasRentalWindow=['endDate','delivery','setup','teardown','deliveryAddress']
+    const hasRentalWindow=['endDate','delivery','customerPickup','setup','teardown','deliveryAddress']
       .some(key=>Object.prototype.hasOwnProperty.call(body,key));
     const endDate = text(body.endDate,10);
     const startTime = typeof body.startTime === 'string' ? body.startTime.trim() : '';
     const endTime = typeof body.endTime === 'string' ? body.endTime.trim() : '';
     const deliveryAddress = text(body.deliveryAddress,240);
     const delivery = body.delivery === true;
+    const customerPickup = body.customerPickup === true;
     const setup = body.setup === true;
     const teardown = body.teardown === true;
     const city = text(body.city,120);
@@ -124,8 +125,16 @@ export async function onRequestPost(context) {
         || typeof body.teardown !== 'boolean') {
         return invalid('Please select valid delivery and setup options.');
       }
+      // Current storefront explicitly sends a customer-pickup flag; require
+      // exactly one fulfillment choice, even for crafted HTTP requests.
+      // Older clients without this field retain the prior delivery=false mode.
+      if (Object.prototype.hasOwnProperty.call(body,'customerPickup')) {
+        if (typeof body.customerPickup !== 'boolean' || delivery === customerPickup) {
+          return invalid('Please choose either delivery or customer pickup, not both.');
+        }
+      }
       if ((setup || teardown) && !delivery) {
-        return invalid('Delivery & pickup is required for setup or teardown.');
+        return invalid('Delivery & collection is required for setup or teardown.');
       }
       if (body.deliveryAddress !== undefined && typeof body.deliveryAddress !== 'string') {
         return invalid('Please enter a valid delivery location.');
