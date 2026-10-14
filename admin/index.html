@@ -61,14 +61,17 @@
           <section class="panel" data-panel-view="new-booking" hidden>
             <div class="panel-heading"><div><p class="eyebrow">Inventory protected</p><h2>Create a Booking</h2></div></div>
             <form class="card form-stack" id="booking-form">
+              <input name="websiteInquiryId" type="hidden" />
+              <div class="message" id="booking-source" hidden role="status"></div>
               <div class="form-grid">
                 <label>Customer name<input name="customerName" autocomplete="name" required /></label>
                 <label>Email<input name="customerEmail" type="email" autocomplete="email" required /></label>
                 <label>Phone<input name="customerPhone" type="tel" autocomplete="tel" required /></label>
                 <label>Event city<input name="eventCity" required /></label>
-                <label>Event date<input name="eventDate" type="date" required /></label>
+                <label>Rental start date<input name="eventDate" type="date" required /></label>
+                <label>Rental end date<input name="eventEndDate" type="date" required /></label>
                 <label>Start time<input name="eventStart" type="time" value="14:00" required /></label>
-                <label>End time<input name="eventEnd" type="time" value="20:00" required /></label>
+                <label>End/return time<input name="eventEnd" type="time" value="20:00" required /></label>
                 <label>Service type<select name="serviceType"><option value="delivery">Delivery</option><option value="pickup">Customer pickup</option></select></label>
                 <label>Initial status<select name="status"><option value="inquiry">Inquiry — does not reserve</option><option value="quote">Quote — does not reserve</option><option value="hold">24-hour hold</option><option value="confirmed">Confirmed reservation</option></select></label>
                 <label>Preparation buffer before<select name="bufferBefore"><option value="60">1 hour</option><option value="120">2 hours</option><option value="180">3 hours</option><option value="240" selected>4 hours</option><option value="1440">1 day</option></select></label>
@@ -237,9 +240,9 @@
   <script src="/admin/booking-documents.js?v=20260722-1" defer></script>
   <script src="/admin/payment-manager.js?v=20260728-1" defer></script>
   <script src="/admin/product-photo-upload.js?v=20261011-1" defer></script>
-  <script src="/admin/admin.js?v=20261011-1" defer></script>
+  <script src="/admin/admin.js?v=20261014-linked-inquiries" defer></script>
   <script src="/admin/admin-defaults.js?v=20260721-1" defer></script>
-  <script src="/admin/website-inquiries.js" defer></script>
+  <script src="/admin/website-inquiries.js?v=20261014-linked-inquiries" defer></script>
   <script src="/admin/storefront-packages.js?v=20261010-2" defer></script>
 </body>
 </html>
