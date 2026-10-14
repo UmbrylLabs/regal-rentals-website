@@ -1,5 +1,6 @@
 import { assertSameOrigin, clientIp, json, normalizeEmail, randomId, readJson, safeErrorResponse, sha256 } from '../../_lib/http.js';
 import { ensureInquiryTables } from '../../_lib/inquiries.js';
+import { regalReference } from '../../_lib/reference.js';
 import { ensureStorefrontTables, availableProducts, availablePackages } from '../../_lib/storefront.js';
 
 const VALID_ITEMS = new Set([
@@ -184,7 +185,7 @@ export async function onRequestPost(context) {
     if (!rate.meta?.changes) return json({ok:false,error:{code:'RATE_LIMIT',message:'Too many requests. Please try again later.'}},429);
 
     const id = randomId();
-    const reference = 'RR-' + id.split('-')[0].toUpperCase();
+    const reference = regalReference(id);
     // Store rental logistics alongside notes so existing D1 databases and admin views
     // display every requested service without waiting on a schema migration.
     const storedDetails = hasRentalWindow ? [
