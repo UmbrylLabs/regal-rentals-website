@@ -21,7 +21,9 @@
   const startTimeLabel=document.querySelector('#rental-start-time-label');
   const endTimeLabel=document.querySelector('#rental-end-time-label');
   const serviceDelivery=document.querySelector('#service-delivery');
+  const serviceCustomerPickup=document.querySelector('#service-customer-pickup');
   const serviceSetupTeardown=document.querySelector('#service-setup-teardown');
+  const serviceSetupWrap=document.querySelector('#service-setup-wrap');
   const serviceHelp=document.querySelector('#quote-services-help');
   const addressWrap=document.querySelector('#delivery-address-wrap');
   const deliveryAddress=document.querySelector('#delivery-address');
@@ -201,35 +203,48 @@
     endTime.setCustomValidity(sameDay && start && end && end<=start
       ? 'For a same-day rental, the end time must be later than the start time.' : '');
   }
-  function syncServices() {
-    if(!serviceDelivery || !serviceSetupTeardown)return;
-    const needsDelivery=serviceSetupTeardown.checked;
-    if(needsDelivery && !serviceDelivery.checked){
-      serviceDelivery.checked=true;
-      if(serviceHelp)serviceHelp.textContent='Delivery & pickup is required with setup & teardown, so it was automatically selected.';
-    }else if(serviceHelp){
-      serviceHelp.textContent=needsDelivery
-        ? 'Setup & teardown requires delivery & pickup by Regal Rentals.'
-        : serviceDelivery.checked
-          ? 'Uncheck delivery if you prefer customer pickup and return (subject to confirmation).'
-          : 'Customer pickup & return requested. Select delivery if you would like us to bring and collect the equipment.';
+  function syncServices(source='') {
+    if(!serviceDelivery || !serviceCustomerPickup || !serviceSetupTeardown)return;
+    // These are presented as checkboxes, but only one fulfillment method is
+    // allowed. A setup request is never preserved after switching to pickup.
+    if(source==='delivery' && serviceDelivery.checked)serviceCustomerPickup.checked=false;
+    if(source==='pickup' && serviceCustomerPickup.checked)serviceDelivery.checked=false;
+    const delivery=serviceDelivery.checked;
+    const pickup=serviceCustomerPickup.checked;
+    if(!delivery){
+      serviceSetupTeardown.checked=false;
+      if(deliveryAddress)deliveryAddress.value='';
     }
-    if(addressWrap)addressWrap.hidden=!serviceDelivery.checked;
-    if(deliveryAddress)deliveryAddress.disabled=!serviceDelivery.checked;
-    if(startTimeLabel)startTimeLabel.textContent=serviceDelivery.checked
-      ? 'Preferred Delivery Time (optional)' : 'Preferred Customer Pickup Time (optional)';
-    if(endTimeLabel)endTimeLabel.textContent=serviceDelivery.checked
-      ? 'Preferred Collection Time (optional)' : 'Preferred Return Time (optional)';
-    if(rentalDateHelp)rentalDateHelp.textContent=serviceDelivery.checked
+    if(serviceSetupWrap)serviceSetupWrap.hidden=!delivery;
+    serviceSetupTeardown.disabled=!delivery;
+    if(addressWrap)addressWrap.hidden=!delivery;
+    if(deliveryAddress)deliveryAddress.disabled=!delivery;
+    serviceDelivery.setCustomValidity(!delivery && !pickup
+      ? 'Please select delivery or customer pickup.' : '');
+    if(serviceHelp)serviceHelp.textContent=delivery
+      ? 'Delivery & collection selected. Setup & teardown is available as an optional extra.'
+      : pickup
+        ? 'Customer pickup & return selected. Delivery and setup services are not included.'
+        : 'Please select delivery or customer pickup to continue.';
+    if(startTimeLabel)startTimeLabel.textContent=delivery
+      ? 'Preferred Delivery Time (optional)'
+      : pickup ? 'Preferred Customer Pickup Time (optional)' : 'Preferred Start Time (optional)';
+    if(endTimeLabel)endTimeLabel.textContent=delivery
+      ? 'Preferred Collection Time (optional)'
+      : pickup ? 'Preferred Return Time (optional)' : 'Preferred End Time (optional)';
+    if(rentalDateHelp)rentalDateHelp.textContent=delivery
       ? 'Start: requested delivery date. End: requested collection date. Times are preferences and confirmed with your quote.'
-      : 'Start: when you would pick up equipment. End: when you would return it. Times are preferences and confirmed with your quote.';
+      : pickup
+        ? 'Start: customer pickup date. End: customer return date. Times are preferences and confirmed with your quote.'
+        : 'Select delivery or customer pickup below. Dates and times are preferences confirmed with your quote.';
   }
   date?.addEventListener('change',syncRentalDates);
   endDate?.addEventListener('change',syncRentalDates);
   startTime?.addEventListener('change',syncRentalTimes);
   endTime?.addEventListener('change',syncRentalTimes);
-  serviceDelivery?.addEventListener('change',syncServices);
-  serviceSetupTeardown?.addEventListener('change',syncServices);
+  serviceDelivery?.addEventListener('change',()=>syncServices('delivery'));
+  serviceCustomerPickup?.addEventListener('change',()=>syncServices('pickup'));
+  serviceSetupTeardown?.addEventListener('change',()=>syncServices());
   syncRentalDates();
   syncServices();
 
@@ -403,8 +418,9 @@
       endTime:String(fields.get('endTime')||''),
       city:String(fields.get('city')||'').trim(),
       delivery:!!serviceDelivery?.checked,
-      setup:!!serviceSetupTeardown?.checked,
-      teardown:!!serviceSetupTeardown?.checked,
+      customerPickup:!!serviceCustomerPickup?.checked,
+      setup:!!serviceDelivery?.checked && !!serviceSetupTeardown?.checked,
+      teardown:!!serviceDelivery?.checked && !!serviceSetupTeardown?.checked,
       deliveryAddress:serviceDelivery?.checked?String(fields.get('deliveryAddress')||'').trim():'',
       package:loaded&&packages.length?'':String(fields.get('package')||''),
       packageId:loaded&&chosenPackage?chosenPackage.id:'',
