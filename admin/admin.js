@@ -553,11 +553,11 @@
     $('#booking-availability-message').textContent = 'Choose the rental dates and times to check availability.';
     showMessage(bookingMessage, '');
   };
-  $('.nav-button').forEach((button) => button.addEventListener('click', () => {
+  $$('.nav-button').forEach((button) => button.addEventListener('click', () => {
     if (button.dataset.panel === 'new-booking') startFreshBooking();
     openPanel(button.dataset.panel);
   }));
-  $('[data-open-panel]').forEach((button) => button.addEventListener('click', () => {
+  $$('[data-open-panel]').forEach((button) => button.addEventListener('click', () => {
     if (button.dataset.openPanel === 'new-booking') startFreshBooking();
     openPanel(button.dataset.openPanel);
   }));

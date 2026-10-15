@@ -12,7 +12,12 @@ assert.match(source,/const \$\$ = \(selector, root = document\) => Array\.from\(
 assert.match(source,/(\$\$)\('\[data-restore-product\]', list\)\.forEach/);
 assert.match(source,/(\$\$)\('\[data-permanent-delete-product\]', list\)\.forEach/);
 assert.doesNotMatch(source,/(?<!\$)\$\(['"][^'"]+['"],\s*list\)\.forEach/);
-assert.match(html,/\/admin\/admin\.js\?v=20261014-quote-equipment/);
+assert.match(source,/\$\$\('\.nav-button'\)\.forEach/,'Navigation must use querySelectorAll');
+assert.match(source,/\$\$\('\[data-open-panel\]'\)\.forEach/,'Panel shortcuts must use querySelectorAll');
+assert.doesNotMatch(source,/(?<!\$)\$\('\.nav-button'\)\.forEach/);
+assert.doesNotMatch(source,/(?<!\$)\$\('\[data-open-panel\]'\)\.forEach/);
+
+assert.match(html,/\/admin\/admin\.js\?v=20261014-nav-startup-fix/);
 assert.match(html,/\/admin\/website-inquiries\.js\?v=20261014-linked-inquiries/);
 
 console.log('Dashboard inventory button listeners and cache-busted admin script passed.');

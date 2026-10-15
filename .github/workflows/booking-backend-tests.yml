@@ -62,6 +62,8 @@ jobs:
         run: node tests/test_official_regal_brand.mjs
       - name: Test admin dashboard startup
         run: node tests/test_admin_startup.mjs
+      - name: Test admin runtime reaches session verification
+        run: node tests/test_admin_runtime_startup.mjs
       - name: Test active inventory selection in package editor
         run: node tests/test_package_inventory_picker_dom.mjs
       - name: Test inventory hard delete and package picker
