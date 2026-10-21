@@ -14,7 +14,8 @@
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/planner.css?v=20261020-1">
   <link rel="stylesheet" href="/planner-regal.css?v=20261021-1">
-  <script src="/planner.js?v=20261021-arrange1" defer></script>
+  <link rel="stylesheet" href="/planner-mobile.css?v=20261020-mobile1">
+  <script src="/planner.js?v=20261020-mobile1" defer></script>
   <title>3D Event Planner | Regal Rentals</title>
 </head>
 <body>
@@ -73,7 +74,9 @@
       </section>
       <aside class="sidebar sidebar-right" aria-label="Design details and quote estimate">
         <div class="sidebar-title"><span class="eyebrow">STEP 2 · CUSTOMIZE</span><h2>Make it yours</h2><p>Tap items in the canvas, or use multi-select to build a group.</p></div>
+        <div id="selection-panel-home" hidden></div>
         <div class="selection-panel" id="selection-panel"><div class="selection-empty"><span class="selection-icon">✦</span><strong>Nothing selected</strong><p>Add equipment from the left or tap an item in the scene.</p></div></div>
+        <div id="arrange-panel-home" hidden></div>
         <div class="arrange-panel" id="arrange-panel" aria-label="Arrange selected equipment">
           <div class="arrange-head"><span class="eyebrow">STEP 3 · THE FINISHING TOUCH</span><h3>Arrange beautifully.</h3><p id="arrange-description">Select two or more pieces to create a custom formation.</p></div>
           <div class="arrange-patterns" id="arrange-patterns" role="group" aria-label="Arrangement pattern">
@@ -106,6 +109,28 @@
         <div class="quote-actions"><button type="button" id="request-quote" class="button button-primary" disabled>Continue to quote <span aria-hidden="true">→</span></button><div class="secondary-actions"><button type="button" id="export-image">Save image</button><button type="button" id="export-json">Export plan</button><label for="import-json" class="import-label">Import plan</label><input id="import-json" type="file" accept=".json,application/json" hidden></div></div>
       </aside>
     </div>
+    <!-- Mobile tools live in an accessible bottom sheet; desktop keeps the original sidebar. -->
+    <div id="mobile-tools-scrim" class="mobile-tools-scrim" hidden></div>
+    <section id="mobile-tools-sheet" class="mobile-tools-sheet" role="dialog" aria-modal="true" aria-labelledby="mobile-tools-title" hidden>
+      <header class="mobile-tools-header">
+        <div><span class="eyebrow">REGAL DESIGN STUDIO</span><h2 id="mobile-tools-title">Edit your layout</h2></div>
+        <button id="mobile-tools-close" type="button" aria-label="Close editing tools">Done <span aria-hidden="true">×</span></button>
+      </header>
+      <div class="mobile-tools-tabs" role="group" aria-label="Edit or arrange your selection">
+        <button id="mobile-tools-edit-tab" type="button" aria-pressed="true">Edit selection</button>
+        <button id="mobile-tools-arrange-tab" type="button" aria-pressed="false">Arrange items</button>
+      </div>
+      <div id="mobile-tools-content" class="mobile-tools-content"></div>
+    </section>
+    <nav id="mobile-planner-dock" class="mobile-planner-dock" aria-label="Quick event planner actions">
+      <div class="mobile-dock-selection"><span class="mobile-dock-dot"></span><span id="mobile-dock-count" aria-live="polite">0 selected</span></div>
+      <div class="mobile-dock-buttons">
+        <button id="mobile-dock-multi" type="button" aria-pressed="false" aria-label="Toggle multi-select"><span aria-hidden="true">☐</span> Multi</button>
+        <button id="mobile-dock-chairs" type="button"><span aria-hidden="true">▥</span> Chairs</button>
+        <button id="mobile-dock-edit" type="button"><span aria-hidden="true">✎</span> Edit</button>
+        <button id="mobile-dock-arrange" type="button" class="mobile-dock-primary"><span aria-hidden="true">✦</span> Arrange</button>
+      </div>
+    </nav>
     <p class="planner-footnote">Layouts are illustrative and not a safety, permitting, fire-access or accessibility plan. Verify venue dimensions, exits, tent anchoring and required clearances before your event.</p>
     <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
   </main>
