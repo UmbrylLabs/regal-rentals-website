@@ -1,0 +1,98 @@
+/* REGAL mobile studio: persistent quick actions and in-place edit/arrange sheet.
+   Larger breakpoints retain the original desktop arrangement panels. */
+.mobile-planner-dock,
+.mobile-tools-scrim,
+.mobile-tools-sheet{display:none}
+.mobile-tools-sheet[hidden],
+.mobile-tools-scrim[hidden]{display:none!important}
+@media(max-width:700px){
+  :root{--mobile-dock-height:93px}
+  body{overscroll-behavior-y:contain}
+  body.mobile-tools-open{overflow:hidden}
+  main{padding-bottom:calc(var(--mobile-dock-height) + 28px + env(safe-area-inset-bottom,0px))}
+  .canvas-wrap,#scene{
+    min-height:320px!important;height:clamp(320px,43dvh,475px)!important;
+    max-height:475px!important
+  }
+  .scene-instructions{width:auto;max-width:calc(100% - 26px);font-size:11px;
+    padding:6px 11px;white-space:nowrap;text-overflow:ellipsis;overflow:hidden}
+  .scene-zoom{bottom:12px;right:10px}
+  .scene-indicator{bottom:12px;left:10px}
+  .scene-toolbar{position:relative}
+  .selection-toolbar{display:none}
+  .sidebar-right .sidebar-title{display:none}
+  .sidebar-right>.summary{margin-top:16px}
+  .sidebar-right{min-height:0}
+  .mobile-planner-dock{
+    position:fixed;display:flex;flex-direction:column;gap:7px;
+    bottom:calc(8px + env(safe-area-inset-bottom,0px));left:10px;right:10px;
+    z-index:70;padding:9px 10px 10px;background:linear-gradient(115deg,#291735,#432b4c);
+    border:1px solid #c3a06c;border-radius:15px;
+    box-shadow:0 9px 31px #1a102a70;
+    color:#fff4df
+  }
+  .mobile-dock-selection{display:flex;align-items:center;justify-content:center;
+    gap:7px;font-size:11px;font-weight:800;line-height:1.15;letter-spacing:.02em}
+  .mobile-dock-dot{display:inline-block;width:7px;height:7px;border-radius:50%;
+    background:#cfaa69;box-shadow:0 0 0 2px #cfaa6933}
+  .mobile-dock-buttons{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px}
+  .mobile-dock-buttons button{
+    display:flex;justify-content:center;align-items:center;gap:5px;min-height:44px;
+    border-radius:9px;border:1px solid #dfc6a363;background:#ffffff12;
+    color:#fbefdd;font-size:12px;font-weight:800;white-space:nowrap;padding:7px 3px
+  }
+  .mobile-dock-buttons button>span{font-size:15px;line-height:1}
+  .mobile-dock-buttons button[aria-pressed="true"]{background:#7d5b79;border-color:#e1c797}
+  .mobile-dock-buttons .mobile-dock-primary{background:linear-gradient(160deg,#e9c98b,#be904b);
+    border-color:#e6d1a5;color:#34233b;box-shadow:inset 0 1px #fff4d3}
+  .mobile-tools-scrim:not([hidden]){display:block;position:fixed;inset:0;background:#160c2296;
+    z-index:79;backdrop-filter:blur(2px)}
+  .mobile-tools-sheet:not([hidden]){
+    display:flex;flex-direction:column;position:fixed;left:0;right:0;bottom:0;
+    z-index:80;max-height:min(84dvh,750px);background:#fffbf4;
+    border:1px solid #b8955a;border-radius:20px 20px 0 0;
+    padding-bottom:env(safe-area-inset-bottom,0px);
+    box-shadow:0 -15px 45px #1c102e73;overflow:hidden
+  }
+  .mobile-tools-header{display:flex;align-items:center;justify-content:space-between;gap:10px;
+    padding:17px 18px 13px;background:linear-gradient(105deg,#2e1c3e,#472c4e);color:#fff4e0;
+    border-bottom:2px solid #c49e64;flex-shrink:0}
+  .mobile-tools-header .eyebrow{font-size:9px;color:#d9b77e}
+  .mobile-tools-header h2{font:700 18px/1.4 "Libre Baskerville",Georgia,serif;
+    margin:3px 0 0;color:#fff6e9}
+  #mobile-tools-close{border:1px solid #dfcaa96b;background:#ffffff19;color:#fff7e9;
+    min-height:42px;border-radius:8px;padding:7px 13px;font-weight:800;font-size:12px}
+  #mobile-tools-close span{font-size:17px;margin-left:5px}
+  .mobile-tools-tabs{display:grid;grid-template-columns:1fr 1fr;gap:8px;background:#fff4de;
+    padding:10px 13px;border-bottom:1px solid #ead6b6;flex-shrink:0}
+  .mobile-tools-tabs button{min-height:41px;border:1px solid #ddc5a0;border-radius:8px;
+    background:#fffcf6;font-size:12px;font-weight:800;color:#52334d}
+  .mobile-tools-tabs button[aria-pressed="true"]{background:#44294d;color:#fff5dc;border-color:#44294d}
+  .mobile-tools-picks{display:flex;gap:8px;padding:9px 14px 5px;
+    background:#fffbf4;flex-shrink:0}
+  .mobile-tools-picks button{flex:1;min-height:37px;padding:7px;border:1px solid #dbc6a8;
+    border-radius:7px;background:#fffdfa;color:#50354c;font-size:11px;font-weight:800}
+  .mobile-tools-content{overflow:auto;overscroll-behavior:contain;
+    padding:12px 14px 22px;flex:1;min-height:0;-webkit-overflow-scrolling:touch}
+  .mobile-tools-content .selection-panel,.mobile-tools-content .arrange-panel{
+    width:100%;margin:0;box-sizing:border-box
+  }
+  .mobile-tools-content .selection-panel{padding:16px}
+  .mobile-tools-content .selected-name{font-size:15px}
+  .mobile-tools-content .arrange-panel{box-shadow:none}
+  .mobile-tools-content .arrange-head{padding:14px 14px 12px}
+  .mobile-tools-content .arrange-patterns{padding:0 12px;gap:7px}
+  .mobile-tools-content .arrange-patterns button{min-height:62px;font-size:11px}
+  .mobile-tools-content .arrange-settings{padding:15px 12px;gap:12px}
+  .mobile-tools-content .arrange-settings input,.mobile-tools-content .arrange-settings select{min-height:43px;font-size:14px}
+  .mobile-tools-content .arrange-apply{min-height:48px;font-size:12px}
+  .mobile-tools-content .arrange-hint{font-size:11px}
+  body.mobile-tools-open #mobile-planner-dock{display:none}
+  .toast{bottom:calc(var(--mobile-dock-height) + 24px + env(safe-area-inset-bottom,0px));
+    max-width:calc(100vw - 30px);font-size:12px}
+}
+@media(max-width:370px){
+  .mobile-dock-buttons{gap:4px}
+  .mobile-dock-buttons button{font-size:11px;gap:3px}
+  .mobile-dock-buttons button>span{font-size:13px}
+}
