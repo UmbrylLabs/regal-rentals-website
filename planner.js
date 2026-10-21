@@ -178,9 +178,17 @@
     $('arrange-apply').disabled=n<2;
     $('multi-select-toggle').setAttribute('aria-pressed',String(multiMode));
     $('multi-select-toggle').classList.toggle('active',multiMode);
-    $('scene-instructions').textContent=multiMode
-      ? 'Selection mode ON · Tap multiple items · In top view drag ground to box-select'
-      : 'Drag items to move · Shift-click for multiple · Drag background to orbit';
+    const mobile=typeof window.matchMedia==='function'&&window.matchMedia('(max-width:700px)').matches;
+    $('scene-instructions').textContent=mobile
+      ? (multiMode?'Tap chairs to select · use Arrange below':'Tap a chair to edit · use the tools below')
+      : (multiMode
+        ? 'Selection mode ON · Tap multiple items · In top view drag ground to box-select'
+        : 'Drag items to move · Shift-click for multiple · Drag background to orbit');
+    $('mobile-dock-count').textContent=n+' selected';
+    $('mobile-dock-multi').setAttribute('aria-pressed',String(multiMode));
+    $('mobile-dock-multi').classList.toggle('active',multiMode);
+    $('mobile-dock-arrange').setAttribute('aria-label','Arrange '+n+' selected pieces');
+    $('mobile-dock-edit').setAttribute('aria-label','Edit '+n+' selected pieces');
     $('arrange-angle-wrap').hidden=false;
     $('arrange-spread-wrap').hidden=pattern!=='arc';
     $('arrange-columns-wrap').hidden=pattern!=='rows';
@@ -260,6 +268,7 @@
     renderAll();saveLocal();
     const warn=$('warning-box').hidden?'':' Review the placement warnings.';
     notify('Arranged '+n+' pieces in '+({line:'a line',arc:'an arc',circle:'a circle',rows:'rows'}[pattern])+'.'+warn);
+    closeMobileTools();
   }
   function findSpot(p) {
     const step = Math.max(2,Math.min(p.w,p.d)+.7);
@@ -626,6 +635,84 @@
     renderArrangement();
   });
   $('arrange-apply').addEventListener('click',arrangeSelected);
+  // Mobile editing uses the SAME live selection and arrangement panels as
+  // desktop. The panels move between their original homes and a bottom sheet
+  // at the breakpoint, avoiding divergent controls or stale pricing.
+  const mobileMedia=typeof window.matchMedia==='function'
+    ? window.matchMedia('(max-width:700px)') : null;
+  const mobileSheet=$('mobile-tools-sheet');
+  const mobileScrim=$('mobile-tools-scrim');
+  const selectedPanel=$('selection-panel'), arrangementPanel=$('arrange-panel');
+  const mobileContent=$('mobile-tools-content');
+  let mobileTrigger=null, mobileTab='edit';
+  function closeMobileTools(){
+    if(mobileSheet.hidden)return;
+    mobileSheet.hidden=true;mobileScrim.hidden=true;
+    document.body.classList.remove('mobile-tools-open');
+    selectedPanel.hidden=false;arrangementPanel.hidden=false;
+    const focus=mobileTrigger;mobileTrigger=null;
+    if(focus?.isConnected)focus.focus();
+  }
+  function showMobileTab(tab){
+    mobileTab=tab==='arrange'?'arrange':'edit';
+    selectedPanel.hidden=mobileTab!=='edit';
+    arrangementPanel.hidden=mobileTab!=='arrange';
+    $('mobile-tools-title').textContent=mobileTab==='edit'?'Edit selection':'Arrange beautifully';
+    $('mobile-tools-edit-tab').setAttribute('aria-pressed',String(mobileTab==='edit'));
+    $('mobile-tools-arrange-tab').setAttribute('aria-pressed',String(mobileTab==='arrange'));
+    mobileContent.scrollTop=0;
+  }
+  function openMobileTools(tab,trigger){
+    if(!mobileMedia?.matches)return;
+    if(mobileSheet.hidden)mobileTrigger=trigger||document.activeElement;
+    showMobileTab(tab);
+    mobileSheet.hidden=false;mobileScrim.hidden=false;
+    document.body.classList.add('mobile-tools-open');
+    $('mobile-tools-close').focus();
+  }
+  function syncMobilePanels(){
+    if(mobileMedia?.matches){
+      // Native append moves the existing nodes; listeners and input state survive.
+      mobileContent.append(selectedPanel,arrangementPanel);
+    }else{
+      closeMobileTools();
+      $('selection-panel-home').after(selectedPanel);
+      $('arrange-panel-home').after(arrangementPanel);
+    }
+  }
+  if(mobileMedia){
+    syncMobilePanels();
+    if(typeof mobileMedia.addEventListener==='function')
+      mobileMedia.addEventListener('change',syncMobilePanels);
+    else if(typeof mobileMedia.addListener==='function')
+      mobileMedia.addListener(syncMobilePanels);
+  }
+  $('mobile-dock-multi').addEventListener('click',()=>{
+    multiMode=!multiMode;renderArrangement();
+  });
+  $('mobile-dock-chairs').addEventListener('click',()=>chooseKind('chair'));
+  $('mobile-dock-edit').addEventListener('click',e=>openMobileTools('edit',e.currentTarget));
+  $('mobile-dock-arrange').addEventListener('click',e=>openMobileTools('arrange',e.currentTarget));
+  $('mobile-tools-edit-tab').addEventListener('click',()=>showMobileTab('edit'));
+  $('mobile-tools-arrange-tab').addEventListener('click',()=>showMobileTab('arrange'));
+  $('mobile-tools-close').addEventListener('click',closeMobileTools);
+  mobileScrim.addEventListener('click',closeMobileTools);
+  $('mobile-tools-chairs').addEventListener('click',()=>chooseKind('chair'));
+  $('mobile-tools-all').addEventListener('click',()=>chooseKind('all'));
+  $('mobile-tools-clear').addEventListener('click',()=>choose(null));
+  document.addEventListener('keydown',e=>{
+    if(mobileSheet.hidden)return;
+    if(e.key==='Escape'){e.preventDefault();closeMobileTools();return;}
+    if(e.key!=='Tab')return;
+    const controls=[...mobileSheet.querySelectorAll(
+      'button:not([disabled]),a[href],input:not([disabled]),select:not([disabled])'
+    )].filter(el=>el.getClientRects().length&&!el.closest('[hidden]'));
+    if(!controls.length)return;
+    const first=controls[0],last=controls[controls.length-1];
+    if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}
+    else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}
+  });
+
   for(const id of ['lawn-width','lawn-length'])$(id).addEventListener('change',()=>{
     const el=$(id),n=el.valueAsNumber;
     if(!Number.isFinite(n)){el.value=id==='lawn-width'?width:length;return;}
