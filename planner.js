@@ -319,7 +319,7 @@
     faces.length=0;
     drawTrees();
     for(const o of items)generateModel(o);
-    faces.sort((a,b)=>b.depth-a.depth);
+    faces.sort((a,b)=>a.depth-b.depth); // Far polygons first, near surfaces last.
     for(const f of faces)path(f.points,f.color,f.stroke, .9,f.alpha);
     for(const o of items){
       const p=placedInfo(o), bounds=corners(o,p),bad=isOutside(o)||overlaps(o),active=o.key===selected;
