@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <meta name="darkreader-lock">
+  <meta name="theme-color" content="#ffffff">
+  <meta name="description" content="Design a custom party layout with Regal Rentals' interactive 3D event planner. Arrange tents, tables and chairs, then request a personalized quote.">
+  <link rel="canonical" href="https://regal.rentals/planner">
+  <link rel="icon" href="/assets/regal-compact-rr.svg?v=gold-20261013" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/planner.css?v=20261020-1">
+  <script src="/planner.js?v=20261020-1" defer></script>
+  <title>3D Event Planner | Regal Rentals</title>
+</head>
+<body>
+  <a href="#workspace" class="skip-link">Skip to planner</a>
+  <header class="planner-header">
+    <a class="brand" href="/" aria-label="Regal Rentals home"><img src="/assets/regal-shield-transparent-20261013.svg" alt="" width="40" height="50"><img class="brand-wordmark" src="/assets/regal-wordmark-transparent-20261013.svg" alt="Regal Rentals" width="180" height="60"></a>
+    <span class="header-divider" aria-hidden="true"></span>
+    <span class="header-label">3D Event Planner <span class="beta-tag">BETA</span></span>
+    <div class="header-spacer"></div>
+    <a href="/" class="back-link">← Back to rentals</a>
+  </header>
+  <main id="workspace">
+    <div class="intro">
+      <div><p class="eyebrow">MAKE YOUR VISION REAL</p><h1>Design your perfect setup.</h1><p>Place real-size rentals, explore your event from any angle, and send the equipment list to your quote.</p></div>
+      <div class="intro-actions">
+        <button type="button" id="save-design" class="button button-muted">Save design</button>
+        <button type="button" id="share-design" class="button button-muted">Share layout</button>
+        <button type="button" id="request-quote-top" class="button button-gold">Request quote <span aria-hidden="true">→</span></button>
+      </div>
+    </div>
+    <div class="workspace">
+      <aside class="sidebar sidebar-left" aria-label="Rental equipment">
+        <div class="sidebar-title"><span class="eyebrow">STEP 1</span><h2>Add equipment</h2><p>Tap an item to place it on the lawn.</p></div>
+        <div class="catalog-status" id="catalog-status" role="status" aria-live="polite">Loading published Regal Rentals equipment…</div>
+        <div class="equipment-categories" id="equipment-categories" role="group" aria-label="Equipment category">
+          <button type="button" class="chip active" data-filter="all" aria-pressed="true">All</button>
+          <button type="button" class="chip" data-filter="canopy" aria-pressed="false">Canopies</button>
+          <button type="button" class="chip" data-filter="table" aria-pressed="false">Tables</button>
+          <button type="button" class="chip" data-filter="chair" aria-pressed="false">Chairs</button>
+        </div>
+        <div class="catalog" id="catalog" aria-live="polite"></div>
+        <p class="microcopy">Displayed prices are equipment estimates only. Quantity requests and availability are confirmed by Regal Rentals.</p>
+      </aside>
+      <section class="scene-panel" aria-label="Interactive 3D event layout">
+        <div class="scene-toolbar">
+          <div class="scene-toolbar-left"><strong>My event layout</strong><span id="object-count">0 pieces</span></div>
+          <div class="scene-toolbar-right"><button type="button" id="view-3d" class="tool active" title="Perspective view" aria-pressed="true">3D view</button><button type="button" id="view-top" class="tool" title="Top-down view" aria-pressed="false">Top view</button><button type="button" id="reset-camera" class="tool" title="Reset camera">Reset view</button></div>
+        </div>
+        <div class="canvas-wrap" id="canvas-wrap">
+          <canvas id="scene" tabindex="0" aria-label="3D event layout. Drag items to move them. Drag empty ground to rotate the camera. Use the item list for keyboard selection." role="img"></canvas>
+          <div class="scene-instructions">Drag items to move · Drag empty space to orbit · Scroll to zoom</div>
+          <div class="scene-zoom"><button type="button" id="zoom-in" aria-label="Zoom in">+</button><button type="button" id="zoom-out" aria-label="Zoom out">−</button></div>
+          <div class="scene-indicator"><span class="indicator-dot"></span><span id="scene-mode">Perspective · 5 ft grid</span></div>
+        </div>
+        <div class="scene-bottom"><div><span class="mini-label">LAWN SIZE</span><div class="size-fields"><label>Width <input id="lawn-width" type="number" min="20" max="200" step="5" value="60" inputmode="numeric"><small>ft</small></label><label>Length <input id="lawn-length" type="number" min="20" max="200" step="5" value="50" inputmode="numeric"><small>ft</small></label></div></div><div class="legend"><span><i class="legend-square"></i>Selected item</span><span><i class="legend-clash"></i>Overlap warning</span></div></div>
+      </section>
+      <aside class="sidebar sidebar-right" aria-label="Design details and quote estimate">
+        <div class="sidebar-title"><span class="eyebrow">STEP 2</span><h2>Make it yours</h2><p>Select any item to adjust its position.</p></div>
+        <div class="selection-panel" id="selection-panel"><div class="selection-empty"><span class="selection-icon">✦</span><strong>Nothing selected</strong><p>Add equipment from the left or tap an item in the scene.</p></div></div>
+        <div class="summary">
+          <h3>Your event summary</h3>
+          <div class="summary-row"><span>Equipment pieces</span><strong id="total-pieces">0</strong></div>
+          <div class="summary-row"><span>Chairs / individual seats</span><strong id="total-seats">0</strong></div>
+          <div class="summary-row"><span>Estimated equipment subtotal</span><strong id="subtotal">$0.00</strong></div>
+          <p id="custom-pricing" class="custom-pricing" hidden>Some items require custom pricing.</p>
+          <div id="warning-box" class="warning-box" role="status" aria-live="polite" hidden></div>
+          <p class="summary-disclaimer">Before delivery, setup, collection, taxes and any package pricing. Planning tool only; no reservation or inventory hold.</p>
+        </div>
+        <div class="objects-header"><h3>Items in your design</h3><button type="button" id="clear-design" class="text-button">Clear all</button></div>
+        <div id="object-list" class="object-list"><p class="empty-list">Start by adding something from the catalog.</p></div>
+        <div class="quote-actions"><button type="button" id="request-quote" class="button button-primary" disabled>Continue to quote <span aria-hidden="true">→</span></button><div class="secondary-actions"><button type="button" id="export-image">Save image</button><button type="button" id="export-json">Export plan</button><label for="import-json" class="import-label">Import plan</label><input id="import-json" type="file" accept=".json,application/json" hidden></div></div>
+      </aside>
+    </div>
+    <p class="planner-footnote">Layouts are illustrative and not a safety, permitting, fire-access or accessibility plan. Verify venue dimensions, exits, tent anchoring and required clearances before your event.</p>
+    <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+  </main>
+  <footer><span>© Regal Rentals · Event Planner</span><a href="/">Browse rental equipment</a><a href="mailto:bookings@regal.rentals">Contact us</a></footer>
+</body>
+</html>

@@ -326,9 +326,36 @@
       packages=Array.isArray(data.packages)?data.packages:[];
       loaded=true;
       renderProducts();renderPackages();renderCart();
+      // One-time navigation transfer from the standalone 3D planner. Keep it
+      // in the quote form until a successful inquiry so refresh is recoverable.
+      if(new URLSearchParams(location.search).get('planner')==='1'){
+        try{
+          const transfer=JSON.parse(sessionStorage.getItem('regal-planner-quote-v1')||'null');
+          if(transfer?.v===1&&Array.isArray(transfer.items)){
+            cart.clear();chosenPackage=null;
+            for(const line of transfer.items){
+              const product=products.find(p=>p.id===line.productId);
+              const q=Number(line.quantity);
+              if(product&&validQty(q))cart.set(product.id,q);
+            }
+            if(cart.size){
+              const details=form.elements.namedItem('details');
+              const link=String(transfer.layoutUrl||'');
+              const validLink=link.startsWith(location.origin+'/planner#design=') && link.length<2220;
+              const description='3D event layout: '+(validLink?link:'See customer-exported layout file (link too large to include).')+
+                '\nPlanned lawn: '+Number(transfer.width||0)+' × '+Number(transfer.length||0)+' ft. Chairs: '+Number(transfer.seats||0)+'.';
+              if(details&&description.length<=2500)details.value=description;
+              renderCart();
+              setStatus('Your 3D layout items were added. Enter your event details to send this quote request.');
+            }else{
+              setStatus('The planned equipment is no longer published. Please choose currently listed rentals.',true);
+            }
+          }
+        }catch(error){setStatus('Unable to recover this planner layout. Please return to the planner and try again.',true);}
+      }
       applyCatalogFilter();
       document.querySelector('#equipment-interest')?.setAttribute('hidden','');
-      setStatus('Select equipment or a package above, adjust quantities, and send your request.');
+      if(!cart.size)setStatus('Select equipment or a package above, adjust quantities, and send your request.');
     }catch(err){
       // Existing static cards and quote form remain usable if D1 is temporarily down.
       setStatus('Live inventory could not load. You can still request a custom quote below.',true);
@@ -453,6 +480,7 @@
       reference.textContent=data.reference||'Received';
       success.hidden=false;submitButton.hidden=true;
       form.querySelectorAll('input,select,textarea').forEach(e=>e.disabled=true);
+      try{sessionStorage.removeItem('regal-planner-quote-v1');}catch{}
       setStatus('Your quote request was received.');
       success.scrollIntoView({behavior:'smooth',block:'nearest'});
     }catch(err){
