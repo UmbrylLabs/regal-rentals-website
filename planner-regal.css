@@ -1,0 +1,177 @@
+/* REGAL DESIGN STUDIO — royal plum, champagne gold and warm ivory.
+   This layer is independent of the storefront's visual system. */
+:root{--ink:#2e1b3f;--muted:#71647a;--purple:#2b183e;--gold:#b88b48;--line:#e9dccb;--bg:#f5f0e8;--soft:#fffaf1;--studio-cream:#faf5ec;--studio-plum:#291637;--studio-gold:#cba467;--studio-border:#d9bc8b}
+html{background:#f8f4ed}
+body{background:#f8f4ed;color:#312241}
+.planner-header{
+  background:linear-gradient(110deg,#24132f 0%,#321d47 54%,#24132f 100%);
+  border-bottom:2px solid #ad854f;box-shadow:0 5px 25px #1e102d28;
+  color:#f8e7c3
+}
+.brand img:first-child{filter:drop-shadow(0 1px 3px #c79c6540)}
+.brand-wordmark{width:158px;max-height:48px}
+.header-divider{border-color:#ac8e64;opacity:.55}
+.header-label{letter-spacing:.16em;font-size:11px;font-weight:800;color:#f7edd8}
+.beta-tag{background:#5b3b4a;border-color:#b89456;color:#f1d6a3;letter-spacing:.09em}
+.back-link{color:#f1dec5;font-size:12px}
+.back-link:hover{color:#fff}
+main{
+  background:
+    radial-gradient(ellipse at 97% 4%,#d1b78d24,transparent 31%),
+    radial-gradient(ellipse at 5% 30%,#9b7ba313,transparent 32%),
+    #f8f4ed
+}
+.intro{position:relative;max-width:1700px;margin:auto;padding:26px 28px 26px;min-height:170px;gap:18px;
+  background:linear-gradient(110deg,#291939 0%,#3c254e 65%,#2b1b3b 100%);
+  color:#fcf7ed;border:1px solid #886847; border-top:0;overflow:hidden;
+  border-radius:0 0 13px 13px;box-shadow:0 7px 28px #30203724}
+.intro::before{content:"";pointer-events:none;position:absolute;right:-92px;top:-165px;width:460px;height:460px;border-radius:50%;
+  border:1px solid #caa26327;box-shadow:0 0 0 32px #caa2630b,0 0 0 68px #caa2630b}
+.intro::after{content:"✦";position:absolute;right:40px;top:8px;color:#dbbe8666;font-size:28px;pointer-events:none}
+.intro-copy,.intro-actions{position:relative;z-index:1}
+.intro .eyebrow{color:#e2be84;font-size:10px;letter-spacing:.19em}
+.intro h1{font-family:"Libre Baskerville",Georgia,serif;font-size:clamp(24px,2.9vw,35px);font-weight:700;color:#fff6e7;letter-spacing:-.028em;margin:9px 0 9px}
+.intro p:not(.eyebrow){color:#e5d6e1;max-width:625px;font-size:12px;line-height:1.7}
+.intro-actions .button{border-radius:6px;border-color:#907858;background:#ffffff12;color:#fff6e9}
+.intro-actions .button:hover{background:#ffffff25;border-color:#d6b67f}
+.intro-actions .button-gold{
+  background:linear-gradient(150deg,#e1bc80,#b18442);color:#24182c;border-color:#e5ca9f;
+  box-shadow:inset 0 1px #fff8ec6b,0 4px 12px #14091e32
+}
+.intro-actions .button-gold:hover{background:#f0cd90}
+.workspace{margin:16px auto 0;gap:15px}
+.sidebar,.scene-panel{border:1px solid #e3d3ba;border-radius:12px;background:#fffcf7;
+  box-shadow:0 7px 22px #3d28341c,0 1px 2px #49351d10}
+.sidebar{position:relative}
+.sidebar::before{content:"";height:4px;width:100%;flex:none;background:linear-gradient(90deg,#5f3b54,#c9a56d,#604151)}
+.sidebar-title{background:linear-gradient(180deg,#fffaf1,#fffdf9);border-bottom:1px solid #eee2d3}
+.sidebar-title .eyebrow{color:#a1733e}
+.sidebar-title h2{color:#35203f;font-size:20px;letter-spacing:-.025em}
+.sidebar-title p{color:#786875}
+.catalog-status{background:#f9f0df;color:#78603f;border-bottom:1px solid #ede0c8}
+.chip{background:#fffdf8;color:#694e63;border-color:#e6d7c1;border-radius:30px}
+.chip:hover{border-color:#b7966a}
+.chip.active{background:#43274f;border-color:#43274f;color:#fff2df}
+.catalog-item{border-bottom:1px solid #eee4d7}
+.catalog-item-icon{background:radial-gradient(circle at 35% 25%,#fffdfa,#f0e3d1);color:#9e734a;border:1px solid #e8d4b4;border-radius:9px}
+.catalog-item h3{color:#362341}
+.catalog-price{color:#9b6c34}
+.catalog-add{background:#442b53;color:#fff6e8;border:1px solid #6c4863;border-radius:6px}
+.catalog-add:hover{background:#9b723e;border-color:#b58d50}
+.catalog-item .catalog-quantity{width:42px;min-height:29px;border:1px solid #dbc9b3;background:#fffdfa;
+  border-radius:5px;text-align:center;font-size:11px;font-weight:800;color:#412b46;padding:1px 2px}
+.catalog-item-actions{display:flex;align-items:center;gap:4px;flex:none}
+.microcopy{background:#fdf8ed;border-top:1px solid #f1e5d3;color:#827280}
+.scene-toolbar{
+  background:linear-gradient(100deg,#302044,#453051 100%);color:#f9eedf;
+  border-bottom:2px solid #c3a16a;min-height:62px
+}
+.scene-toolbar-left strong{font-family:"Libre Baskerville",Georgia,serif;font-size:13px;color:#f7eedc}
+.scene-toolbar-left strong span{color:#d5af74;font-family:var(--sans)}
+.scene-toolbar-left span{color:#d4c4cc}
+.scene-toolbar .tool{background:#ffffff17;color:#f5e5d3;border:1px solid #e4c9a743;border-radius:6px}
+.scene-toolbar .tool.active{background:#d2a967;color:#241a2b;border-color:#eed09d}
+.scene-toolbar .tool:hover{border-color:#e8c88d}
+.canvas-wrap{background:#d9e4de}
+.scene-instructions{background:#fff9eddc;color:#51415a;border:1px solid #e9d5b5;font-weight:700;box-shadow:0 6px 18px #3a2a341f}
+.scene-indicator{background:#fffaeeeb;color:#62515e;border:1px solid #e8d8bf}
+.indicator-dot{background:#ac874b}
+.scene-zoom button{border-color:#e2cda8;color:#47314c;background:#fffaf1}
+.scene-zoom button:hover{background:#f7e5c9}
+.selection-toolbar{padding:10px 13px;display:flex;align-items:center;justify-content:space-between;gap:10px;
+  background:#faf3e6;border-top:1px solid #dec7a3}
+.selection-toolbar-main{display:flex;align-items:center;flex-wrap:wrap;gap:5px}
+.selection-toolbar button{
+  min-height:34px;padding:7px 10px;border:1px solid #d9c4a5;border-radius:6px;
+  background:#fffcf5;color:#543b52;font-size:10px;font-weight:800
+}
+.selection-toolbar button:hover{background:#f1e4cf}
+.selection-toolbar .select-mode-button[aria-pressed="true"]{color:#fff;background:#4b2b58;border-color:#4b2b58}
+.select-mode-key{font-size:9px;color:#a18a9e;font-weight:600;margin-left:4px}
+.select-mode-button[aria-pressed="true"] .select-mode-key{color:#dec9d8}
+#selection-badge{border:1px solid #d5ba8d;border-radius:22px;color:#704d2c;background:#f4e3c3;
+  padding:6px 9px;white-space:nowrap;font-size:10px}
+.scene-bottom{background:#fffcf7;border-top:1px solid #eee2d1}
+.size-fields input{border-color:#ddc9a6}
+.legend-square{background:#e7c580;border-color:#9d692e}
+.legend-clash{background:#ffdfd9;border-color:#bf5653}
+.selection-panel{background:#fff9ed;border:1px dashed #d9be8a}
+.selection-empty{color:#776575}
+.selection-icon{color:#bc9153}
+.selected-name{font-family:"Libre Baskerville",Georgia,serif;color:#352141}
+.selected-controls button,.selection-actions button{border-color:#d9c7ab;background:#fffdf7}
+.selected-controls button:hover,.selection-actions button:hover{background:#f6e5c9}
+.object-list{background:#fffcf8;border-radius:7px}
+.object-row{background:transparent;border-color:#eee1ce}
+.object-row.selected{background:#f3e8cd;color:#3e2844;box-shadow:inset 3px 0 #b88747}
+.objects-header h3,.summary h3{font-family:"Libre Baskerville",Georgia,serif}
+.summary{border-color:#e8d4b6}
+.summary-row:has(#subtotal){border-color:#e3d3bf}
+.summary-row:has(#subtotal) strong{color:#3a2448}
+.arrange-panel{margin:14px 16px 0;border:1px solid #ddc6a2;border-radius:10px;overflow:hidden;
+  background:linear-gradient(170deg,#fffaf1,#f7eddd);box-shadow:0 3px 14px #62443112}
+.arrange-head{padding:13px 13px 10px}
+.arrange-head h3{font:700 17px/1.25 "Libre Baskerville",Georgia,serif;color:#382241;margin:5px 0 6px}
+.arrange-head p{font-size:11px;color:#786779;margin:0;line-height:1.5}
+.arrange-head .eyebrow{font-size:9px}
+.arrange-patterns{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;padding:0 10px}
+.arrange-patterns button{display:flex;align-items:center;flex-direction:column;justify-content:center;gap:1px;min-height:57px;
+  border:1px solid #e1cfb3;background:#fffdfa;color:#55435a;border-radius:7px;font-size:10px;font-weight:800;padding:6px 2px}
+.arrange-patterns button.active{border:2px solid #a97a3d;background:#f2dfbd;color:#432844}
+.arrange-patterns button:hover{border-color:#bc9354}
+.pattern-glyph{height:23px;font-size:21px;color:#977047;line-height:1.1;letter-spacing:-3px}
+.arrange-settings{display:grid;grid-template-columns:1fr 1fr;gap:10px 12px;padding:12px}
+.arrange-settings>label{display:flex;flex-direction:column;gap:4px;min-width:0;color:#654e61;font-size:10px;font-weight:800}
+.input-suffix{display:flex;align-items:center;gap:4px;color:#977850;white-space:nowrap}
+.arrange-settings input,.arrange-settings select{width:100%;min-width:0;min-height:35px;
+  border:1px solid #d9c6a8;border-radius:5px;background:#fffdfa;color:#3c2944;font-size:12px;font-weight:800;padding:5px 7px}
+.arrange-settings select{font-weight:700;font-size:10px}
+.arrange-apply{display:flex;justify-content:space-between;align-items:center;gap:5px;width:calc(100% - 24px);margin:0 12px;
+  padding:12px;border:1px solid #9d733e;background:linear-gradient(140deg,#4b3154,#2b1b3b);
+  color:#fff1d6;font-size:11px;font-weight:800;border-radius:6px}
+.arrange-apply:not(:disabled):hover{background:#6d4a65}
+.arrange-apply:disabled{background:#d9d0c3;color:#7f747a;border-color:#d3c7b5}
+.arrange-hint{font-size:10px;color:#81717a;line-height:1.5;margin:10px 12px 12px}
+.quote-actions{border-top:1px solid #e5d6bf;background:#fdf8f0}
+.button-primary{background:linear-gradient(115deg,#392142,#513056);border-color:#9d753d;color:#fff4e1}
+.button-primary:hover{background:#61406a}
+.planner-footnote{color:#796c72}
+footer{background:#2b1939;color:#d8c7d5;border-top:2px solid #ac874e}
+footer a{color:#e6c38d}
+.marquee-box{position:absolute;border:2px dashed #9b7040;background:#d9b46e35;box-shadow:inset 0 0 18px #d4af6940;pointer-events:none;z-index:3}
+@media(max-width:960px){.intro{min-height:140px}.workspace{gap:12px}.arrange-panel{margin-top:10px}}
+@media(max-width:700px){
+ .planner-header{gap:9px}.header-label{font-size:10px;letter-spacing:.06em}.brand-wordmark{width:116px}
+ .intro{padding:26px 18px;border-radius:0 0 10px 10px}
+ .intro h1{font-size:clamp(24px,7vw,31px)}.intro-actions .button{padding:10px 11px}
+ .workspace{margin-top:12px}
+ .catalog-item{width:216px;background:#fffdf8}
+ .catalog-item .catalog-quantity{width:37px}
+ .scene-instructions{max-width:calc(100% - 30px);width:270px}
+ .selection-toolbar{align-items:flex-start;flex-direction:column;gap:8px}
+ .selection-toolbar-main{gap:6px}
+ .selection-toolbar button{font-size:11px}
+ #selection-badge{align-self:flex-start}
+ .arrange-patterns button{min-height:60px}
+ .arrange-settings{grid-template-columns:1fr 1fr}
+ .sidebar-right .selection-panel{margin:0 14px}
+ .sidebar-right .arrange-panel{margin:13px 14px}
+ .scene-bottom{gap:8px}
+}
+@media(max-width:360px){.selection-toolbar button{padding:7px 8px}.arrange-settings{gap:8px}}
+
+/* The original tablet layout used a two-column panel grid. Arrangement tools
+   need a predictable reading order, so collapse the detail rail at 960px. */
+@media(max-width:960px){
+  .sidebar-right{display:flex;flex-direction:column}
+  .sidebar-right .sidebar-title,
+  .sidebar-right .selection-panel,
+  .sidebar-right .arrange-panel,
+  .sidebar-right .summary,
+  .sidebar-right .objects-header,
+  .sidebar-right .object-list,
+  .sidebar-right .quote-actions{grid-column:auto;grid-row:auto}
+  .sidebar-right .summary{margin:14px 16px 0}
+  .sidebar-right .arrange-panel{margin:14px 16px 0}
+  .sidebar-right .quote-actions{margin-top:16px}
+}
