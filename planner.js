@@ -181,7 +181,7 @@
     $('scene-instructions').textContent=multiMode
       ? 'Selection mode ON · Tap multiple items · In top view drag ground to box-select'
       : 'Drag items to move · Shift-click for multiple · Drag background to orbit';
-    $('arrange-angle-wrap').hidden=!['line','rows'].includes(pattern);
+    $('arrange-angle-wrap').hidden=false;
     $('arrange-spread-wrap').hidden=pattern!=='arc';
     $('arrange-columns-wrap').hidden=pattern!=='rows';
     $('arrange-facing-wrap').hidden=!['arc','circle'].includes(pattern);
