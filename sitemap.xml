@@ -4,4 +4,8 @@
     <loc>https://regal.rentals/</loc>
     <priority>1.0</priority>
   </url>
+  <url>
+    <loc>https://regal.rentals/planner</loc>
+    <priority>0.7</priority>
+  </url>
 </urlset>
