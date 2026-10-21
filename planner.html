@@ -13,21 +13,22 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/planner.css?v=20261020-1">
-  <script src="/planner.js?v=20261020-1" defer></script>
+  <link rel="stylesheet" href="/planner-regal.css?v=20261021-1">
+  <script src="/planner.js?v=20261021-arrange1" defer></script>
   <title>3D Event Planner | Regal Rentals</title>
 </head>
 <body>
   <a href="#workspace" class="skip-link">Skip to planner</a>
   <header class="planner-header">
-    <a class="brand" href="/" aria-label="Regal Rentals home"><img src="/assets/regal-shield-transparent-20261013.svg" alt="" width="40" height="50"><img class="brand-wordmark" src="/assets/regal-wordmark-transparent-20261013.svg" alt="Regal Rentals" width="180" height="60"></a>
+    <a class="brand" href="/" aria-label="Regal Rentals home"><img src="/assets/regal-shield-transparent-20261013.svg" alt="" width="40" height="50"><img class="brand-wordmark" src="/assets/regal-wordmark-footer-gold-20261013.svg" alt="Regal Rentals" width="180" height="60"></a>
     <span class="header-divider" aria-hidden="true"></span>
-    <span class="header-label">3D Event Planner <span class="beta-tag">BETA</span></span>
+    <span class="header-label">THE REGAL DESIGN STUDIO <span class="beta-tag">3D PLANNER</span></span>
     <div class="header-spacer"></div>
     <a href="/" class="back-link">← Back to rentals</a>
   </header>
   <main id="workspace">
     <div class="intro">
-      <div><p class="eyebrow">MAKE YOUR VISION REAL</p><h1>Design your perfect setup.</h1><p>Place real-size rentals, explore your event from any angle, and send the equipment list to your quote.</p></div>
+      <div class="intro-copy"><p class="eyebrow"><span aria-hidden="true">✦</span> THE REGAL EXPERIENCE <span aria-hidden="true">✦</span></p><h1>Envision something extraordinary.</h1><p>Create a celebration worth remembering. Arrange life-size rentals, explore your layout, and make every detail your own.</p></div>
       <div class="intro-actions">
         <button type="button" id="save-design" class="button button-muted">Save design</button>
         <button type="button" id="share-design" class="button button-muted">Share layout</button>
@@ -49,20 +50,48 @@
       </aside>
       <section class="scene-panel" aria-label="Interactive 3D event layout">
         <div class="scene-toolbar">
-          <div class="scene-toolbar-left"><strong>My event layout</strong><span id="object-count">0 pieces</span></div>
+          <div class="scene-toolbar-left"><strong><span aria-hidden="true">✦</span> My event canvas</strong><span id="object-count">0 pieces</span></div>
           <div class="scene-toolbar-right"><button type="button" id="view-3d" class="tool active" title="Perspective view" aria-pressed="true">3D view</button><button type="button" id="view-top" class="tool" title="Top-down view" aria-pressed="false">Top view</button><button type="button" id="reset-camera" class="tool" title="Reset camera">Reset view</button></div>
         </div>
         <div class="canvas-wrap" id="canvas-wrap">
-          <canvas id="scene" tabindex="0" aria-label="3D event layout. Drag items to move them. Drag empty ground to rotate the camera. Use the item list for keyboard selection." role="img"></canvas>
-          <div class="scene-instructions">Drag items to move · Drag empty space to orbit · Scroll to zoom</div>
+          <canvas id="scene" tabindex="0" aria-label="3D event layout. Drag to move selected objects. Use multi-select or Shift-click to select several. Drag empty ground to orbit; top view supports box selection." role="img"></canvas>
+          <div class="scene-instructions" id="scene-instructions">Drag items to move · Shift-click to select several · Drag background to orbit</div>
+          <div id="marquee-box" class="marquee-box" hidden aria-hidden="true"></div>
           <div class="scene-zoom"><button type="button" id="zoom-in" aria-label="Zoom in">+</button><button type="button" id="zoom-out" aria-label="Zoom out">−</button></div>
           <div class="scene-indicator"><span class="indicator-dot"></span><span id="scene-mode">Perspective · 5 ft grid</span></div>
+        </div>
+        <div class="selection-toolbar" aria-label="Selection tools">
+          <div class="selection-toolbar-main">
+            <button type="button" id="multi-select-toggle" class="select-mode-button" aria-pressed="false">◻ Multi-select <span class="select-mode-key">Shift-click / tap</span></button>
+            <button type="button" id="select-chairs">Select chairs</button>
+            <button type="button" id="select-all">Select all</button>
+            <button type="button" id="clear-selection">Deselect</button>
+          </div>
+          <strong id="selection-badge" aria-live="polite">0 selected</strong>
         </div>
         <div class="scene-bottom"><div><span class="mini-label">LAWN SIZE</span><div class="size-fields"><label>Width <input id="lawn-width" type="number" min="20" max="200" step="5" value="60" inputmode="numeric"><small>ft</small></label><label>Length <input id="lawn-length" type="number" min="20" max="200" step="5" value="50" inputmode="numeric"><small>ft</small></label></div></div><div class="legend"><span><i class="legend-square"></i>Selected item</span><span><i class="legend-clash"></i>Overlap warning</span></div></div>
       </section>
       <aside class="sidebar sidebar-right" aria-label="Design details and quote estimate">
-        <div class="sidebar-title"><span class="eyebrow">STEP 2</span><h2>Make it yours</h2><p>Select any item to adjust its position.</p></div>
+        <div class="sidebar-title"><span class="eyebrow">STEP 2 · CUSTOMIZE</span><h2>Make it yours</h2><p>Tap items in the canvas, or use multi-select to build a group.</p></div>
         <div class="selection-panel" id="selection-panel"><div class="selection-empty"><span class="selection-icon">✦</span><strong>Nothing selected</strong><p>Add equipment from the left or tap an item in the scene.</p></div></div>
+        <div class="arrange-panel" id="arrange-panel" aria-label="Arrange selected equipment">
+          <div class="arrange-head"><span class="eyebrow">STEP 3 · THE FINISHING TOUCH</span><h3>Arrange beautifully.</h3><p id="arrange-description">Select two or more pieces to create a custom formation.</p></div>
+          <div class="arrange-patterns" id="arrange-patterns" role="group" aria-label="Arrangement pattern">
+            <button type="button" data-pattern="line" class="active" aria-pressed="true"><span class="pattern-glyph">— — —</span>Line</button>
+            <button type="button" data-pattern="arc" aria-pressed="false"><span class="pattern-glyph">⌒</span>Arc</button>
+            <button type="button" data-pattern="circle" aria-pressed="false"><span class="pattern-glyph">◯</span>Circle</button>
+            <button type="button" data-pattern="rows" aria-pressed="false"><span class="pattern-glyph">▦</span>Rows</button>
+          </div>
+          <div class="arrange-settings">
+            <label>Center spacing <span class="input-suffix"><input type="number" id="arrange-spacing" value="3" min="2" max="50" step="0.5" inputmode="decimal"> ft</span></label>
+            <label id="arrange-angle-wrap">Angle <span class="input-suffix"><input type="number" id="arrange-angle" value="0" min="-180" max="180" step="15" inputmode="decimal"> °</span></label>
+            <label id="arrange-spread-wrap" hidden>Arc spread <span class="input-suffix"><input type="number" id="arrange-spread" value="120" min="30" max="300" step="10" inputmode="decimal"> °</span></label>
+            <label id="arrange-columns-wrap" hidden>Pieces per row <span class="input-suffix"><input type="number" id="arrange-columns" value="4" min="2" max="20" step="1" inputmode="numeric"></span></label>
+            <label id="arrange-facing-wrap" hidden>Facing <select id="arrange-facing"><option value="in">Toward center</option><option value="out">Away from center</option></select></label>
+          </div>
+          <button type="button" id="arrange-apply" class="arrange-apply" disabled>Arrange selected pieces <span aria-hidden="true">→</span></button>
+          <p class="arrange-hint">The formation stays centered on your selection. Adjust the spacing or spread, then arrange again. Overlap alerts remain visible.</p>
+        </div>
         <div class="summary">
           <h3>Your event summary</h3>
           <div class="summary-row"><span>Equipment pieces</span><strong id="total-pieces">0</strong></div>
