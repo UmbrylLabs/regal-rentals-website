@@ -96,3 +96,66 @@
   .mobile-dock-buttons button{font-size:11px;gap:3px}
   .mobile-dock-buttons button>span{font-size:13px}
 }
+
+/*
+ * Phone-width containment hotfix.
+ * The unshrinkable desktop header label and inline dock button labels can
+ * create a document wider than the visual viewport on 360-393px screens.
+ * Fix their intrinsic sizing rather than making the entire planner scroll.
+ */
+@media(max-width:700px){
+  html,body{max-width:100%;overflow-x:clip}
+  body{width:100%;min-width:0}
+  main,.intro,.workspace,.sidebar,.scene-panel,.scene-toolbar,.canvas-wrap,
+  .scene-bottom,.mobile-tools-sheet{min-width:0;max-width:100%}
+  .workspace{width:100%}
+  .sidebar,.scene-panel{width:100%;flex:0 1 auto}
+  #scene{max-width:100%;min-width:0}
+  .planner-header{
+    width:100%;min-width:0;max-width:100%;
+    gap:8px;padding-left:14px;padding-right:14px;overflow:hidden
+  }
+  .planner-header .brand{flex:0 1 auto;min-width:0;max-width:calc(100% - 78px)}
+  .planner-header .brand-wordmark{width:112px;max-width:100%;height:auto}
+  .planner-header .header-label,.planner-header .header-divider{display:none}
+  .planner-header .header-spacer{flex:1 1 auto;min-width:0}
+  .planner-header .back-link{flex:0 0 auto;white-space:nowrap}
+  .intro-copy,.intro-actions{min-width:0;max-width:100%}
+  .intro-actions{gap:7px}
+  .intro-actions .button{white-space:normal}
+  .scene-toolbar{max-width:100%;min-width:0}
+  .scene-toolbar-left,.scene-toolbar-right{min-width:0}
+  .scene-toolbar-right button{flex:0 1 auto;min-width:0}
+  .scene-bottom{flex-wrap:wrap}
+  .scene-bottom>div{min-width:0}
+  .scene-bottom .legend{max-width:100%}
+  /* Four equally sized touch targets, not a horizontally scrollable menu. */
+  .mobile-planner-dock{
+    left:10px;right:auto;width:calc(100vw - 20px);
+    max-width:calc(100vw - 20px);min-width:0;
+    box-sizing:border-box;overflow:hidden;
+    padding:8px 9px 9px
+  }
+  .mobile-dock-buttons{
+    width:100%;min-width:0;max-width:100%;
+    grid-template-columns:repeat(4,minmax(0,1fr));gap:5px
+  }
+  .mobile-dock-buttons button{
+    width:100%;min-width:0;max-width:100%;
+    min-height:51px;min-inline-size:0;
+    padding:5px 2px;flex-direction:column;gap:1px;
+    text-align:center;white-space:normal;overflow-wrap:anywhere;
+    font-size:11px;line-height:1.2
+  }
+  .mobile-dock-buttons button>span{display:block;font-size:17px;line-height:1.15}
+  .mobile-dock-selection{flex:0 0 auto;min-width:0}
+}
+@media(max-width:350px){
+  .scene-toolbar{flex-wrap:wrap}
+  .scene-toolbar-left{width:100%}
+  .scene-toolbar-right{width:100%;justify-content:space-between}
+  .scene-toolbar-right button{flex:1}
+  .mobile-planner-dock{left:7px;width:calc(100vw - 14px);max-width:calc(100vw - 14px)}
+  .mobile-dock-buttons{gap:3px}
+  .mobile-dock-buttons button{font-size:10px}
+}
