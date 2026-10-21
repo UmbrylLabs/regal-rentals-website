@@ -10,7 +10,8 @@
   const money = cents => (cents / 100).toLocaleString('en-US',{style:'currency',currency:'USD'});
   const esc = s => String(s ?? '').replace(/[&<>"']/g,c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   let width = 60, length = 50, products = [], catalogReady = false;
-  let items = [], selected = null, activeFilter = 'all', serial = 0, dragging = null;
+  let items = [], selected = null, selectedKeys = new Set(), multiMode = false;
+  let pattern = 'line', activeFilter = 'all', serial = 0, dragging = null;
   let view = {yaw:0.64,elev:0.82,dist:94,cx:0,cz:0};
   let cw = 900, ch = 550, ratio = 1, dirty = true, toastTimer;
   const uid = () => 'p' + (++serial) + '-' + Date.now().toString(36);
@@ -63,7 +64,7 @@
       if (![a[1],a[2],a[3]].every(Number.isFinite)) continue;
       restored.push({key:uid(),pid:a[0],x:clamp(a[1],-200,200),z:clamp(a[2],-200,200),r:((a[3] % 360)+360)%360});
     }
-    width = w;length = l; items = restored; selected = null;
+    width = w;length = l; items = restored; selected = null; selectedKeys.clear();
     $('lawn-width').value = width; $('lawn-length').value = length;
     renderAll();saveLocal();
   }
@@ -80,8 +81,8 @@
     $('catalog').innerHTML = shown.map(p => '<div class="catalog-item"><div class="catalog-item-icon">' + catalogIcon(p.kind) +
       '</div><div class="catalog-item-body"><h3>' + esc(p.name) + '</h3><small>' + esc(p.label) +
       '</small><span class="catalog-price">' + (Number.isInteger(p.priceCents) ? money(p.priceCents) : 'Price by quote') +
-      '</span></div><button type="button" class="catalog-add" data-add="' + esc(p.id) + '" aria-label="Add ' +
-      esc(p.name) + ' to event">+</button></div>').join('') ||
+      '</span></div><div class="catalog-item-actions"><input class="catalog-quantity" type="number" value="1" min="1" max="40" step="1" inputmode="numeric" aria-label="Quantity to add for ' + esc(p.name) + '"><button type="button" class="catalog-add" data-add="' + esc(p.id) + '" aria-label="Add ' +
+      esc(p.name) + ' to event">+</button></div></div>').join('') ||
       '<p class="empty-list">No published equipment in this category.</p>';
   }
   function updateCounts() {
@@ -141,9 +142,18 @@
     $('warning-box').textContent=notes.join(' ');
     return {collisions,outside};
   }
+  const selection = () => items.filter(o => selectedKeys.has(o.key));
   function renderSelection() {
-    const el=$('selection-panel'), o=items.find(x=>x.key===selected);
-    if(!o){el.innerHTML='<div class="selection-empty"><span class="selection-icon">✦</span><strong>Nothing selected</strong><p>Add equipment from the left or tap an item in the scene.</p></div>';return;}
+    const el=$('selection-panel'), chosen=selection(), o=items.find(x=>x.key===selected);
+    if(!o){el.innerHTML='<div class="selection-empty"><span class="selection-icon">✦</span><strong>Nothing selected</strong><p>Add equipment, then tap items or use Multi-select. For a quick seating layout, select all chairs.</p></div>';return;}
+    if(chosen.length>1){
+      const chairs=chosen.filter(x=>placedInfo(x).kind==='chair').length;
+      el.innerHTML='<div class="selected-name">'+chosen.length+' pieces selected</div><div class="selected-info">'+chairs+
+        ' chairs · Drag any selected piece to move the group (turn Multi-select off first).</div>'+
+        '<div class="selected-controls"><button type="button" data-rotate="-15">↶ Rotate group</button><button type="button" data-rotate="15">Rotate group ↷</button></div>'+
+        '<div class="selection-actions"><button type="button" id="duplicate-item">Duplicate group</button><button class="delete" type="button" id="delete-item">Remove group</button></div>';
+      return;
+    }
     const p=placedInfo(o);
     el.innerHTML='<div class="selected-name">' + esc(p.name) + '</div><div class="selected-info">' +
       esc(p.label) + ' · Rotation ' + o.r + '°</div>' +
@@ -155,13 +165,102 @@
   function renderList() {
     const list=$('object-list');
     if(!items.length){list.innerHTML='<p class="empty-list">Start by adding something from the catalog.</p>';return;}
-    // Group identical equipment but retain individually selectable placements.
-    list.innerHTML=items.map((o,i)=>'<button type="button" data-select="' + esc(o.key) + '" class="object-row' +
-      (selected===o.key?' selected':'') + '"><span>' + (i+1) + '. ' + esc(placedInfo(o).name) +
-      '</span><small>' + round(o.x) + ', ' + round(o.z) + ' ft</small></button>').join('');
+    list.innerHTML=items.map((o,i)=>'<button type="button" data-select="' + esc(o.key) + '" aria-pressed="'+selectedKeys.has(o.key)+'" class="object-row' +
+      (selectedKeys.has(o.key)?' selected':'') + '"><span><span aria-hidden="true">'+
+      (selectedKeys.has(o.key)?'☑ ':'□ ')+'</span>'+(i+1)+'. '+esc(placedInfo(o).name)+
+      '</span><small>'+round(o.x)+', '+round(o.z)+' ft</small></button>').join('');
   }
-  function renderAll(){const counts=updateCounts();refreshWarnings(counts);renderSelection();renderList();dirty=true;}
-  function choose(key){selected=key;renderAll();}
+  function renderArrangement() {
+    const n=selectedKeys.size;
+    $('selection-badge').textContent=n+' selected';
+    $('arrange-description').textContent=n>=2 ? n+' pieces selected · choose a formation.' :
+      'Select two or more pieces to create a custom formation.';
+    $('arrange-apply').disabled=n<2;
+    $('multi-select-toggle').setAttribute('aria-pressed',String(multiMode));
+    $('multi-select-toggle').classList.toggle('active',multiMode);
+    $('scene-instructions').textContent=multiMode
+      ? 'Selection mode ON · Tap multiple items · In top view drag ground to box-select'
+      : 'Drag items to move · Shift-click for multiple · Drag background to orbit';
+    $('arrange-angle-wrap').hidden=!['line','rows'].includes(pattern);
+    $('arrange-spread-wrap').hidden=pattern!=='arc';
+    $('arrange-columns-wrap').hidden=pattern!=='rows';
+    $('arrange-facing-wrap').hidden=!['arc','circle'].includes(pattern);
+  }
+  function renderAll(){
+    // An imported or removed item must never leave a stale selection entry.
+    const keys=new Set(items.map(o=>o.key));
+    for(const k of selectedKeys)if(!keys.has(k))selectedKeys.delete(k);
+    if(!selectedKeys.has(selected))selected=selection()[0]?.key||null;
+    const counts=updateCounts();refreshWarnings(counts);
+    renderSelection();renderList();renderArrangement();dirty=true;
+  }
+  function choose(key,additive=false){
+    if(!key){selectedKeys.clear();selected=null;}
+    else if(additive){
+      if(selectedKeys.has(key)){selectedKeys.delete(key);selected=selection().at(-1)?.key||null;}
+      else{selectedKeys.add(key);selected=key;}
+    }else{selectedKeys=new Set([key]);selected=key;}
+    renderAll();
+  }
+  function chooseKind(kind){
+    selectedKeys=new Set(items.filter(o=>kind==='all'||placedInfo(o).kind===kind).map(o=>o.key));
+    selected=selection()[0]?.key||null;
+    renderAll();
+    if(!selected)notify(kind==='chair'?'Add chairs first, then select them here.':'Add equipment first.');
+  }
+  // Every arrangement preserves the selected group's center of mass. Spacing
+  // refers to center-to-center distance, never edge-to-edge distance.
+  function arrangeSelected() {
+    const chosen=selection();if(chosen.length<2)return;
+    const n=chosen.length;
+    const desired=clamp(Number($('arrange-spacing').value)||3,2,50);
+    const largest=Math.max(...chosen.map(o=>Math.max(placedInfo(o).w,placedInfo(o).d)));
+    const spacing=Math.max(desired,largest+.35);
+    const deg=clamp(Number($('arrange-angle').value)||0,-180,180);
+    const rad=deg*Math.PI/180;
+    const ct=Math.cos(rad),st=Math.sin(rad), centerX=chosen.reduce((a,o)=>a+o.x,0)/n;
+    const centerZ=chosen.reduce((a,o)=>a+o.z,0)/n;
+    const facingOut=$('arrange-facing').value==='out';
+    let poses=[];
+    if(pattern==='line'){
+      poses=chosen.map((o,i)=>({x:(i-(n-1)/2)*spacing,z:0,r:deg}));
+    }else if(pattern==='arc'){
+      const spread=clamp(Number($('arrange-spread').value)||120,30,300)*Math.PI/180;
+      const delta=spread/(n-1);
+      const radius=spacing/(2*Math.sin(delta/2));
+      poses=chosen.map((o,i)=>{
+        const theta=-spread/2+i*delta;
+        return {x:radius*Math.sin(theta),z:radius*(1-Math.cos(theta)),
+          r:theta*180/Math.PI+(facingOut?180:0)};
+      });
+    }else if(pattern==='circle'){
+      const radius=spacing/(2*Math.sin(Math.PI/n));
+      poses=chosen.map((o,i)=>{
+        const theta=i*Math.PI*2/n;
+        return {x:radius*Math.sin(theta),z:-radius*Math.cos(theta),
+          r:theta*180/Math.PI+(facingOut?180:0)};
+      });
+    }else{
+      const cols=Math.min(n,clamp(Math.round(Number($('arrange-columns').value)||4),2,20));
+      const rows=Math.ceil(n/cols);
+      poses=chosen.map((o,i)=>{
+        const row=Math.floor(i/cols), col=i%cols;
+        const rowSize=Math.min(cols,n-row*cols);
+        return {x:(col-(rowSize-1)/2)*spacing,z:(row-(rows-1)/2)*spacing,r:deg};
+      });
+    }
+    // Exact arithmetic mean correction prevents the group drifting after
+    // repeatedly applying Arc, Line or Circle to already arranged items.
+    const meanX=poses.reduce((a,p)=>a+p.x,0)/n,meanZ=poses.reduce((a,p)=>a+p.z,0)/n;
+    chosen.forEach((o,i)=>{
+      const p=poses[i],x=p.x-meanX,z=p.z-meanZ;
+      o.x=round(centerX+x*ct-z*st);o.z=round(centerZ+x*st+z*ct);
+      o.r=((Math.round(p.r+deg)%360)+360)%360;
+    });
+    renderAll();saveLocal();
+    const warn=$('warning-box').hidden?'':' Review the placement warnings.';
+    notify('Arranged '+n+' pieces in '+({line:'a line',arc:'an arc',circle:'a circle',rows:'rows'}[pattern])+'.'+warn);
+  }
   function findSpot(p) {
     const step = Math.max(2,Math.min(p.w,p.d)+.7);
     const spots = [[0,0]];
@@ -177,17 +276,42 @@
     }
     return [0,0];
   }
-  function add(id) {
-    if(items.length>=200){notify('This layout has reached its 200-item limit.');return;}
-    const p=products.find(x=>x.id===id);
-    if(!p)return;
-    const [x,z]=findSpot(p);
-    const o={key:uid(),pid:id,x,z,r:0};
-    items.push(o);selected=o.key;renderAll();saveLocal();
+  function add(id,qty=1) {
+    const p=products.find(x=>x.id===id);if(!p)return;
+    qty=clamp(Math.round(qty),1,40);
+    if(items.length+qty>200){notify('A design can contain at most 200 pieces.');return;}
+    const added=[];
+    for(let i=0;i<qty;i++){
+      const [x,z]=findSpot(p),o={key:uid(),pid:id,x,z,r:0};
+      items.push(o);added.push(o);
+    }
+    selectedKeys=new Set(added.map(o=>o.key));selected=added[added.length-1].key;
+    renderAll();saveLocal();
+    if(qty>1)notify(qty+' pieces added and selected. Choose a formation in Arrange beautifully.');
   }
-  function removeSelected(){items=items.filter(x=>x.key!==selected);selected=null;renderAll();saveLocal();}
-  function duplicate(){const o=items.find(x=>x.key===selected);if(!o)return;add(o.pid);}
-  function rotate(n){const o=items.find(x=>x.key===selected);if(!o)return;o.r=(o.r+n+360)%360;renderAll();saveLocal();}
+  function removeSelected(){
+    if(!selectedKeys.size)return;
+    items=items.filter(x=>!selectedKeys.has(x.key));selected=null;selectedKeys.clear();renderAll();saveLocal();
+  }
+  function duplicate(){
+    const chosen=selection();if(!chosen.length)return;
+    if(items.length+chosen.length>200){notify('Not enough room under the 200-piece limit.');return;}
+    const copies=chosen.map(o=>({...o,key:uid(),x:round(o.x+3),z:round(o.z+3)}));
+    items.push(...copies);
+    selectedKeys=new Set(copies.map(o=>o.key));selected=copies.at(-1).key;
+    renderAll();saveLocal();
+  }
+  function rotate(n){
+    const chosen=selection();if(!chosen.length)return;
+    const cx=chosen.reduce((sum,o)=>sum+o.x,0)/chosen.length,cz=chosen.reduce((sum,o)=>sum+o.z,0)/chosen.length;
+    const r=n*Math.PI/180,co=Math.cos(r),si=Math.sin(r);
+    for(const o of chosen){
+      const dx=o.x-cx,dz=o.z-cz;
+      o.x=round(cx+dx*co-dz*si);o.z=round(cz+dx*si+dz*co);
+      o.r=(o.r+n+360)%360;
+    }
+    renderAll();saveLocal();
+  }
 
   // Project real 3D coordinates (x, height, depth in feet) through a perspective camera.
   function cameraBasis() {
