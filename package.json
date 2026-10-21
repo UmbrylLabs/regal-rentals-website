@@ -3,7 +3,7 @@
   "private": true,
   "scripts": {
     "test": "python3 -m unittest -v tests/test_inventory_guards.py",
-    "check:js": "find functions admin -name '*.js' -print0 | xargs -0 -n1 node --check && node --check rentals.js && node --check sign.js",
+    "check:js": "find functions admin -name '*.js' -print0 | xargs -0 -n1 node --check && node --check rentals.js && node --check sign.js && node --check planner.js && node --check regal-catalog-v3.js",
     "dev": "wrangler pages dev .",
     "db:migrate:local": "wrangler d1 migrations apply regal-rentals --local",
     "db:migrate:remote": "wrangler d1 migrations apply regal-rentals --remote"
