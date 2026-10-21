@@ -159,3 +159,19 @@ footer a{color:#e6c38d}
  .scene-bottom{gap:8px}
 }
 @media(max-width:360px){.selection-toolbar button{padding:7px 8px}.arrange-settings{gap:8px}}
+
+/* The original tablet layout used a two-column panel grid. Arrangement tools
+   need a predictable reading order, so collapse the detail rail at 960px. */
+@media(max-width:960px){
+  .sidebar-right{display:flex;flex-direction:column}
+  .sidebar-right .sidebar-title,
+  .sidebar-right .selection-panel,
+  .sidebar-right .arrange-panel,
+  .sidebar-right .summary,
+  .sidebar-right .objects-header,
+  .sidebar-right .object-list,
+  .sidebar-right .quote-actions{grid-column:auto;grid-row:auto}
+  .sidebar-right .summary{margin:14px 16px 0}
+  .sidebar-right .arrange-panel{margin:14px 16px 0}
+  .sidebar-right .quote-actions{margin-top:16px}
+}
