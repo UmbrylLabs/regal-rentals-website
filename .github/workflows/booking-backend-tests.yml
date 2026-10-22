@@ -84,6 +84,8 @@ jobs:
         run: node tests/test_rr_references.mjs
       - name: Test website inquiry submissions
         run: node tests/test_website_inquiries.mjs
+      - name: Verify 3D planner and fallback contracts
+        run: node tests/test_planner_3d.mjs
       - name: Check JavaScript syntax
         run: |
           find functions admin -name '*.js' -print0 | xargs -0 -n1 node --check
