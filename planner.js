@@ -187,10 +187,10 @@
     $('multi-select-toggle').classList.toggle('active',multiMode);
     const mobile=typeof window.matchMedia==='function'&&window.matchMedia('(max-width:700px)').matches;
     $('scene-instructions').textContent=mobile
-      ? (multiMode?'Tap chairs to select · use Arrange below':'Tap a chair to edit · use the tools below')
+      ? (multiMode?'Tap items to select · pinch to zoom · 2-finger pan':'Tap to edit · pinch to zoom · 2-finger pan')
       : (multiMode
         ? 'Selection mode ON · Tap multiple items · In top view drag ground to box-select'
-        : 'Drag items to move · Shift-click for multiple · Drag background to orbit');
+        : 'Drag items · Drag empty space to orbit · Right-drag to pan · Scroll to zoom');
     $('mobile-dock-count').textContent=n+' selected';
     $('mobile-dock-multi').setAttribute('aria-pressed',String(multiMode));
     $('mobile-dock-multi').classList.toggle('active',multiMode);
@@ -587,11 +587,14 @@
       return;
     }
     // Right mouse button or Alt-drag pans in all camera modes.
-    if(e.button===2||e.altKey||activeView==='top'&&!multiMode&&!e.shiftKey){
+    if(e.button===2||e.altKey){
       dragging={mode:'pan',previous:pt};return;
     }
     const o=pick(pt.x,pt.y),g=onGround(pt.x,pt.y);
     const additive=multiMode||e.shiftKey||e.ctrlKey||e.metaKey;
+    if(!o&&activeView==='top'&&!additive){
+      dragging={mode:'pan',previous:pt};choose(null);return;
+    }
     if(o){
       if(additive){
         choose(o.key,true);
