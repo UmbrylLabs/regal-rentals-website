@@ -15,7 +15,9 @@
   <link rel="stylesheet" href="/planner.css?v=20261020-1">
   <link rel="stylesheet" href="/planner-regal.css?v=20261021-1">
   <link rel="stylesheet" href="/planner-mobile.css?v=20261020-mobile2">
-  <script src="/planner.js?v=20261020-mobile1" defer></script>
+  <link rel="stylesheet" href="/planner-3d.css?v=20261022-1">
+  <script src="/planner.js?v=20261022-1" defer></script>
+  <script src="/planner-3d.js?v=20261022-1" type="module"></script>
   <title>3D Event Planner | Regal Rentals</title>
 </head>
 <body>
@@ -52,14 +54,15 @@
       <section class="scene-panel" aria-label="Interactive 3D event layout">
         <div class="scene-toolbar">
           <div class="scene-toolbar-left"><strong><span aria-hidden="true">✦</span> My event canvas</strong><span id="object-count">0 pieces</span></div>
-          <div class="scene-toolbar-right"><button type="button" id="view-3d" class="tool active" title="Perspective view" aria-pressed="true">3D view</button><button type="button" id="view-top" class="tool" title="Top-down view" aria-pressed="false">Top view</button><button type="button" id="reset-camera" class="tool" title="Reset camera">Reset view</button></div>
+          <div class="scene-toolbar-right"><button type="button" id="view-3d" class="tool active" title="Perspective view" aria-pressed="true">3D view</button><button type="button" id="view-top" class="tool" title="Top-down view" aria-pressed="false">Top view</button><button type="button" id="view-eye" class="tool" title="View from guest height" aria-pressed="false">Eye level</button><button type="button" id="reset-camera" class="tool" title="Reset camera">Reset view</button></div>
         </div>
         <div class="canvas-wrap" id="canvas-wrap">
-          <canvas id="scene" tabindex="0" aria-label="3D event layout. Drag to move selected objects. Use multi-select or Shift-click to select several. Drag empty ground to orbit; top view supports box selection." role="img"></canvas>
-          <div class="scene-instructions" id="scene-instructions">Drag items to move · Shift-click to select several · Drag background to orbit</div>
+          <canvas id="scene-3d" aria-hidden="true" tabindex="-1"></canvas>
+          <canvas id="scene" tabindex="0" aria-label="3D event planner. Drag objects to place them, drag empty ground to orbit, use two fingers to pan and pinch to zoom. In top view drag the background to pan, and use multi-select for box selection." role="img"></canvas>
+          <div class="scene-instructions" id="scene-instructions">Drag furniture · Drag open space to orbit · Pinch to zoom · Two fingers to pan</div>
           <div id="marquee-box" class="marquee-box" hidden aria-hidden="true"></div>
-          <div class="scene-zoom"><button type="button" id="zoom-in" aria-label="Zoom in">+</button><button type="button" id="zoom-out" aria-label="Zoom out">−</button></div>
-          <div class="scene-indicator"><span class="indicator-dot"></span><span id="scene-mode">Perspective · 5 ft grid</span></div>
+          <div class="scene-zoom"><button type="button" id="zoom-in" aria-label="Zoom in">+</button><button type="button" id="zoom-out" aria-label="Zoom out">−</button><button type="button" id="fit-view" aria-label="Fit entire lawn in view" title="Fit lawn">⤢</button></div>
+          <div class="scene-indicator"><span class="indicator-dot"></span><span id="scene-mode">Perspective 3D · 5 ft grid</span></div>
         </div>
         <div class="selection-toolbar" aria-label="Selection tools">
           <div class="selection-toolbar-main">
