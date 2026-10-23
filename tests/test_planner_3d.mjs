@@ -28,6 +28,9 @@ assert.match(js,/window\.Regal3D\?\.ready/);
 assert.match(js,/const pointers = new Map\(\)/);
 assert.match(js,/gesture\.distance\/nextGap/);
 assert.match(js,/panBetween\(/);
+// Horizontal orbit motion tracks the direction of a finger swipe.
+assert.match(js,/targetView\.yaw=dragging\.yaw-\(pt\.x-dragging\.startX\)\*\.008/);
+assert.doesNotMatch(js,/targetView\.yaw=dragging\.yaw\+\(pt\.x-dragging\.startX\)/);
 assert.match(js,/Math\.exp\(-delta\/105\)/);
 assert.match(js,/function setView\(mode\)/);
 assert.match(js,/setView\('eye'\)/);
