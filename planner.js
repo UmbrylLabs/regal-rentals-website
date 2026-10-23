@@ -654,7 +654,9 @@
     }else if(dragging.mode==='pan'){
       panBetween(dragging.previous,pt);dragging.previous=pt;
     }else if(dragging.mode==='orbit'){
-      targetView.yaw=dragging.yaw+(pt.x-dragging.startX)*.008;
+      // Dragging right rotates the view right, matching direct-manipulation gestures.
+      // Two-finger panning uses independent world-space math; do not invert it.
+      targetView.yaw=dragging.yaw-(pt.x-dragging.startX)*.008;
       targetView.elev=clamp(dragging.elev+(pt.y-dragging.startY)*.0055,.12,1.54);
       dirty=true;
     }
