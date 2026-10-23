@@ -111,16 +111,103 @@ if (canvas) {
         for(let i=0;i<4;i++)roofTriangle(group,[pts[i],pts[(i+1)%4],[0,height,0]],i%2?roofA:roofB);
       }
     }
+    // Photo-matched DuraMax-style white folding chair. Rounded plastic
+    // backrest and seat, painted metal tubes, crossed legs and end caps.
+    // Retain the 2D planner's dimensions for saved layouts/collision checks.
+    const chairMolds = new Map();
+    const chairPaint = material(0xe9ebea, 0.61, 0.18);
+    const chairFeet = material(0xc6c8c5, 0.94);
+    const chairUnitUp = new THREE.Vector3(0,1,0);
+    function chairTube(group,a,b,radius=.042,mat=chairPaint) {
+      const delta=new THREE.Vector3(b[0]-a[0],b[1]-a[1],b[2]-a[2]);
+      const length=delta.length();
+      if(length<.001)return;
+      // Shared cylinder geometry reduces memory for 100+ chair layouts.
+      const tube=new THREE.Mesh(getCylinder(radius,radius,1,10),mat);
+      tube.position.set((a[0]+b[0])/2,(a[1]+b[1])/2,(a[2]+b[2])/2);
+      tube.quaternion.setFromUnitVectors(chairUnitUp,delta.multiplyScalar(1/length));
+      tube.scale.y=length;
+      group.add(tube);
+      return tube;
+    }
+    function chairMoldGeometry(w,d) {
+      const id=w.toFixed(3)+':'+d.toFixed(3);
+      if(chairMolds.has(id))return chairMolds.get(id);
+      // Seat plan: slightly tapered at the back with a rounded front edge.
+      const halfW=w*.45,front=d*.38,rear=d*.34;
+      const rounding=Math.min(.19,halfW*.25);
+      // Shape Y maps to minus world Z after rotation.
+      const seatShape=new THREE.Shape();
+      seatShape.moveTo(-halfW+.07,rear);
+      seatShape.lineTo(halfW-.07,rear);
+      seatShape.quadraticCurveTo(halfW,rear,halfW,rear-.09);
+      seatShape.lineTo(halfW,-front+rounding);
+      seatShape.quadraticCurveTo(halfW,-front,halfW-rounding,-front);
+      seatShape.lineTo(-halfW+rounding,-front);
+      seatShape.quadraticCurveTo(-halfW,-front,-halfW,-front+rounding);
+      seatShape.lineTo(-halfW,rear-.09);
+      seatShape.quadraticCurveTo(-halfW,rear,-halfW+.07,rear);
+      const seatGeometry=new THREE.ExtrudeGeometry(seatShape,{
+        depth:.115,steps:1,curveSegments:5,
+        bevelEnabled:true,bevelThickness:.013,bevelSize:.018,bevelSegments:2
+      });
+      seatGeometry.rotateX(-Math.PI/2);
+      // Backrest curves at the top, corners and the bottom scallop.
+      const backWidth=w*.90,halfBack=backWidth/2;
+      const backShape=new THREE.Shape();
+      backShape.moveTo(-halfBack+.12,-.30);
+      backShape.quadraticCurveTo(-halfBack,-.28,-halfBack,-.16);
+      backShape.lineTo(-halfBack+.02,.20);
+      backShape.quadraticCurveTo(-halfBack+.02,.31,-halfBack+.18,.34);
+      backShape.quadraticCurveTo(0,.405,halfBack-.18,.34);
+      backShape.quadraticCurveTo(halfBack-.02,.31,halfBack-.02,.20);
+      backShape.lineTo(halfBack,-.16);
+      backShape.quadraticCurveTo(halfBack,-.28,halfBack-.12,-.30);
+      backShape.quadraticCurveTo(0,-.355,-halfBack+.12,-.30);
+      const backGeometry=new THREE.ExtrudeGeometry(backShape,{
+        depth:.067,steps:1,curveSegments:6,
+        bevelEnabled:true,bevelThickness:.012,bevelSize:.017,bevelSegments:2
+      });
+      chairMolds.set(id,{seatGeometry,backGeometry});
+      return {seatGeometry,backGeometry};
+    }
     function makeChair(group,w,d) {
-      const xl=w*.38,front=d*.34,back=-d*.34;
-      for(const x of [-xl,xl]){
-        box(group,.105,1.46,.105,metal,x,.73,front);
-        box(group,.105,2.84,.105,metal,x,1.42,back);
+      const {seatGeometry,backGeometry}=chairMoldGeometry(w,d);
+      const halfFrame=w*.355,halfRear=w*.345;
+      const zFront=d*.405,zBack=-d*.405;
+      const seat=new THREE.Mesh(seatGeometry,white);
+      seat.position.y=1.49;
+      seat.castShadow=true;seat.receiveShadow=true;
+      group.add(seat);
+      const back=new THREE.Mesh(backGeometry,plastic);
+      back.position.set(0,2.47,-d*.37);
+      back.rotation.x=-.15;
+      back.castShadow=true;back.receiveShadow=true;
+      group.add(back);
+      for(const sign of [-1,1]){
+        const x=sign*halfFrame,rx=sign*halfRear;
+        // Main tubular uprights extend through the seat to front feet.
+        const frontFoot=[x,.065,zFront];
+        const seatHinge=[x,1.50,-d*.065];
+        const backTop=[x,2.81,-d*.45];
+        chairTube(group,frontFoot,seatHinge,.043);
+        chairTube(group,seatHinge,backTop,.043);
+        // Hinged legs angle back to create the characteristic side X.
+        const rearFoot=[rx,.065,zBack];
+        const rearHinge=[rx,1.51,d*.23];
+        chairTube(group,rearFoot,rearHinge,.041);
+        chairTube(group,[x,1.46,-d*.30],[x,1.46,d*.33],.033);
+        // Rubber/polymer end caps on each foot.
+        chairTube(group,[x,.025,zFront],[x,.14,zFront-.016],.056,chairFeet);
+        chairTube(group,[rx,.025,zBack],[rx,.14,zBack+.016],.056,chairFeet);
+        chairTube(group,[x,1.41,d*.11],[rx,.69,-d*.20],.030,darkMetal);
+        const hinge=cylinder(group,.072,.072,.045,darkMetal,x,1.44,d*.18,12);
+        hinge.rotation.z=Math.PI/2;
       }
-      const seat=box(group,w*.89,.17,d*.78,plastic,0,1.55,0,true);
-      seat.material=white;
-      box(group,w*.86,.97,.145,white,0,2.24,back);
-      box(group,w*.80,.12,.15,sideWhite,0,1.45,back+.12);
+      // Cross rails give a legible, accurate silhouette even in grouped rows.
+      chairTube(group,[-halfFrame,.45,d*.265],[halfFrame,.45,d*.265],.032);
+      chairTube(group,[-halfRear,.35,-d*.29],[halfRear,.35,-d*.29],.032);
+      chairTube(group,[-halfFrame,1.42,-d*.23],[halfFrame,1.42,-d*.23],.025);
     }
     function makeRound(group,w) {
       cylinder(group,.115,.115,2.4,metal,0,1.2,0,12);
