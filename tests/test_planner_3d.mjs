@@ -24,6 +24,17 @@ assert.match(headers,/script-src 'self' https:\/\/cdn\.jsdelivr\.net/);
 assert.match(three,/three@0\.186\.1\/build\/three\.module\.js/);
 assert.match(three,/window\.Regal3D\s*=\s*\{/);
 assert.match(three,/webglcontextlost/);
+// Chair reference geometry is reused across instances and remains selectable.
+assert.match(three,/function chairMoldGeometry\(w,d\)/);
+assert.match(three,/new THREE\.ExtrudeGeometry\(seatShape/);
+assert.match(three,/new THREE\.ExtrudeGeometry\(backShape/);
+assert.match(three,/function chairTube\(group,a,b/);
+assert.match(three,/chairTube\(group,rearFoot,rearHinge/);
+assert.match(three,/chairTube\(group,frontFoot,seatHinge/);
+assert.match(three,/chairMolds\.has\(id\)/);
+assert.match(three,/else if\(o\.kind==='chair'\)makeChair\(group,w,d\)/);
+assert.match(html,/planner-3d\.js\?v=20261022-chair1/);
+
 assert.match(js,/window\.Regal3D\?\.ready/);
 assert.match(js,/const pointers = new Map\(\)/);
 assert.match(js,/gesture\.distance\/nextGap/);
